@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import api from '../api/axios';
 import { getVenues } from '../api/venues';
 import { Calendar, Clock, FileText, ArrowLeft, ArrowRight, Save, CheckCircle2, ChevronRight, Info, MapPin, Briefcase, Plus, X } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 const EventForm = () => {
     const { id } = useParams();
@@ -71,7 +72,8 @@ const EventForm = () => {
                             programImpacted: currentEvent.programImpacted || '',
                             guestSpecifications: currentEvent.guestSpecifications || currentEvent.asistentes || '',
                             presidiumDetail: currentEvent.presidiumDetail || '',
-                            directorAction: currentEvent.directorAction || ''
+                            directorAction: currentEvent.directorAction || '',
+                            activities: currentEvent.activities || []
                         });
                     }
                 }
@@ -365,13 +367,22 @@ const EventForm = () => {
                                                 onChange={(e) => setCurrentActivity({ ...currentActivity, endsAt: e.target.value })}
                                             />
                                         </div>
+                                        <div className="md:col-span-2 mt-2">
+                                            <textarea
+                                                placeholder="Descripción o detalles de la actividad..."
+                                                rows="2"
+                                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-4 focus:ring-emerald-500/10 outline-none font-medium resize-none"
+                                                value={currentActivity.description || ''}
+                                                onChange={(e) => setCurrentActivity({ ...currentActivity, description: e.target.value })}
+                                            ></textarea>
+                                        </div>
                                     </div>
                                     <button
                                         type="button"
                                         onClick={() => {
                                             if (currentActivity.name && currentActivity.startsAt && currentActivity.endsAt) {
                                                 if (currentActivity.startsAt >= currentActivity.endsAt) {
-                                                    alert("La hora de fin debe ser posterior a la de inicio");
+                                                    Swal.fire('Error', 'La hora de fin debe ser posterior a la de inicio', 'error');
                                                     return;
                                                 }
                                                 setFormData({
@@ -397,6 +408,9 @@ const EventForm = () => {
                                                 <div>
                                                     <p className="font-bold text-gray-900">{act.name}</p>
                                                     <p className="text-xs text-gray-400 font-medium">{act.startsAt} - {act.endsAt}</p>
+                                                    {act.description && (
+                                                        <p className="text-xs text-gray-500 mt-1 line-clamp-2">{act.description}</p>
+                                                    )}
                                                 </div>
                                             </div>
                                             <button

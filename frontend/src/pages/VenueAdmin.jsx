@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getVenues, createVenue, updateVenue, deleteVenue } from '../api/venues';
+import Swal from 'sweetalert2';
 import { MapPin, Plus, Trash2, Edit2, X, Check } from 'lucide-react';
 
 const VenueAdmin = () => {
@@ -44,12 +45,25 @@ const VenueAdmin = () => {
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm('¿Seguro que deseas eliminar este recinto?')) return;
+        const result = await Swal.fire({
+            title: '¿Estás seguro?',
+            text: "No podrás revertir esto. El recinto será eliminado.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#ef4444',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (!result.isConfirmed) return;
+
         try {
             await deleteVenue(id);
-            setVenues(prev => prev.filter(v => v.id !== id));
-        } catch {
-            setError('Error al eliminar el recinto.');
+            await fetchVenues();
+            Swal.fire('¡Eliminado!', 'El recinto ha sido eliminado.', 'success');
+        } catch (err) {
+            Swal.fire('Error', err.response?.data?.message || 'Error al eliminar recinto', 'error');
         }
     };
 

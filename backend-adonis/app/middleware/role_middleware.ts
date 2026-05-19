@@ -2,7 +2,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 
 export default class RoleMiddleware {
   async handle({auth, response}: HttpContext, next: () => Promise<void>, guardRoles: string[]) {
-    const user = auth.user
+    const user = auth.use('web').user
     await user?.load('role')
     if  (user?.role?.name === 'staff_externo') {
       return response.redirect('/home')

@@ -3,9 +3,10 @@ import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, isSameMonth, isSameDay, addMonths, subMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, CheckCircle, XCircle, Clock, Info, Plus, Calendar as CalendarIcon, Users, Filter, MapPin, RefreshCw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle, XCircle, Clock, Info, Plus, Calendar as CalendarIcon, Users, Filter, MapPin, RefreshCw, ShieldAlert } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getVenues } from '../api/venues';
+import Swal from 'sweetalert2';
 
 const Dashboard = () => {
     const { user } = useAuth();
@@ -41,7 +42,7 @@ const Dashboard = () => {
             await api.patch(`/events/${eventId}/status`, { estado: newStatus });
             fetchEvents();
         } catch (error) {
-            alert('Error al actualizar el estado del evento');
+            Swal.fire('Error', 'Error al actualizar el estado del evento', 'error');
         }
     };
 
@@ -253,14 +254,14 @@ const Dashboard = () => {
                 </div>
             )}
 
-            {event.estado === 'rechazado' && (String(event.user_id) === String(user?.id) || user?.nivel_permiso === 1) && (
+            {(event.estado === 'rechazado' || event.estado === 'pendiente') && (String(event.user_id) === String(user?.id) || user?.nivel_permiso === 1) && (
                 <div className="mt-4 pt-4 border-t border-gray-50">
                     <button
                         onClick={() => navigate(`/editar-evento/${event.id}`)}
-                        className="w-full flex items-center justify-center gap-2 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 py-2.5 rounded-xl text-xs font-bold transition-all"
+                        className={`w-full flex items-center justify-center gap-2 ${event.estado === 'rechazado' ? 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'} border py-2.5 rounded-xl text-xs font-bold transition-all`}
                     >
                         <RefreshCw size={14} />
-                        Reagendar Evento
+                        {event.estado === 'rechazado' ? 'Reagendar Evento' : 'Editar Ficha Técnica'}
                     </button>
                 </div>
             )}
@@ -347,6 +348,16 @@ const Dashboard = () => {
             </div>
         );
     };
+
+    if (user?.nivel_permiso === 2) {
+        return (
+            <div className="flex flex-col items-center justify-center h-[60vh]">
+                <ShieldAlert className="w-16 h-16 text-slate-400 mb-4" />
+                <h2 className="text-xl font-bold text-slate-700">Acceso Denegado</h2>
+                <p className="text-slate-500 font-medium mt-2">Los editores no tienen acceso al Dashboard principal.</p>
+            </div>
+        );
+    }
 
     if (loading) return (
         <div className="flex flex-col items-center justify-center h-[60vh] gap-4">

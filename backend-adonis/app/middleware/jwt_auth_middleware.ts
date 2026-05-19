@@ -28,9 +28,10 @@ export default class JwtAuthMiddleware {
       await user.load('role')
       await ctx.auth.use('web').login(user)
 
-      return next()
     } catch (error) {
       return ctx.response.unauthorized({ message: 'Token inválido o expirado' })
     }
+
+    return next()
   }
 }

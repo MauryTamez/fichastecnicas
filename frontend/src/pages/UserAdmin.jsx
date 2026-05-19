@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getUsers, createUser, updateUser, deleteUser } from '../api/users';
 import { useAuth } from '../context/AuthContext';
+import Swal from 'sweetalert2';
 import { UserPlus, Edit2, Trash2, Shield, ShieldCheck, ShieldAlert } from 'lucide-react';
 
 const roleNames = {
@@ -90,12 +91,25 @@ export default function UserAdmin() {
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm('¿Estás seguro de que quieres eliminar este usuario?')) return;
+        const result = await Swal.fire({
+            title: '¿Estás seguro?',
+            text: "No podrás revertir esto. El usuario será eliminado.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#0f766e',
+            cancelButtonColor: '#ef4444',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (!result.isConfirmed) return;
+
         try {
             await deleteUser(id);
             await loadUsers();
+            Swal.fire('¡Eliminado!', 'El usuario ha sido eliminado.', 'success');
         } catch (err) {
-            alert(err.response?.data?.message || 'Error al eliminar usuario');
+            Swal.fire('Error', err.response?.data?.message || 'Error al eliminar usuario', 'error');
         }
     };
 
@@ -156,19 +170,23 @@ export default function UserAdmin() {
                                     <div className="flex items-center justify-end gap-2">
                                         <button
                                             onClick={() => handleOpenForm(u)}
-                                            className="p-2 text-slate-400 hover:text-teal-600 transition-colors rounded-lg hover:bg-teal-50"
-                                            title="Editar usuario"
+                                            disabled={String(u.id) === String(user?.id)}
+                                            className={`p-2 transition-colors rounded-lg ${String(u.id) === String(user?.id)
+                                                    ? 'text-slate-300 cursor-not-allowed'
+                                                    : 'text-slate-400 hover:text-teal-600 hover:bg-teal-50'
+                                                }`}
+                                            title={String(u.id) === String(user?.id) ? "No puedes editarte a ti mismo" : "Editar usuario"}
                                         >
                                             <Edit2 className="w-4 h-4" />
                                         </button>
                                         <button
                                             onClick={() => handleDelete(u.id)}
-                                            disabled={u.id === String(user.id)}
-                                            className={`p-2 transition-colors rounded-lg ${u.id === String(user.id)
+                                            disabled={String(u.id) === String(user?.id)}
+                                            className={`p-2 transition-colors rounded-lg ${String(u.id) === String(user?.id)
                                                     ? 'text-slate-300 cursor-not-allowed'
                                                     : 'text-slate-400 hover:text-red-600 hover:bg-red-50'
                                                 }`}
-                                            title={u.id === String(user.id) ? "No puedes eliminarte a ti mismo" : "Eliminar usuario"}
+                                            title={String(u.id) === String(user?.id) ? "No puedes eliminarte a ti mismo" : "Eliminar usuario"}
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </button>

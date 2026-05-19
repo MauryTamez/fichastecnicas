@@ -23,7 +23,7 @@ const Layout = ({ children }) => {
     };
 
     const menuItems = [
-        { name: 'Dashboard', path: '/', icon: LayoutDashboard },
+        { name: 'Dashboard', path: '/', icon: LayoutDashboard, roles: [1, 3] },
         { name: 'Nueva Ficha', path: '/nuevo-evento', icon: PlusCircle, roles: [1, 2] },
         { name: 'Recintos', path: '/admin/recintos', icon: MapPin, roles: [1] },
         { name: 'Catálogo', path: '/admin/catalogo', icon: Tag, roles: [1] },

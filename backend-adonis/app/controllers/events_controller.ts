@@ -91,7 +91,7 @@ export default class EventsController {
 
   async store({ request, response, auth }: HttpContext) {
     const data = await request.validateUsing(createEventValidator)
-    const userEmail = auth.user?.email || ''
+    const userEmail = auth.use('web').user?.email || ''
     
     const locationId = data.locationId
     const startsAt = DateTime.fromISO(data.startsAt)
@@ -119,8 +119,8 @@ export default class EventsController {
         const event = new Event()
         event.currentState = 'in_review'
         event.organizationId = data.organizationId || 1 
-        event.userId = auth.user!.id
-        event.mainResponsibleId = auth.user!.id
+        event.userId = auth.use('web').user!.id
+        event.mainResponsibleId = auth.use('web').user!.id
         event.eventTypeId = data.eventTypeId || 1
         event.locationId = locationId
         event.useTransaction(transaction)
@@ -156,7 +156,7 @@ export default class EventsController {
                 description: act.description || null,
                 startsAt: DateTime.fromISO(act.startsAt),
                 endsAt: DateTime.fromISO(act.endsAt),
-                responsibleId: auth.user!.id,
+                responsibleId: auth.use('web').user!.id,
                 locationId: event.locationId || 1
             })
             activity.useTransaction(transaction)
@@ -195,11 +195,11 @@ export default class EventsController {
     const event = await Event.findOrFail(params.id)
     
     // Authorization Check
-    if (auth.user?.role?.name !== 'admin' && event.userId !== auth.user?.id) {
+    if (auth.use('web').user?.role?.name !== 'admin' && event.userId !== auth.use('web').user?.id) {
         return response.forbidden({ message: 'No tienes permiso para editar este evento' })
     }
 
-    const userEmail = auth.user?.email || ''
+    const userEmail = auth.use('web').user?.email || ''
     
     const oldVersion = await EventVersion.query().where('eventId', event.id).where('isCurrentVersion', true).first()
     const oldContent = oldVersion ? await VersionContent.find(oldVersion.versionContentId) : null
@@ -263,7 +263,7 @@ export default class EventsController {
                 description: act.description || null,
                 startsAt: DateTime.fromISO(act.startsAt),
                 endsAt: DateTime.fromISO(act.endsAt),
-                responsibleId: auth.user!.id,
+                responsibleId: auth.use('web').user!.id,
                 locationId: event.locationId || 1
             })
             activity.useTransaction(transaction)
@@ -293,7 +293,7 @@ export default class EventsController {
     const { estado } = request.only(['estado'])
     const event = await Event.findOrFail(params.id)
 
-    if (auth.user?.role?.name !== 'admin' && auth.user?.role?.name !== 'auxiliar') {
+    if (auth.use('web').user?.role?.name !== 'admin' && auth.use('web').user?.role?.name !== 'auxiliar') {
         return response.forbidden({ message: 'No tienes permiso para cambiar el estado de este evento' })
     }
 
@@ -313,7 +313,7 @@ export default class EventsController {
   async destroy({ params, response, auth }: HttpContext) {
     const event = await Event.findOrFail(params.id)
 
-    if (auth.user?.role?.name !== 'admin' && event.userId !== auth.user?.id) {
+    if (auth.use('web').user?.role?.name !== 'admin' && event.userId !== auth.use('web').user?.id) {
         return response.forbidden({ message: 'No tienes permiso para cancelar este evento' })
     }
 

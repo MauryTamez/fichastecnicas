@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Bot, User, Loader2, Sparkles } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import api from '../api/axios';
 
 const ChatBot = () => {
@@ -92,7 +93,28 @@ const ChatBot = () => {
                                             ? 'bg-emerald-600 text-white rounded-tr-none shadow-md shadow-emerald-100'
                                             : 'bg-white text-gray-700 border border-gray-100 rounded-tl-none shadow-sm'
                                         }`}>
-                                        {msg.content}
+                                        {msg.role === 'user' ? (
+                                            msg.content
+                                        ) : (
+                                            <div className="text-gray-700">
+                                                <ReactMarkdown
+                                                    components={{
+                                                        p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props} />,
+                                                        ul: ({ node, ...props }) => <ul className="list-disc pl-4 mb-2" {...props} />,
+                                                        ol: ({ node, ...props }) => <ol className="list-decimal pl-4 mb-2" {...props} />,
+                                                        li: ({ node, ...props }) => <li className="mb-1" {...props} />,
+                                                        strong: ({ node, ...props }) => <strong className="font-bold text-gray-900" {...props} />,
+                                                        h1: ({ node, ...props }) => <h1 className="font-bold text-lg mb-2 text-emerald-800" {...props} />,
+                                                        h2: ({ node, ...props }) => <h2 className="font-bold text-base mb-2 text-emerald-700" {...props} />,
+                                                        h3: ({ node, ...props }) => <h3 className="font-bold text-sm mb-1 text-emerald-600" {...props} />,
+                                                        code: ({ node, inline, ...props }) => inline ? <code className="bg-gray-100 px-1 py-0.5 rounded text-xs font-mono" {...props} /> : <pre className="bg-gray-800 text-gray-100 p-3 rounded-xl text-xs overflow-x-auto mb-2 font-mono"><code {...props} /></pre>,
+                                                        a: ({ node, ...props }) => <a className="text-emerald-600 hover:underline" {...props} />
+                                                    }}
+                                                >
+                                                    {msg.content}
+                                                </ReactMarkdown>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>

@@ -6,9 +6,10 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
     ArrowLeft, Calendar, Clock, User, Users, Mic, Lightbulb,
-    Coffee, FileText, CheckCircle, XCircle, ExternalLink, Tag, Check, MapPin
+    Coffee, FileText, CheckCircle, XCircle, ExternalLink, Tag, Check, MapPin, Edit
 } from 'lucide-react';
 import { getVenues } from '../api/venues';
+import Swal from 'sweetalert2';
 
 const StatusBadge = ({ estado }) => {
     const styles = {
@@ -86,7 +87,7 @@ const EventDetail = () => {
                     getVenues()
                 ]);
 
-                const found = eventRes.data.find(e => String(e.id) === String(id));
+                const found = eventRes.data.data.find(e => String(e.id) === String(id));
                 if (!found) setError('Evento no encontrado.');
                 else {
                     setEvent(found);
@@ -107,8 +108,8 @@ const EventDetail = () => {
         try {
             await api.patch(`/events/${id}/status`, { estado: newStatus });
             setEvent(prev => ({ ...prev, estado: newStatus }));
-        } catch {
-            alert('Error al actualizar el estado del evento.');
+        } catch (error) {
+            Swal.fire('Error', 'Error al actualizar el estado del evento.', 'error');
         } finally {
             setActionLoading(false);
         }
@@ -149,24 +150,35 @@ const EventDetail = () => {
                         <h1 className="text-3xl font-display font-bold text-gray-900 mb-2 leading-tight">{event.titulo}</h1>
                         <StatusBadge estado={event.estado} />
                     </div>
-                    {user?.nivel_permiso === 1 && event.estado === 'pendiente' && (
-                        <div className="flex gap-3">
+                    <div className="flex gap-3">
+                        {user?.nivel_permiso === 1 && event.estado === 'pendiente' && (
+                            <>
+                                <button
+                                    onClick={() => handleStatus('aceptado')}
+                                    disabled={actionLoading}
+                                    className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-2xl font-bold text-sm shadow-lg shadow-emerald-100 transition-all disabled:opacity-60"
+                                >
+                                    <CheckCircle size={16} /> Aceptar
+                                </button>
+                                <button
+                                    onClick={() => handleStatus('rechazado')}
+                                    disabled={actionLoading}
+                                    className="flex items-center gap-2 bg-white border border-red-100 text-red-600 hover:bg-red-50 px-5 py-2.5 rounded-2xl font-bold text-sm transition-all disabled:opacity-60"
+                                >
+                                    <XCircle size={16} /> Rechazar
+                                </button>
+                            </>
+                        )}
+                        {(event.estado === 'rechazado' || event.estado === 'pendiente') && (String(event.user_id) === String(user?.id) || user?.nivel_permiso === 1) && (
                             <button
-                                onClick={() => handleStatus('aceptado')}
+                                onClick={() => navigate(`/editar-evento/${event.id}`)}
                                 disabled={actionLoading}
-                                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-2xl font-bold text-sm shadow-lg shadow-emerald-100 transition-all disabled:opacity-60"
+                                className="flex items-center gap-2 bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 px-5 py-2.5 rounded-2xl font-bold text-sm transition-all disabled:opacity-60"
                             >
-                                <CheckCircle size={16} /> Aceptar
+                                <Edit size={16} /> Editar
                             </button>
-                            <button
-                                onClick={() => handleStatus('rechazado')}
-                                disabled={actionLoading}
-                                className="flex items-center gap-2 bg-white border border-red-100 text-red-600 hover:bg-red-50 px-5 py-2.5 rounded-2xl font-bold text-sm transition-all disabled:opacity-60"
-                            >
-                                <XCircle size={16} /> Rechazar
-                            </button>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
 
