@@ -32,11 +32,14 @@ export default class EventsController {
     })
   }
 
-  async index({ request, response }: HttpContext) {
+  async index({ request, response, auth }: HttpContext) {
     const page = request.input('page', 1)
     const limit = 20
 
-    const events = await Event.query()
+    const user = auth.use('web').user
+    const isNotAdmin = user?.role?.name !== 'admin'
+
+    const eventsQuery = Event.query()
       .preload('eventVersions', (query) => {
         query.where('isCurrentVersion', true)
           .preload('versionContent')
@@ -45,7 +48,12 @@ export default class EventsController {
       .preload('organization')
       .preload('user')
       .orderBy('createdAt', 'desc')
-      .paginate(page, limit)
+
+    if (isNotAdmin && user) {
+      eventsQuery.where('userId', user.id)
+    }
+
+    const events = await eventsQuery.paginate(page, limit)
 
     const mapped = events.toJSON().data.map((e: any) => {
       const currentVersion = e.eventVersions[0];

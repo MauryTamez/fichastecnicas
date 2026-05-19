@@ -349,15 +349,7 @@ const Dashboard = () => {
         );
     };
 
-    if (user?.nivel_permiso === 2) {
-        return (
-            <div className="flex flex-col items-center justify-center h-[60vh]">
-                <ShieldAlert className="w-16 h-16 text-slate-400 mb-4" />
-                <h2 className="text-xl font-bold text-slate-700">Acceso Denegado</h2>
-                <p className="text-slate-500 font-medium mt-2">Los editores no tienen acceso al Dashboard principal.</p>
-            </div>
-        );
-    }
+
 
     if (loading) return (
         <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
