@@ -124,4 +124,75 @@ ${contextText}
     const data = await response.json() as any
     return data.choices[0].message.content
   }
+
+  /**
+   * Auto-rellenado de Ficha Técnica usando RAG
+   */
+  async autoFillRAG(userPrompt: string): Promise<any> {
+    const relevantDocs = await this.findRelevantContext(userPrompt, 5)
+    const contextText = relevantDocs.map((doc: any) => doc.content_chunk).join('\n\n---\n\n')
+
+    const systemPrompt = `Eres un asistente experto en redactar Fichas Técnicas para eventos del Centro de Apoyo Multidisciplinario (CAM).
+Tu objetivo es ayudar al usuario a rellenar un formulario de evento basándote en la información que proporcione.
+También puedes usar como referencia las descripciones y formatos de eventos pasados proporcionados en el contexto, pero adáptalos al nuevo evento.
+
+<contexto>
+${contextText}
+</contexto>
+
+IMPORTANTE: DEBES RESPONDER ÚNICA Y EXCLUSIVAMENTE CON UN OBJETO JSON VÁLIDO. No agregues texto adicional, saludos ni explicaciones.
+El objeto JSON debe tener la siguiente estructura exacta (puedes dejar los campos vacíos si no hay suficiente información, pero intenta inferirlos):
+{
+  "name": "Nombre del evento",
+  "objective": "Objetivo principal",
+  "description": "Descripción general",
+  "dressCode": "Código de vestimenta sugerido",
+  "programImpacted": "Programa impactado o beneficiado",
+  "guestSpecifications": "Especificaciones de invitados o perfil",
+  "presidiumDetail": "Detalles del presidium si los hay",
+  "directorAction": "Acciones o rol del director",
+  "activities": [
+    {
+      "name": "Nombre de la actividad",
+      "startsAt": "HH:MM",
+      "endsAt": "HH:MM",
+      "description": "Descripción de la actividad"
+    }
+  ]
+}
+
+Ten en cuenta que "startsAt" y "endsAt" en las actividades deben ser en formato 24 horas (ej: "14:00"). Genera tiempos lógicos y secuenciales si no se especifican claramente.`
+
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.openRouterKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'http://localhost:3333',
+        'X-Title': 'Fichas Tecnicas CAM',
+      },
+      body: JSON.stringify({
+        model: 'openai/gpt-4o-mini',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        response_format: { type: 'json_object' }
+      })
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`Error en OpenRouter AutoFill: ${response.statusText} - ${errorText}`)
+    }
+
+    const data = await response.json() as any
+    const content = data.choices[0].message.content
+    try {
+      return JSON.parse(content)
+    } catch (e) {
+      console.error("Failed to parse JSON from AI", content)
+      return {}
+    }
+  }
 }

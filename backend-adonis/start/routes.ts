@@ -64,6 +64,7 @@ const LoginControllerIntegration = () => import('#controllers/auth/login_control
 router.group(() => {
     router.post('/chat', [RagController, 'chat']).as('rag.chat')
     router.post('/vectorize', [RagController, 'vectorizeVersion']).as('rag.vectorize')
+    router.post('/autofill', [RagController, 'autoFill']).as('rag.autofill')
 })
 .prefix('/api/ai')
 .use([middleware.jwtAuth()]) // Todos los roles autenticados pueden usar el chatbot

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../api/axios';
 import { getVenues } from '../api/venues';
-import { Calendar, Clock, FileText, ArrowLeft, ArrowRight, Save, CheckCircle2, ChevronRight, Info, MapPin, Briefcase, Plus, X } from 'lucide-react';
+import { Calendar, Clock, FileText, ArrowLeft, ArrowRight, Save, CheckCircle2, ChevronRight, Info, MapPin, Briefcase, Plus, X, Sparkles, AlertTriangle } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 const EventForm = () => {
@@ -39,6 +39,39 @@ const EventForm = () => {
         endsAt: '',
         description: ''
     });
+
+    const [showAIModal, setShowAIModal] = useState(false);
+    const [aiPrompt, setAIPrompt] = useState('');
+    const [isAILoading, setIsAILoading] = useState(false);
+    const [aiWarning, setAiWarning] = useState(false);
+
+    const handleAutoFill = async () => {
+        if (!aiPrompt.trim()) return;
+        setIsAILoading(true);
+        try {
+            const res = await api.post('/ai/autofill', { prompt: aiPrompt });
+            const data = res.data;
+            setFormData(prev => ({
+                ...prev,
+                name: data.name || prev.name,
+                objective: data.objective || prev.objective,
+                description: data.description || prev.description,
+                dressCode: data.dressCode || prev.dressCode,
+                programImpacted: data.programImpacted || prev.programImpacted,
+                guestSpecifications: data.guestSpecifications || prev.guestSpecifications,
+                presidiumDetail: data.presidiumDetail || prev.presidiumDetail,
+                directorAction: data.directorAction || prev.directorAction,
+                activities: data.activities?.length ? data.activities : prev.activities
+            }));
+            setAiWarning(true);
+            setShowAIModal(false);
+            setAIPrompt('');
+        } catch (error) {
+            Swal.fire('Error', 'Hubo un error al autorellenar la ficha. Intenta de nuevo.', 'error');
+        } finally {
+            setIsAILoading(false);
+        }
+    };
 
     useEffect(() => {
         const fetchInitialData = async () => {
@@ -176,13 +209,37 @@ const EventForm = () => {
                         </div>
                     )}
 
+                    {aiWarning && (
+                        <div className="bg-amber-50 border border-amber-200 text-amber-800 px-5 py-4 rounded-2xl text-sm flex items-start gap-3 animate-fade-in shadow-sm">
+                            <AlertTriangle className="flex-shrink-0 w-5 h-5 text-amber-500 mt-0.5" />
+                            <div>
+                                <p className="font-bold mb-1">Verifica la información</p>
+                                <p>Estos datos fueron generados por Inteligencia Artificial y pueden contener inconsistencias. Por favor, revisa cuidadosamente todos los campos antes de guardar.</p>
+                            </div>
+                            <button type="button" onClick={() => setAiWarning(false)} className="ml-auto p-1 text-amber-400 hover:text-amber-600 transition-colors">
+                                <X size={16} />
+                            </button>
+                        </div>
+                    )}
+
                     {step === 1 && (
                         <div className="bg-white p-8 rounded-[2rem] shadow-premium border border-gray-100 animate-slide-up">
-                            <div className="flex items-center gap-3 mb-8">
-                                <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center">
-                                    <FileText size={24} />
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center">
+                                        <FileText size={24} />
+                                    </div>
+                                    <h2 className="text-2xl font-display font-bold text-gray-900">Información Básica</h2>
                                 </div>
-                                <h2 className="text-2xl font-display font-bold text-gray-900">Información Básica</h2>
+                                {!isEditMode && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowAIModal(true)}
+                                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5"
+                                    >
+                                        <Sparkles size={16} /> Autorellenar con IA
+                                    </button>
+                                )}
                             </div>
 
                             <div className="space-y-6">
@@ -581,6 +638,60 @@ const EventForm = () => {
                     </div>
                 </div>
             </div>
+
+            {/* AI AutoFill Modal */}
+            {showAIModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-fade-in">
+                    <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col">
+                        <div className="p-6 bg-gradient-to-r from-emerald-600 to-teal-600 text-white flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <Sparkles size={24} className="text-emerald-200" />
+                                <h2 className="text-xl font-display font-bold">Asistente de Autorellenado IA</h2>
+                            </div>
+                            <button onClick={() => setShowAIModal(false)} className="text-emerald-100 hover:text-white transition-colors">
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <div className="p-8 space-y-4 bg-gray-50 flex-1">
+                            <p className="text-sm font-medium text-gray-600 leading-relaxed">
+                                Describe el evento que deseas crear. Incluye todos los detalles que sepas: el nombre, objetivo, horarios aproximados, código de vestimenta, quiénes asistirán o qué actividades habrá. 
+                                La Inteligencia Artificial analizará tu solicitud y utilizará fichas técnicas pasadas para intentar rellenar todos los campos del formulario por ti.
+                            </p>
+                            <textarea
+                                className="w-full h-40 p-4 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none resize-none font-medium text-gray-700 shadow-inner"
+                                placeholder="Ej: Necesito una ficha para el Foro Anual de Innovación. Será de 10am a 2pm. Habrá una bienvenida por el director, luego una ponencia..."
+                                value={aiPrompt}
+                                onChange={(e) => setAIPrompt(e.target.value)}
+                            ></textarea>
+                        </div>
+                        <div className="p-6 bg-white border-t border-gray-100 flex justify-end gap-3">
+                            <button
+                                onClick={() => setShowAIModal(false)}
+                                className="px-6 py-2.5 rounded-xl font-bold text-gray-500 hover:bg-gray-50 border border-transparent transition-all"
+                                disabled={isAILoading}
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleAutoFill}
+                                disabled={!aiPrompt.trim() || isAILoading}
+                                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 disabled:cursor-not-allowed text-white px-8 py-2.5 rounded-xl font-bold shadow-lg shadow-emerald-100 transition-all"
+                            >
+                                {isAILoading ? (
+                                    <>
+                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                        Procesando...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Sparkles size={18} /> Autorellenar
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

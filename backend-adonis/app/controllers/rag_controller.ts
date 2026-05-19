@@ -44,4 +44,24 @@ export default class RagController {
       return response.internalServerError({ error: 'Ocurrió un error al vectorizar el contenido' })
     }
   }
+
+  /**
+   * Endpoint para autorellenar la ficha técnica
+   */
+  async autoFill({ request, response }: HttpContext) {
+    const prompt = request.input('prompt')
+    
+    if (!prompt) {
+      return response.badRequest({ error: 'El prompt es requerido' })
+    }
+
+    try {
+      const ragService = new RagService()
+      const data = await ragService.autoFillRAG(prompt)
+      return response.ok(data)
+    } catch (error) {
+      console.error('Error en RAG AutoFill:', error)
+      return response.internalServerError({ error: 'Ocurrió un error al generar los datos' })
+    }
+  }
 }
