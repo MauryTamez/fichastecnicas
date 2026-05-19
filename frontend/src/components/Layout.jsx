@@ -1,5 +1,6 @@
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, Calendar, PlusCircle, User as UserIcon, Bell, Search, LayoutDashboard, Tag, MapPin } from 'lucide-react';
+import { LogOut, Calendar, PlusCircle, User as UserIcon, Search, LayoutDashboard, Tag, MapPin, ChevronDown, Shield, Mail, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import ChatBot from './ChatBot';
 
@@ -7,6 +8,18 @@ const Layout = ({ children }) => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const dropdownRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const handleLogout = () => {
         logout();
@@ -85,15 +98,11 @@ const Layout = ({ children }) => {
                         />
                     </div>
 
-                    <div className="flex items-center gap-6">
-                        <button className="relative p-2.5 bg-white border border-gray-100 rounded-2xl text-gray-400 hover:text-emerald-600 transition-all shadow-sm">
-                            <Bell size={20} />
-                            <span className="absolute top-2 right-2 w-2 h-2 bg-emerald-500 rounded-full border-2 border-white"></span>
-                        </button>
-
-                        <div className="h-8 w-px bg-gray-100"></div>
-
-                        <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-6 relative" ref={dropdownRef}>
+                        <div 
+                            className="flex items-center gap-4 cursor-pointer group p-1.5 rounded-2xl hover:bg-gray-50 transition-all"
+                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                        >
                             <div className="text-right hidden sm:block">
                                 <p className="text-sm font-bold text-gray-900 leading-none mb-1">{user?.nombre}</p>
                                 <div className="flex items-center justify-end gap-1.5">
@@ -105,20 +114,52 @@ const Layout = ({ children }) => {
                             </div>
 
                             <div className="flex items-center gap-2">
-                                <div className="w-12 h-12 rounded-2xl bg-white border border-gray-100 shadow-sm flex items-center justify-center text-emerald-600 group hover:border-emerald-200 transition-all cursor-pointer overflow-hidden p-0.5">
+                                <div className="w-12 h-12 rounded-2xl bg-white border border-gray-100 shadow-sm flex items-center justify-center text-emerald-600 group-hover:border-emerald-200 transition-all overflow-hidden p-0.5">
                                     <div className="w-full h-full bg-emerald-50 rounded-xl flex items-center justify-center font-display font-bold text-lg">
                                         {user?.nombre?.charAt(0)}
                                     </div>
                                 </div>
-                                <button
-                                    onClick={handleLogout}
-                                    className="p-2.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all"
-                                    title="Cerrar Sesión"
-                                >
-                                    <LogOut size={20} />
-                                </button>
+                                <ChevronDown size={16} className={`text-gray-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
                             </div>
                         </div>
+
+                        {/* Dropdown Menu */}
+                        {isDropdownOpen && (
+                            <div className="absolute top-full right-0 mt-3 w-72 bg-white rounded-3xl shadow-premium border border-gray-100 overflow-hidden animate-fade-in origin-top-right z-50">
+                                <div className="p-5 border-b border-gray-100 bg-gradient-to-br from-emerald-50 to-white">
+                                    <div className="flex items-center gap-3 mb-3">
+                                        <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-display font-bold text-lg shadow-md">
+                                            {user?.nombre?.charAt(0)}
+                                        </div>
+                                        <div className="overflow-hidden">
+                                            <p className="font-bold text-gray-900 truncate leading-tight">{user?.nombre}</p>
+                                            <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider truncate">
+                                                {user?.nivel_permiso === 1 ? 'Administrador' : user?.nivel_permiso === 2 ? 'Editor (Auxiliar)' : 'Solicitante (Staff)'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-xs font-medium text-gray-500 mt-2 bg-white p-2 rounded-lg border border-gray-100">
+                                        <Mail size={14} className="text-gray-400" />
+                                        <span className="truncate">{user?.email || 'Sin correo electrónico'}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-xs font-medium text-gray-500 mt-2 bg-white p-2 rounded-lg border border-gray-100">
+                                        {user?.nivel_permiso === 1 ? <ShieldCheck size={14} className="text-emerald-500" /> : user?.nivel_permiso === 2 ? <Shield size={14} className="text-gray-400" /> : <ShieldAlert size={14} className="text-slate-400" />}
+                                        <span className="truncate">Nivel de Acceso: {user?.nivel_permiso} ({user?.role})</span>
+                                    </div>
+                                </div>
+                                <div className="p-2">
+                                    <button
+                                        onClick={handleLogout}
+                                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-600 hover:bg-red-50 rounded-2xl transition-all group"
+                                    >
+                                        <div className="w-8 h-8 rounded-xl bg-red-100 text-red-600 flex items-center justify-center group-hover:bg-red-200 transition-colors">
+                                            <LogOut size={16} />
+                                        </div>
+                                        Cerrar Sesión Segura
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </header>
 
