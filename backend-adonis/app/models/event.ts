@@ -27,7 +27,7 @@ export default class Event extends BaseModel {
   @column()
   declare userId: number
 
-  @column()
+  @column({ columnName: 'main_responsible' })
   declare mainResponsibleId: number
 
   @column()
