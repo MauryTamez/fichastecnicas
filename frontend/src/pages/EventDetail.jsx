@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
     ArrowLeft, Calendar, Clock, User, Users, Mic, Lightbulb,
-    Coffee, FileText, CheckCircle, XCircle, ExternalLink, Tag, Check, MapPin, Edit
+    Coffee, FileText, CheckCircle, XCircle, ExternalLink, Tag, Check, MapPin, Edit, Download
 } from 'lucide-react';
 import { getVenues } from '../api/venues';
 import Swal from 'sweetalert2';
@@ -115,6 +115,26 @@ const EventDetail = () => {
         }
     };
 
+    const handleDownloadPdf = async () => {
+        setActionLoading(true);
+        try {
+            const response = await api.get(`/events/${id}/pdf`, {
+                responseType: 'blob'
+            });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `ficha_tecnica_${id}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode.removeChild(link);
+        } catch (error) {
+            Swal.fire('Error', 'Error al generar el PDF.', 'error');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
     if (loading) return (
         <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
             <div className="w-12 h-12 border-4 border-emerald-100 border-t-emerald-600 rounded-full animate-spin"></div>
@@ -178,6 +198,13 @@ const EventDetail = () => {
                                 <Edit size={16} /> Editar
                             </button>
                         )}
+                        <button
+                            onClick={handleDownloadPdf}
+                            disabled={actionLoading}
+                            className="flex items-center gap-2 bg-gray-900 text-white hover:bg-gray-800 px-5 py-2.5 rounded-2xl font-bold text-sm shadow-lg transition-all disabled:opacity-60"
+                        >
+                            <Download size={16} /> Descargar PDF
+                        </button>
                     </div>
                 </div>
             </div>

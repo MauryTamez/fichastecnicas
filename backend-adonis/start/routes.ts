@@ -86,6 +86,10 @@ router.group(() => {
         router.patch('/events/:id/status', [EventsController, 'updateStatus'])
         router.delete('/events/:id', [EventsController, 'destroy'])
 
+        // PDF Generation
+        const EventsPdfController = () => import('#controllers/events_pdf_controller')
+        router.get('/events/:id/pdf', [EventsPdfController, 'generatePdf'])
+
         // Venues / Locations
         router.get('/venues', [VenuesController, 'index'])
         router.post('/venues', [VenuesController, 'store'])
