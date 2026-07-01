@@ -166,15 +166,17 @@ const Dashboard = () => {
         }
 
         return (
-            <div className="bg-white rounded-[2rem] shadow-premium overflow-hidden border border-gray-100 animate-slide-up">
-                <div className="grid grid-cols-7 bg-white border-b border-gray-100">
-                    {weekdayHeaders.map(day => (
-                        <div key={day} className="py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
-                            {day}
-                        </div>
-                    ))}
+            <div className="bg-white rounded-[2rem] shadow-premium overflow-hidden border border-gray-100 animate-slide-up overflow-x-auto">
+                <div className="min-w-[700px]">
+                    <div className="grid grid-cols-7 bg-white border-b border-gray-100">
+                        {weekdayHeaders.map(day => (
+                            <div key={day} className="py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
+                                {day}
+                            </div>
+                        ))}
+                    </div>
+                    <div>{rows}</div>
                 </div>
-                <div>{rows}</div>
             </div>
         );
     };
@@ -236,7 +238,7 @@ const Dashboard = () => {
             </div>
 
             {user?.nivel_permiso === 1 && event.estado === 'pendiente' && (
-                <div className="grid grid-cols-2 gap-3 mt-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
                     <button
                         onClick={() => handleStatusChange(event.id, 'aceptado')}
                         className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-bold transition-all shadow-md shadow-emerald-100 border border-emerald-500"
@@ -311,7 +313,7 @@ const Dashboard = () => {
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-800 rounded-full blur-2xl opacity-40 -mr-16 -mt-16"></div>
                                 <div className="relative z-10">
                                     <h4 className="text-emerald-200 text-xs font-black uppercase tracking-widest mb-4">Métricas del Sistema</h4>
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
                                             <p className="text-2xl font-display font-bold">{events.filter(e => e.estado === 'pendiente').length}</p>
                                             <p className="text-emerald-300/80 text-[10px] font-bold uppercase">Pendientes</p>

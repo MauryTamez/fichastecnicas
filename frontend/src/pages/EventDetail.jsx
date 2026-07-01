@@ -128,7 +128,7 @@ const EventDetail = () => {
             document.body.appendChild(link);
             link.click();
             link.parentNode.removeChild(link);
-        } catch (error) {
+        } catch (err) {
             Swal.fire('Error', 'Error al generar el PDF.', 'error');
         } finally {
             setActionLoading(false);

@@ -1,7 +1,6 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import Event from '#models/event'
 import puppeteer from 'puppeteer'
-import { DateTime } from 'luxon'
 
 export default class EventsPdfController {
   async generatePdf({ params, response }: HttpContext) {
@@ -41,6 +40,24 @@ export default class EventsPdfController {
     const responsibleName = event.user?.name || ''
     const description = content?.description || ''
     const objectives = content?.objective || ''
+
+    const activitiesRows = activities.map((act: any) => `
+            <tr>
+                <td style="text-align: center;">${act.startsAt ? act.startsAt.toFormat('HH:mm') : ''}</td>
+                <td>${act.name || ''}</td>
+                <td>${act.description || ''}</td>
+                <td></td>
+            </tr>
+            `).join('')
+
+    const emptyRows = Array.from({length: Math.max(0, 8 - activities.length)}).map(() => `
+            <tr>
+                <td style="height: 25px;"></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            `).join('')
 
     const htmlContent = `
 <!DOCTYPE html>
@@ -227,22 +244,8 @@ export default class EventsPdfController {
             </tr>
         </thead>
         <tbody>
-            ${activities.map((act: any) => \`
-            <tr>
-                <td style="text-align: center;">\${act.startsAt ? act.startsAt.toFormat('HH:mm') : ''}</td>
-                <td>\${act.name || ''}</td>
-                <td>\${act.description || ''}</td>
-                <td></td>
-            </tr>
-            \`).join('')}
-            ${Array.from({length: Math.max(0, 8 - activities.length)}).map(() => \`
-            <tr>
-                <td style="height: 25px;"></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            \`).join('')}
+            ${activitiesRows}
+            ${emptyRows}
             <tr>
                 <td colspan="4" style="text-align: center;">Fin del evento</td>
             </tr>
@@ -276,7 +279,7 @@ export default class EventsPdfController {
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
     })
     const page = await browser.newPage()
-    await page.setContent(htmlContent, { waitUntil: 'networkidle0' })
+    await page.setContent(htmlContent, { waitUntil: 'load' })
     const pdfBuffer = await page.pdf({
       format: 'Letter',
       printBackground: true,
@@ -290,7 +293,7 @@ export default class EventsPdfController {
     await browser.close()
 
     response.header('Content-Type', 'application/pdf')
-    response.header('Content-Disposition', \`attachment; filename="ficha_\${eventId}.pdf"\`)
+    response.header('Content-Disposition', `attachment; filename="ficha_${eventId}.pdf"`)
     
     // Convert Uint8Array back to Buffer for Adonis to send it correctly if needed
     return response.send(Buffer.from(pdfBuffer))
