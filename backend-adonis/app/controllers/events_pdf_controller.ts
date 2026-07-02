@@ -1,6 +1,11 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import { inject } from '@adonisjs/core'
 import Event from '#models/event'
 import puppeteer from 'puppeteer'
+import fs from 'node:fs'
+import path from 'node:path'
+
+@inject()
 
 export default class EventsPdfController {
   async generatePdf({ params, response }: HttpContext) {
@@ -28,14 +33,14 @@ export default class EventsPdfController {
     const timeFormatted = content?.startsAt ? content.startsAt.toFormat('HH:mm') : ''
     const dayOfWeek = content?.startsAt ? content.startsAt.setLocale('es').toFormat('EEEE') : ''
     const locationName = event.location?.name || ''
-    const aforo = content?.guestSpecifications || ''
+    const aforo = content?.guestSpecifications || 'N/A'
     const programImpacted = content?.programImpacted || ''
     const dressCode = content?.dressCode || ''
-    const specialGuests = '' // Not mapped explicitly, maybe in description or we leave it empty box
-    const guestCharacteristics = '' // Not mapped explicitly
-    const directorAction = content?.directorAction || ''
-    const receptionCommittee = '' // Not mapped explicitly
-    const mc = '' // Not mapped explicitly
+    const specialGuests = ''
+    const guestCharacteristics = ''
+    const directorAction = content?.directorAction || 'N/A'
+    const receptionCommittee = ''
+    const mc = ''
     const presidium = content?.presidiumDetail || ''
     const responsibleName = event.user?.name || ''
     const description = content?.description || ''
@@ -58,7 +63,12 @@ export default class EventsPdfController {
                 <td></td>
             </tr>
             `).join('')
-
+    // Convierte las imágenes a Base64 en memoria
+    const uanlPath = path.join(process.cwd(), 'public', 'uanl-logo.png')
+    const fimePath = path.join(process.cwd(), 'public', 'fime-logo.png')
+    // (Asegúrate de que la ruta coincida con donde guardaste las fotos)
+    const uanlBase64 = fs.existsSync(uanlPath) ? fs.readFileSync(uanlPath, 'base64') : ''
+    const fimeBase64 = fs.existsSync(fimePath) ? fs.readFileSync(fimePath, 'base64') : ''
     const htmlContent = `
 <!DOCTYPE html>
 <html lang="es">
@@ -72,7 +82,7 @@ export default class EventsPdfController {
         }
         body {
             font-family: Arial, sans-serif;
-            font-size: 11px;
+            font-size: 16px;
             color: #000;
             margin: 0;
             padding: 0;
@@ -93,7 +103,7 @@ export default class EventsPdfController {
             color: #777;
         }
         .header-text h1 {
-            font-size: 14px;
+            font-size: 16px;
             margin: 0;
             text-transform: uppercase;
         }
@@ -157,23 +167,17 @@ export default class EventsPdfController {
         .page-break {
             page-break-before: always;
         }
-        .dotted-underline {
-            text-decoration: underline;
-            text-decoration-style: dashed;
-            color: #0000EE; /* Similar to screenshot */
-        }
     </style>
 </head>
 <body>
     <div class="doc-code">IT-8-DGE-02-R02</div>
     <div class="header">
-        <div style="width: 80px; height: 80px; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; color: #999; font-size: 10px;">Logo UANL</div>
-        <div class="header-text">
+        <img src="data:image/png;base64,${uanlBase64}" style="width: 160px; height: auto; object-fit: contain; border: none;" />       
+         <div class="header-text">
             <h1>FACULTAD DE INGENIERÍA MECÁNICA Y ELÉCTRICA</h1>
             <h2>LOGÍSTICA</h2>
         </div>
-        <div style="width: 80px; height: 80px; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; color: #999; font-size: 10px;">Logo FIME</div>
-    </div>
+        <img src="data:image/png;base64,${fimeBase64}" style="width: 80px; height: 80px; object-fit: contain; border: none;" />    </div>
 
     <div class="box">
         <span class="box-title">Nombre del Evento:</span> ${eventName}
@@ -216,13 +220,17 @@ export default class EventsPdfController {
         <span class="box-title">Características de los Invitados:</span> ${guestCharacteristics}
     </div>
     <div class="box">
-        <span class="box-title">Acción a realizar por el <span class="dotted-underline">Director</span>:</span> ${directorAction}
+        <span class="box-title">Acción a realizar por el Director:</span> ${directorAction}
     </div>
     <div class="box">
-        <span class="box-title">Comité de recepción al <span class="dotted-underline">Director</span>:</span> ${receptionCommittee}
+        <span class="box-title">Comité de recepción al Director:</span> ${receptionCommittee}
     </div>
     <div class="box">
         <span class="box-title">Maestros de Ceremonia:</span> ${mc}
+    </div>
+    <div style="margin-top: 220px; font-size: 13px; color: #888;">
+        <strong>REVISIÓN No. 0</strong><br>
+        VIGENTE A PARTIR DEL: 22 de febrero 2024
     </div>
 
     <!-- PAGE 2 -->
@@ -231,7 +239,7 @@ export default class EventsPdfController {
     <div class="doc-code">IT-8-DGE-02-R02</div>
 
     <div style="margin-bottom: 5px;">
-        <span class="box-title">Orden del día:</span> <span style="text-transform: capitalize; text-decoration: underline; color: #0000EE;">${dayOfWeek}</span>
+        <span class="box-title">Orden del día:</span> <span style="text-transform: capitalize;">${dayOfWeek}</span>
     </div>
 
     <table>
@@ -266,7 +274,7 @@ export default class EventsPdfController {
         <div style="margin-top: 5px;">${description}</div>
     </div>
 
-    <div style="margin-top: 20px; font-style: italic; color: #3b82f6;">
+    <div style="margin-top: 20px;">
         <span class="box-title">Objetivos:</span> ${objectives}
     </div>
 
@@ -299,3 +307,4 @@ export default class EventsPdfController {
     return response.send(Buffer.from(pdfBuffer))
   }
 }
+
