@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../api/axios';
 import { Tag, Plus, Trash2, Calendar, Building2 } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 const EventTypeAdmin = () => {
     const [eventTypes, setEventTypes] = useState([]);
@@ -43,20 +44,58 @@ const EventTypeAdmin = () => {
             });
             setNewItem(prev => ({ ...prev, name: '', description: '' }));
             fetchData(); // Refresh the list to get the preloaded organization relation
+            Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: 'Tipo de evento agregado correctamente.',
+                timer: 3000,
+                showConfirmButton: false
+            });
         } catch {
             setError('Error al agregar el tipo de evento.');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error al agregar el tipo de evento.'
+            });
         } finally {
             setAdding(false);
         }
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm('¿Estás seguro de que deseas eliminar este tipo de evento?')) return;
+        const result = await Swal.fire({
+            title: '¿Estás seguro?',
+            text: "No podrás revertir esta acción. ¿Deseas eliminar este tipo de evento?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#ef4444',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (!result.isConfirmed) return;
+
         try {
             await api.delete(`/admin/event-types/${id}`);
             setEventTypes(prev => prev.filter(c => c.id !== id));
-        } catch {
-            setError('Error al eliminar el tipo de evento.');
+            setError('');
+            Swal.fire({
+                icon: 'success',
+                title: 'Eliminado',
+                text: 'El tipo de evento ha sido eliminado.',
+                timer: 3000,
+                showConfirmButton: false
+            });
+        } catch (err) {
+            const errMsg = err.response?.data?.message || 'Error al eliminar el tipo de evento.';
+            setError(errMsg);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: errMsg
+            });
         }
     };
 
@@ -169,7 +208,7 @@ const EventTypeAdmin = () => {
                                 </div>
                                 <button
                                     onClick={() => handleDelete(type.id)}
-                                    className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 self-end sm:self-center p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                                    className="opacity-100 self-end sm:self-center p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
                                     title="Eliminar tipo"
                                 >
                                     <Trash2 size={18} />
