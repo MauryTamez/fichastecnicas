@@ -111,15 +111,14 @@ router.group(() => {
         router.delete('/catalog/:id', [CatalogsController, 'destroy'])
 
         // Event Types
-        const LazyEventTypesController = () => import('#controllers/event_types_controller')
-        router.get('/event-types', [LazyEventTypesController, 'index']) // Used by EventForm
-        
+        router.get('/event-types', [EventTypesController, 'index']) // Used by EventForm
+
         router.group(() => {
-            router.get('/event-types', [LazyEventTypesController, 'index'])
-            router.post('/event-types', [LazyEventTypesController, 'store'])
-            router.get('/event-types/:id', [LazyEventTypesController, 'show'])
-            router.put('/event-types/:id', [LazyEventTypesController, 'update'])
-            router.delete('/event-types/:id', [LazyEventTypesController, 'destroy'])
+            router.get('/event-types', [EventTypesController, 'index'])
+            router.post('/event-types', [EventTypesController, 'store'])
+            router.get('/event-types/:id', [EventTypesController, 'show'])
+            router.put('/event-types/:id', [EventTypesController, 'update'])
+            router.delete('/event-types/:id', [EventTypesController, 'destroy'])
         }).prefix('/admin') // Consumed by EventTypeAdmin via /api/admin/event-types
 
     }).use([middleware.jwtAuth()])
