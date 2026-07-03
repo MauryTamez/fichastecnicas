@@ -136,5 +136,37 @@ export default class extends BaseSeeder {
         await eventVersion.related('versionActivities').sync([pivot.activity_id], false)
       }
     }
+
+    // Vectorize all historical/seeded events
+    console.log('Generando embeddings para los eventos sembrados...')
+    const { RagService } = await import('#services/rag_service')
+    const ragService = new RagService()
+
+    const eventVersions = await EventVersion.query().where('isCurrentVersion', true)
+    for (const ev of eventVersions) {
+      const content = await VersionContent.find(ev.versionContentId)
+      if (!content) continue
+
+      const activities = await ev.related('versionActivities').query()
+      const activitiesText = activities
+        .map((a: any) => `- ${a.name}: ${a.startsAt ? a.startsAt.toFormat('HH:mm') : ''}`)
+        .join('\n')
+
+      const fullContent = `
+Ficha Técnica: ${content.name}
+Objetivo: ${content.objective}
+Descripción: ${content.description}
+Dress Code: ${content.dressCode || 'No especificado'}
+Agenda:
+${activitiesText}
+`.trim()
+
+      try {
+        console.log(`Vectorizando: "${content.name}"...`)
+        await ragService.vectorizeFichaTecnica(ev.eventId, content.id, fullContent)
+      } catch (err: any) {
+        console.error(`Error al vectorizar evento ${ev.eventId}: ${err.message}`)
+      }
+    }
   }
 }
