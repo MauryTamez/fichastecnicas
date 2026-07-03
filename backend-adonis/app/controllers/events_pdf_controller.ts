@@ -46,23 +46,87 @@ export default class EventsPdfController {
     const description = content?.description || ''
     const objectives = content?.objective || ''
 
-    const activitiesRows = activities.map((act: any) => `
-            <tr>
-                <td style="text-align: center;">${act.startsAt ? act.startsAt.toFormat('HH:mm') : ''}</td>
-                <td>${act.name || ''}</td>
-                <td>${act.description || ''}</td>
-                <td></td>
-            </tr>
-            `).join('')
+    // 1. Calcular los días del evento (Si no hay endsAt, forzamos 4 días para la prueba)
+    const startDate = content?.startsAt
+    const endDate = content?.endsAt || (startDate ? startDate.plus({ days: 3 }) : null)
 
-    const emptyRows = Array.from({length: Math.max(0, 8 - activities.length)}).map(() => `
+    let totalDays = 4 // Por defecto para la prueba
+    if (startDate && endDate) {
+      const diffInDays = endDate.diff(startDate, 'days').days
+      totalDays = Math.max(1, Math.ceil(diffInDays) + 1)
+    }
+
+    // 2. Generar las filas internas de la tabla UNIFICADA
+    let singleTableRowsHtml = ''
+
+    for (let i = 0; i < totalDays; i++) {
+      const currentDayDate = startDate ? startDate.plus({ days: i }) : null
+      const dateTitle = currentDayDate ? currentDayDate.setLocale('es').toFormat('EEEE dd/MM/yyyy') : `Día ${i + 1}`
+
+      // Fila separadora del día (Celda gris alargada)
+      singleTableRowsHtml += `
+      <tr>
+          <td colspan="4" style="background-color: #f0f0f0; text-align: center; font-weight: bold; text-transform: capitalize; padding: 5px;">
+              Día ${i + 1}: ${dateTitle}
+          </td>
+      </tr>
+      `
+
+      // Actividades
+      if (i === 0) {
+        // ES EL DÍA 1: Imprimimos las actividades que SÍ vienen del frontend
+        activities.forEach((act: any) => {
+          singleTableRowsHtml += `
+          <tr>
+              <td style="text-align: center; height: 25px;">${act.startsAt ? act.startsAt.toFormat('HH:mm') : ''}</td>
+              <td>${act.name || ''}</td>
+              <td>${act.description || ''}</td>
+              <td></td>
+          </tr>
+          `
+        })
+        
+        // Rellenar filas vacías para el día 1
+        const emptyRowsCount = Math.max(0, 3 - activities.length)
+        for (let e = 0; e < emptyRowsCount; e++) {
+          singleTableRowsHtml += `<tr><td style="height: 25px;"></td><td></td><td></td><td></td></tr>`
+        }
+      } else {
+        // DÍAS SIGUIENTES: Días simulados sin actividades para demostrar el formato
+        for (let e = 0; e < 3; e++) {
+          singleTableRowsHtml += `<tr><td style="height: 25px;"></td><td></td><td></td><td></td></tr>`
+        }
+      }
+      
+      // Fin del día
+      singleTableRowsHtml += `
+      <tr>
+          <td colspan="4" style="text-align: center; font-style: italic; font-size: 11px;">
+              Fin de las actividades del ${dateTitle.split(' ')[0]}
+          </td>
+      </tr>
+      `
+    }
+
+    // 3. Empaquetar todo en una sola tabla
+    const unifiedTableHtml = `
+    <div style="margin-bottom: 5px; margin-top: 20px;">
+        <span class="box-title">Orden del día:</span>
+    </div>
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;" border="1">
+        <thead>
             <tr>
-                <td style="height: 25px;"></td>
-                <td></td>
-                <td></td>
-                <td></td>
+                <th style="width: 10%;">Hora</th>
+                <th style="width: 30%;">Actividad</th>
+                <th style="width: 40%;">Descripción</th>
+                <th style="width: 20%;">Responsable</th>
             </tr>
-            `).join('')
+        </thead>
+        <tbody>
+            ${singleTableRowsHtml}
+        </tbody>
+    </table>
+    `
     // Convierte las imágenes a Base64 en memoria
     const uanlPath = path.join(process.cwd(), 'public', 'uanl-logo.png')
     const fimePath = path.join(process.cwd(), 'public', 'fime-logo.png')
@@ -87,6 +151,8 @@ export default class EventsPdfController {
             margin: 0;
             padding: 0;
             line-height: 1.3;
+            overflow-wrap: break-word;
+            word-break: break-word;
         }
         .header {
             display: flex;
@@ -123,6 +189,8 @@ export default class EventsPdfController {
             border: 1px solid #000;
             padding: 5px;
             margin-bottom: 5px;
+            page-break-inside: avoid;
+            break-inside: avoid;
         }
         .box-title {
             font-weight: bold;
@@ -148,11 +216,17 @@ export default class EventsPdfController {
             padding: 5px;
             min-height: 150px;
             margin-bottom: 5px;
+            page-break-inside: avoid;
+            break-inside: avoid;
         }
         table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 10px;
+        }
+        tr {
+            page-break-inside: avoid;
+            break-inside: avoid;
         }
         th, td {
             border: 1px solid #000;
@@ -169,7 +243,8 @@ export default class EventsPdfController {
         }
     </style>
 </head>
-<body>
+<div style="position: relative; min-height: 900px;">
+    <body>
     <div class="doc-code">IT-8-DGE-02-R02</div>
     <div class="header">
         <img src="data:image/png;base64,${uanlBase64}" style="width: 160px; height: auto; object-fit: contain; border: none;" />       
@@ -228,37 +303,19 @@ export default class EventsPdfController {
     <div class="box">
         <span class="box-title">Maestros de Ceremonia:</span> ${mc}
     </div>
-    <div style="margin-top: 220px; font-size: 13px; color: #888;">
+    <div style="position: absolute; bottom: 0; left: 0; font-size: 13px; color: #888;">
         <strong>REVISIÓN No. 0</strong><br>
         VIGENTE A PARTIR DEL: 22 de febrero 2024
     </div>
+</div>
+
 
     <!-- PAGE 2 -->
     <div class="page-break"></div>
 
     <div class="doc-code">IT-8-DGE-02-R02</div>
 
-    <div style="margin-bottom: 5px;">
-        <span class="box-title">Orden del día:</span> <span style="text-transform: capitalize;">${dayOfWeek}</span>
-    </div>
-
-    <table>
-        <thead>
-            <tr>
-                <th style="width: 10%;">Hora</th>
-                <th style="width: 30%;">Actividad</th>
-                <th style="width: 40%;">Descripción</th>
-                <th style="width: 20%;">Responsable</th>
-            </tr>
-        </thead>
-        <tbody>
-            ${activitiesRows}
-            ${emptyRows}
-            <tr>
-                <td colspan="4" style="text-align: center;">Fin del evento</td>
-            </tr>
-        </tbody>
-    </table>
+    ${unifiedTableHtml}
 
     <div class="box">
         <span class="box-title">PRESIDIUM:</span>

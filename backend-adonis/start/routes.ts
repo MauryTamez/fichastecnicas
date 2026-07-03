@@ -124,11 +124,3 @@ router.group(() => {
     }).use([middleware.jwtAuth()])
 
 }).prefix('/api') // Frontend points to /api
-// --- RUTA PÚBLICA DE PRUEBA PARA QA DEL PDF ---
-router.get('/test-pdf/:id', async (ctx) => {
-    // Importamos e instanciamos manualmente para saltarnos el @inject() y el jwtAuth
-    // http://localhost:3333/test-pdf/1
-    const Controller = await import('#controllers/events_pdf_controller')
-    const controller = new Controller.default()
-    return controller.generatePdf(ctx)
-})
