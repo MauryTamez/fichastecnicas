@@ -13,6 +13,7 @@ import Organization from '#models/organization'
 import LocationType from '#models/location_type'
 import Role from '#models/role'
 import Department from '#models/department'
+import db from '@adonisjs/lucid/services/db'
 
 export default class extends BaseSeeder {
   async run() {
@@ -166,6 +167,31 @@ ${activitiesText}
         await ragService.vectorizeFichaTecnica(ev.eventId, content.id, fullContent)
       } catch (err: any) {
         console.error(`Error al vectorizar evento ${ev.eventId}: ${err.message}`)
+      }
+    }
+
+    // Sync database sequences for tables seeded with explicit IDs
+    const tables = [
+      'organizations',
+      'departments',
+      'users',
+      'event_types',
+      'location_types',
+      'locations',
+      'events',
+      'version_contents',
+      'event_versions',
+      'version_activities'
+    ]
+
+    console.log('Sincronizando secuencias de base de datos...')
+    for (const table of tables) {
+      try {
+        await db.rawQuery(
+          `SELECT setval('${table}_id_seq', COALESCE((SELECT MAX(id) FROM ${table}), 1))`
+        )
+      } catch (err: any) {
+        console.warn(`No se pudo sincronizar la secuencia de la tabla ${table}: ${err.message}`)
       }
     }
   }
