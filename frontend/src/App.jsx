@@ -8,6 +8,7 @@ import Layout from './components/Layout';
 import CatalogAdmin from './pages/CatalogAdmin';
 import UserAdmin from './pages/UserAdmin';
 import VenueAdmin from './pages/VenueAdmin';
+import EventTypeAdmin from './pages/EventTypeAdmin';
 
 const ProtectedRoute = ({ children }) => {
   const { user } = useAuth();
@@ -67,6 +68,13 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <UserAdmin />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/tipos-evento" element={
+            <ProtectedRoute>
+              <Layout>
+                <EventTypeAdmin />
               </Layout>
             </ProtectedRoute>
           } />

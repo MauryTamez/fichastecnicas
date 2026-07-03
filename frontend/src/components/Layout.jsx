@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, Calendar, PlusCircle, User as UserIcon, Search, LayoutDashboard, Tag, MapPin, ChevronDown, Shield, Mail, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { LogOut, Calendar, PlusCircle, User as UserIcon, Search, LayoutDashboard, Tag, MapPin, ChevronDown, Shield, Mail, ShieldCheck, ShieldAlert, Menu, X } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import ChatBot from './ChatBot';
 
@@ -9,6 +9,7 @@ const Layout = ({ children }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const dropdownRef = useRef(null);
 
     useEffect(() => {
@@ -40,13 +41,22 @@ const Layout = ({ children }) => {
         { name: 'Nueva Ficha', path: '/nuevo-evento', icon: PlusCircle, roles: [1, 2] },
         { name: 'Recintos', path: '/admin/recintos', icon: MapPin, roles: [1] },
         { name: 'Catálogo', path: '/admin/catalogo', icon: Tag, roles: [1] },
+        { name: 'Tipos de Evento', path: '/admin/tipos-evento', icon: Calendar, roles: [1] },
         { name: 'Usuarios', path: '/admin/usuarios', icon: UserIcon, roles: [1] },
     ];
 
     return (
         <div className="min-h-screen bg-[#fafdfc] font-sans selection:bg-emerald-100 selection:text-emerald-900">
-            {/* Sidebar - Desktop Only */}
-            <aside className="fixed left-0 top-0 h-screen w-72 bg-white border-r border-gray-100 hidden lg:flex flex-col z-30 shadow-sm">
+            {/* Mobile Sidebar Overlay */}
+            {isSidebarOpen && (
+                <div 
+                    className="fixed inset-0 bg-black/20 backdrop-blur-sm z-30 lg:hidden"
+                    onClick={() => setIsSidebarOpen(false)}
+                />
+            )}
+
+            {/* Sidebar */}
+            <aside className={`fixed left-0 top-0 h-screen w-72 bg-white border-r border-gray-100 flex flex-col z-40 shadow-sm transition-transform duration-300 ease-in-out lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
                 <div className="p-8 pb-12">
                     <Link to="/" className="flex items-center gap-3 text-2xl font-display font-bold text-gray-900 group">
                         <div className="bg-emerald-600 p-2 rounded-xl text-white shadow-lg shadow-emerald-100 group-hover:rotate-6 transition-transform">
@@ -63,6 +73,7 @@ const Layout = ({ children }) => {
                             <Link
                                 key={item.path}
                                 to={item.path}
+                                onClick={() => setIsSidebarOpen(false)}
                                 className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition-all group ${location.pathname === item.path
                                     ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-100 translate-x-1'
                                     : 'text-gray-500 hover:bg-emerald-50 hover:text-emerald-600'
@@ -86,16 +97,24 @@ const Layout = ({ children }) => {
             </aside>
 
             {/* Main Content Area */}
-            <div className="lg:pl-72 min-h-screen flex flex-col">
+            <div className="lg:pl-72 min-h-screen flex flex-col transition-all duration-300">
                 {/* Header */}
-                <header className="sticky top-0 z-20 bg-[#fafdfc]/80 backdrop-blur-md px-8 py-5 border-b border-gray-100 flex items-center justify-between">
-                    <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-gray-100 shadow-sm w-96 max-w-full">
-                        <Search size={18} className="text-gray-300" />
-                        <input
-                            type="text"
-                            placeholder="Buscar fichas o eventos..."
-                            className="bg-transparent border-none outline-none text-sm font-medium w-full text-gray-600 placeholder:text-gray-300"
-                        />
+                <header className="sticky top-0 z-20 bg-[#fafdfc]/80 backdrop-blur-md px-4 sm:px-8 py-5 border-b border-gray-100 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 flex-1">
+                        <button 
+                            className="lg:hidden p-2 bg-white rounded-xl border border-gray-100 shadow-sm text-gray-500 hover:text-emerald-600 transition-colors shrink-0"
+                            onClick={() => setIsSidebarOpen(true)}
+                        >
+                            <Menu size={20} />
+                        </button>
+                        <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-gray-100 shadow-sm w-full max-w-sm hidden sm:flex">
+                            <Search size={18} className="text-gray-300" />
+                            <input
+                                type="text"
+                                placeholder="Buscar fichas o eventos..."
+                                className="bg-transparent border-none outline-none text-sm font-medium w-full text-gray-600 placeholder:text-gray-300"
+                            />
+                        </div>
                     </div>
 
                     <div className="flex items-center gap-6 relative" ref={dropdownRef}>
@@ -164,7 +183,7 @@ const Layout = ({ children }) => {
                 </header>
 
                 {/* Content */}
-                <main className="flex-1 p-8 lg:p-12">
+                <main className="flex-1 p-4 sm:p-8 lg:p-12 w-full max-w-[100vw] overflow-x-hidden">
                     {children}
                 </main>
 

@@ -35,7 +35,7 @@ export default class VersionContent extends BaseModel {
   @column()
   declare guestSpecifications: string | null
 
-  @column()
+  @column({ columnName: 'presidium_details' })
   declare presidiumDetail: string | null
 
   @column()

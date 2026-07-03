@@ -9,7 +9,7 @@ export default class VersionStaffing extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
 
-  @column()
+  @column({ columnName: 'member' })
   declare userId: number
 
   @column()
