@@ -3,22 +3,26 @@ import Role from '#models/role'
 
 export default class extends BaseSeeder {
   async run() {
-    await Role.createMany([
+    await Role.updateOrCreateMany('name', [
       {
         name: 'admin',
-        description: 'admin',
+        description: 'Administrador del sistema',
       },
       {
-        name: 'auxiliar',
-        description: 'auxiliar',
+        name: 'moderador',
+        description: 'encargado de aceptar o rechazar las solicitudes y dar feedback a los creadores',
       },
       {
-        name: 'staff_interno',
-        description: 'staff_interno',
+        name: 'subdirector',
+        description: 'encargado de aceptar o rechazar las fichas técnicas de su departamento',
       },
       {
-        name: 'staff_externo',
-        description: 'staff_externo',
+        name: 'creadores',
+        description: 'Creadores de contenido y fichas',
+      },
+      {
+        name: 'auxiliares',
+        description: 'Auxiliares y personal de apoyo',
       },
     ])
   }

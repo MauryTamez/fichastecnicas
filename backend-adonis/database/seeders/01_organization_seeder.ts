@@ -3,7 +3,7 @@ import Organization from '#models/organization'
 
 export default class extends BaseSeeder {
   async run() {
-    await Organization.createMany([
+    await Organization.updateOrCreateMany('slug', [
       {
         name: 'FIME',
         slug: 'fime',

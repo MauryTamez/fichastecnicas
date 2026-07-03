@@ -1,50 +1,66 @@
 import { BaseSeeder } from '@adonisjs/lucid/seeders'
 import User from '#models/user'
+import Role from '#models/role'
 
 export default class extends BaseSeeder {
   async run() {
-    await User.createMany([
-      {
-        name: 'Sergio',
-        email: 'sergio@mail.com',
-        phone: '123456789',
-        password: 'password',
-        isInternal: true,
-        roleId: 1,
-        organizationId: 1,
-        departmentId: 1,
-      },
-      {
-        name: 'Valeria',
-        email: 'valeria@mail.com',
-        phone: '123456790',
-        password: 'password',
-        isInternal: true,
-        roleId: 2,
-        organizationId: 1,
-        departmentId: 1,
-      },
-      {
-        name: 'Juan',
-        email: 'juan@mail.com',
-        phone: '123456791',
-        password: 'password',
-        isInternal: true,
-        roleId: 3,
-        organizationId: 1,
-        departmentId: 1,
-      },
-      {
-        name: 'Ana',
-        email: 'ana@mail.com',
-        phone: '123456792',
-        password: 'password',
-        isInternal: false,
-        roleId: 4,
-        organizationId: 1,
-        departmentId: 1,
-      }
-    ])
+    const roles = await Role.all()
+    const getRoleId = (roleName: string) => {
+      const role = roles.find((r) => r.name === roleName)
+      return role ? role.id : 1 // Fallback to 1 if not found
+    }
 
+    await User.updateOrCreateMany('email', [
+      {
+        name: 'Admin User',
+        email: 'admin@mail.com',
+        phone: '1234567890',
+        password: 'password',
+        isInternal: true,
+        roleId: getRoleId('admin'),
+        organizationId: 1,
+        departmentId: 1,
+      },
+      {
+        name: 'Moderador User',
+        email: 'moderador@mail.com',
+        phone: '1234567891',
+        password: 'password',
+        isInternal: true,
+        roleId: getRoleId('moderador'),
+        organizationId: 1,
+        departmentId: 1,
+      },
+      {
+        name: 'Subdirector User',
+        email: 'subdirector@mail.com',
+        phone: '1234567892',
+        password: 'password',
+        isInternal: true,
+        roleId: getRoleId('subdirector'),
+        organizationId: 1,
+        departmentId: 1,
+      },
+      {
+        name: 'Creador User',
+        email: 'creador@mail.com',
+        phone: '1234567893',
+        password: 'password',
+        isInternal: true,
+        roleId: getRoleId('creadores'),
+        organizationId: 1,
+        departmentId: 1,
+      },
+      {
+        name: 'Auxiliar User',
+        email: 'auxiliar@mail.com',
+        phone: '1234567894',
+        password: 'password',
+        isInternal: true,
+        roleId: getRoleId('auxiliares'),
+        organizationId: 1,
+        departmentId: 1,
+      },
+    ])
   }
 }

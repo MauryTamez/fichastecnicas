@@ -7,7 +7,7 @@ export default class extends BaseSeeder {
     const fime = await Organization.findBy('slug', 'fime')
     
     if (fime) {
-      await Department.createMany([
+      const departments = [
         {
           name: 'Direccion',
           priority: 1,
@@ -28,7 +28,14 @@ export default class extends BaseSeeder {
           priority: 4,
           organization_id: fime.id,
         },
-      ])
+      ]
+
+      for (const dept of departments) {
+        await Department.updateOrCreate(
+          { name: dept.name, organization_id: dept.organization_id },
+          dept
+        )
+      }
     }
   }
 }

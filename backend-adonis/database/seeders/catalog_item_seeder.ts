@@ -3,7 +3,7 @@ import CatalogItem from '#models/catalog_item'
 
 export default class extends BaseSeeder {
   async run() {
-    await CatalogItem.createMany([
+    await CatalogItem.updateOrCreateMany('name', [
       { category: 'audio', name: 'Micrófono de mano' },
       { category: 'audio', name: 'Sistema de sonido lineal' },
       { category: 'iluminacion', name: 'Cabezas móviles' },
