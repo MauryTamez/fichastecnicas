@@ -1,12 +1,12 @@
-import { DateTime } from 'luxon'
 import { BaseModel, belongsTo, column, hasMany } from '@adonisjs/lucid/orm'
-import Organization from './organization.js'
 import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
-import User from './user.js'
+import { DateTime } from 'luxon'
 import EventType from './event_type.js'
 import EventVersion from './event_version.js'
 import EventVersionEmbedding from './event_version_embedding.js'
 import Location from './location.js'
+import Organization from './organization.js'
+import User from './user.js'
 
 export default class Event extends BaseModel {
   @column({ isPrimary: true })

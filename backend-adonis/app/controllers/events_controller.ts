@@ -1,11 +1,11 @@
-import type { HttpContext } from '@adonisjs/core/http'
-import { DateTime } from 'luxon'
 import Event from '#models/event'
 import EventVersion from '#models/event_version'
-import VersionContent from '#models/version_content'
 import VersionActivity from '#models/version_activity'
+import VersionContent from '#models/version_content'
 import { createEventValidator, updateEventValidator } from '#validators/event'
+import type { HttpContext } from '@adonisjs/core/http'
 import db from '@adonisjs/lucid/services/db'
+import { DateTime } from 'luxon'
 
 import { RagService } from '#services/rag_service'
 
@@ -24,7 +24,7 @@ export default class EventsController {
     return allEvents.filter(e => {
       const ver = e.eventVersions[0]
       if (!ver || !ver.versionContent) return false
-      
+
       const eventStart = ver.versionContent.startsAt
       const eventEnd = ver.versionContent.endsAt
 
@@ -65,7 +65,7 @@ export default class EventsController {
         asistentes: content?.guestSpecifications || '',
         fecha_inicio: content?.startsAt || e.createdAt,
         fecha_fin: content?.endsAt || e.createdAt,
-        venue_id: e.locationId || 1, 
+        venue_id: e.locationId || 1,
         locationId: e.locationId,
         organizationId: e.organizationId,
         eventTypeId: e.eventTypeId,
@@ -100,7 +100,7 @@ export default class EventsController {
   async store({ request, response, auth }: HttpContext) {
     const data = await request.validateUsing(createEventValidator)
     const userEmail = auth.use('web').user?.email || ''
-    
+
     const locationId = data.locationId
     const startsAt = DateTime.fromISO(data.startsAt)
     const endsAt = DateTime.fromISO(data.endsAt)
@@ -126,7 +126,7 @@ export default class EventsController {
     try {
         const event = new Event()
         event.currentState = 'in_review'
-        event.organizationId = data.organizationId || 1 
+        event.organizationId = data.organizationId || 1
         event.userId = auth.use('web').user!.id
         event.mainResponsibleId = auth.use('web').user!.id
         event.eventTypeId = data.eventTypeId || 1
@@ -201,14 +201,14 @@ export default class EventsController {
   async update({ params, request, response, auth }: HttpContext) {
     const data = await request.validateUsing(updateEventValidator)
     const event = await Event.findOrFail(params.id)
-    
+
     // Authorization Check
     if (auth.use('web').user?.role?.name !== 'admin' && event.userId !== auth.use('web').user?.id) {
         return response.forbidden({ message: 'No tienes permiso para editar este evento' })
     }
 
     const userEmail = auth.use('web').user?.email || ''
-    
+
     const oldVersion = await EventVersion.query().where('eventId', event.id).where('isCurrentVersion', true).first()
     const oldContent = oldVersion ? await VersionContent.find(oldVersion.versionContentId) : null
 
@@ -231,7 +231,7 @@ export default class EventsController {
         }
       }
     }
-    
+
     const transaction = await db.transaction()
 
     try {
@@ -240,7 +240,7 @@ export default class EventsController {
           oldVersion.useTransaction(transaction)
           await oldVersion.save()
         }
-        
+
         const content = new VersionContent()
         content.versionNumber = (oldContent?.versionNumber || 0) + 1
         content.name = data.name || oldContent?.name || ''
@@ -283,7 +283,7 @@ export default class EventsController {
         if (data.locationId) event.locationId = data.locationId
         if (data.organizationId) event.organizationId = data.organizationId
         if (data.eventTypeId) event.eventTypeId = data.eventTypeId
-        event.currentState = 'in_review' 
+        event.currentState = 'in_review'
         event.useTransaction(transaction)
         await event.save()
 
