@@ -13,12 +13,12 @@ export default class extends BaseSeeder {
         description: 'encargado de aceptar o rechazar las fichas técnicas y dar feedback a los creadores',
       },
       {
-        name: 'subdirector',
+        name: 'encargado_departamento',
         description: 'encargado de aceptar o rechazar las solicitudes de su departamento',
       },
       {
-        name: 'creadores',
-        description: 'Creadores de contenido y fichas',
+        name: 'creador',
+        description: 'Creadores de eventos - fichas tecnicas',
       },
       {
         name: 'auxiliares',
@@ -26,4 +26,4 @@ export default class extends BaseSeeder {
       },
     ])
   }
-}
+}                        
