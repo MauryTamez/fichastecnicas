@@ -10,11 +10,11 @@ export default class extends BaseSeeder {
       },
       {
         name: 'moderador',
-        description: 'encargado de aceptar o rechazar las solicitudes y dar feedback a los creadores',
+        description: 'encargado de aceptar o rechazar las fichas técnicas y dar feedback a los creadores',
       },
       {
         name: 'subdirector',
-        description: 'encargado de aceptar o rechazar las fichas técnicas de su departamento',
+        description: 'encargado de aceptar o rechazar las solicitudes de su departamento',
       },
       {
         name: 'creadores',
