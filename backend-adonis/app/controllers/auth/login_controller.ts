@@ -26,12 +26,6 @@ export default class LoginController {
         { expiresIn: '24h' }
       )
       
-      const roleToNivel: Record<string, number> = {
-        'admin': 1,
-        'auxiliar': 2,
-        'staff_interno': 3
-      }
-
       return response.ok({
         message: 'Inicio de sesión exitoso',
         token,
@@ -40,7 +34,7 @@ export default class LoginController {
           nombre: user.name,
           email: user.email,
           role: user.role?.name,
-          nivel_permiso: roleToNivel[user.role?.name || 'staff_interno'] || 3
+          nivel_permiso: user.roleId
         }
       })
     } catch (error) {

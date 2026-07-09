@@ -11,7 +11,8 @@ export default class UsersController {
       id: u.id,
       nombre: u.name,
       email: u.email,
-      nivel_permiso: u.role?.name === 'admin' ? 1 : (u.role?.name === 'auxiliar' ? 2 : 3)
+      role: u.role?.name,
+      nivel_permiso: u.roleId
     }))
     
     return response.json(mapped)
@@ -23,10 +24,15 @@ export default class UsersController {
     user.name = data.nombre
     user.email = data.email
     user.password = data.password
-    // map nivel_permiso to role
-    const roleName = data.nivel_permiso === 1 ? 'admin' : (data.nivel_permiso === 2 ? 'auxiliar' : 'staff_interno')
-    const role = await Role.findBy('name', roleName)
-    user.roleId = role?.id || 1
+    
+    // map role explicitly if passed or fallback to legacy numeric mapping
+    let roleId = data.roleId || data.nivel_permiso
+    if (data.roleName) {
+      const role = await Role.findBy('name', data.roleName)
+      if (role) roleId = role.id
+    }
+    user.roleId = roleId || 4 // Default to 'creador' if nothing else matches
+
     user.organizationId = 1
     user.isInternal = true
     await user.save()
@@ -41,19 +47,23 @@ export default class UsersController {
     if (data.nombre) user.name = data.nombre
     if (data.email) user.email = data.email
     if (data.password) user.password = data.password
-    if (data.nivel_permiso) {
-      const roleName = data.nivel_permiso === 1 ? 'admin' : (data.nivel_permiso === 2 ? 'auxiliar' : 'staff_interno')
-      const role = await Role.findBy('name', roleName)
-      user.roleId = role?.id || 1
+    if (data.roleId || data.nivel_permiso) {
+      user.roleId = data.roleId || data.nivel_permiso
+    }
+    if (data.roleName) {
+      const role = await Role.findBy('name', data.roleName)
+      if (role) user.roleId = role.id
     }
     
     await user.save()
+    await user.load('role')
     
     return response.json({
       id: user.id,
       nombre: user.name,
       email: user.email,
-      nivel_permiso: data.nivel_permiso || (user.roleId === 1 ? 1 : 2)
+      role: user.role?.name,
+      nivel_permiso: user.roleId
     })
   }
 

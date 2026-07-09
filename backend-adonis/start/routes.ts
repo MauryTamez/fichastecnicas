@@ -11,8 +11,15 @@ import router from '@adonisjs/core/services/router'
 import { middleware } from './kernel.js'
 import LoginController from '#controllers/auth/login_controller'
 import DashboardController from '#controllers/dashboard_controller'
-import AdminConfigurationController from '#controllers/admin_configurations_controller'
-import EventTypesController from '#controllers/event_types_controller'
+const EventsController = () => import('#controllers/events_controller')
+const VenuesController = () => import('#controllers/venues_controller')
+const UsersController = () => import('#controllers/users_controller')
+const LoginControllerIntegration = () => import('#controllers/auth/login_controller')
+const EventTypesController = () => import('#controllers/event_types_controller')
+const DepartmentsController = () => import('#controllers/departments_controller')
+// --- Rutas de IA y Chatbot (Protegidas) ---
+const RagController = () => import('#controllers/rag_controller')
+
 router.get('/', () => {
     return { status: 'API is running' }
 })
@@ -23,104 +30,88 @@ router.group(() => {
     router.post('/logout', [LoginController, 'logout']).as('login.destroy')
 }).as('auth')
 
-// --- Rutas Protegidas por Rol ---
-
-// 1. Administrador
+// --- Rutas Protegidas por Rol (Legacy/Views) ---
 router.group(() => {
     router.get('/dashboard', [DashboardController, 'admin']).as('admin.dashboard')
-    router.get('/inventory', [DashboardController, 'adminInventory']).as('admin.inventory')
-    router.get('/reports', [DashboardController, 'adminReports']).as('admin.reports')
-    router.get('/configuration', [AdminConfigurationController, 'index']).as('admin.configuration')
-})
-    .prefix('/admin')
-    .as('admin')
-    .use([middleware.jwtAuth(), middleware.role(['admin'])])
+}).prefix('/admin-legacy').use([middleware.jwtAuth(), middleware.role(['admin'])])
 
-// 2. Auxiliar
 router.group(() => {
     router.get('/dashboard', [DashboardController, 'auxiliar']).as('auxiliar.dashboard')
-    router.get('/operations', [DashboardController, 'auxiliarOperations']).as('auxiliar.operations')
-})
-    .prefix('/auxiliar')
-    .as('auxiliar')
-    .use([middleware.jwtAuth(), middleware.role(['auxiliar'])])
-
-// 3. Staff Interno
-router.group(() => {
-    router.get('/dashboard', [DashboardController, 'staffInterno']).as('staff_interno.dashboard')
-    router.get('/about', [DashboardController, 'staffInternoAbout']).as('staff_interno.about')
-})
-    .prefix('/staff-internal')
-    .as('staff_interno')
-    .use([middleware.jwtAuth(), middleware.role(['staff_interno'])])
-
-// --- Rutas de IA y Chatbot (Protegidas) ---
-const RagController = () => import('#controllers/rag_controller')
-const EventsController = () => import('#controllers/events_controller')
-const VenuesController = () => import('#controllers/venues_controller')
-const UsersController = () => import('#controllers/users_controller')
-const LoginControllerIntegration = () => import('#controllers/auth/login_controller')
+}).prefix('/auxiliar-legacy').use([middleware.jwtAuth(), middleware.role(['auxiliares', 'auxiliar'])])
 
 router.group(() => {
     router.post('/chat', [RagController, 'chat']).as('rag.chat')
     router.post('/vectorize', [RagController, 'vectorizeVersion']).as('rag.vectorize')
     router.post('/autofill', [RagController, 'autoFill']).as('rag.autofill')
-})
-    .prefix('/api/ai')
-    .use([middleware.jwtAuth()]) // Todos los roles autenticados pueden usar el chatbot
+}).prefix('/api/ai').use([middleware.jwtAuth()])
 
 // --- API Integrada con Frontend (Fichas Técnicas) ---
 router.group(() => {
-    // Auth legacy support
     router.post('/auth/login', [LoginControllerIntegration, 'login'])
     router.post('/auth/logout', [LoginControllerIntegration, 'logout'])
-    // UsersController store handles registration for legacy auth
     router.post('/auth/register', [UsersController, 'store'])
 
-    // Rutas protegidas de la API
     router.group(() => {
-        // Events / Fichas Técnicas
+        // Eventos generales (index es filtrado por controlador)
         router.get('/events', [EventsController, 'index'])
         router.post('/events', [EventsController, 'store'])
         router.put('/events/:id', [EventsController, 'update'])
         router.patch('/events/:id/status', [EventsController, 'updateStatus'])
         router.delete('/events/:id', [EventsController, 'destroy'])
 
-        // PDF Generation
         const EventsPdfController = () => import('#controllers/events_pdf_controller')
         router.get('/events/:id/pdf', [EventsPdfController, 'generatePdf'])
 
-        // Venues / Locations
+        // Data for dropdowns (accessible to all authenticated roles)
+        router.get('/event-types', [EventTypesController, 'index'])
         router.get('/venues', [VenuesController, 'index'])
-        router.post('/venues', [VenuesController, 'store'])
-        router.put('/venues/:id', [VenuesController, 'update'])
-        router.delete('/venues/:id', [VenuesController, 'destroy'])
-
-        // Users
-        router.get('/users', [UsersController, 'index'])
-        router.post('/users', [UsersController, 'store'])
-        router.put('/users/:id', [UsersController, 'update'])
-        router.delete('/users/:id', [UsersController, 'destroy'])
-
-        // Catalog
+        
         const CatalogsController = () => import('#controllers/catalogs_controller')
         router.get('/organizations', [CatalogsController, 'getOrganizations'])
         router.get('/catalog', [CatalogsController, 'index'])
 
-        router.post('/catalog', [CatalogsController, 'store'])
-        router.delete('/catalog/:id', [CatalogsController, 'destroy'])
-
-        // Event Types
-        router.get('/event-types', [EventTypesController, 'index']) // Used by EventForm
-
+        // 1. Admin Group
         router.group(() => {
-            router.get('/event-types', [EventTypesController, 'index'])
+            router.post('/venues', [VenuesController, 'store'])
+            router.put('/venues/:id', [VenuesController, 'update'])
+            router.delete('/venues/:id', [VenuesController, 'destroy'])
+
+            router.get('/users', [UsersController, 'index'])
+            router.post('/users', [UsersController, 'store'])
+            router.put('/users/:id', [UsersController, 'update'])
+            router.delete('/users/:id', [UsersController, 'destroy'])
+
+            router.post('/catalog', [CatalogsController, 'store'])
+            router.delete('/catalog/:id', [CatalogsController, 'destroy'])
+
             router.post('/event-types', [EventTypesController, 'store'])
             router.get('/event-types/:id', [EventTypesController, 'show'])
             router.put('/event-types/:id', [EventTypesController, 'update'])
             router.delete('/event-types/:id', [EventTypesController, 'destroy'])
-        }).prefix('/admin') // Consumed by EventTypeAdmin via /api/admin/event-types
+        }).prefix('/admin').use(middleware.role(['admin']))
+
+        // 2. Moderador Group
+        router.group(() => {
+            // Aprobación global y endpoints exclusivos del moderador
+        }).prefix('/moderador').use(middleware.role(['admin', 'moderador']))
+
+        // 3. Encargado de Departamento Group (Subdirector)
+        router.group(() => {
+            // Endpoints para encargado
+            const DepartmentsController = () => import('#controllers/departments_controller')
+            router.get('/organigram', [DepartmentsController, 'organigram'])
+        }).prefix('/encargado').use(middleware.role(['admin', 'encargado_departamento']))
+
+        // 4. Creador Group
+        router.group(() => {
+            // Endpoints exclusivos creador
+        }).prefix('/creador').use(middleware.role(['admin', 'creador']))
+
+        // 5. Auxiliares Group
+        router.group(() => {
+            // Endpoints exclusivos auxiliares
+        }).prefix('/auxiliar').use(middleware.role(['admin', 'auxiliares', 'auxiliar']))
 
     }).use([middleware.jwtAuth()])
+}).prefix('/api')
 
-}).prefix('/api') // Frontend points to /api

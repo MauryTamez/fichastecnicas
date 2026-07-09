@@ -37,7 +37,8 @@ export default class EventsController {
     const limit = 20
 
     const user = auth.use('web').user
-    const isNotAdmin = user?.role?.name !== 'admin'
+    await user?.load('role')
+    const roleName = user?.role?.name
 
     const eventsQuery = Event.query()
       .preload('eventVersions', (query) => {
@@ -49,8 +50,24 @@ export default class EventsController {
       .preload('user')
       .orderBy('createdAt', 'desc')
 
-    if (isNotAdmin && user) {
-      eventsQuery.where('userId', user.id)
+    if (user && roleName !== 'admin' && roleName !== 'moderador') {
+      if (roleName === 'encargado_departamento') {
+        eventsQuery.whereHas('user', (q) => {
+          q.where('departmentId', user.departmentId || 0)
+        })
+      } else if (roleName === 'creador') {
+        eventsQuery.where('userId', user.id)
+      } else if (roleName === 'auxiliares' || roleName === 'auxiliar') {
+        eventsQuery.whereHas('eventVersions', (v) => {
+          v.where('isCurrentVersion', true)
+           .whereHas('versionStaffings', (s) => {
+             s.where('userId', user.id)
+           })
+        })
+      } else {
+        // Fallback for other legacy roles
+        eventsQuery.where('userId', user.id)
+      }
     }
 
     const events = await eventsQuery.paginate(page, limit)

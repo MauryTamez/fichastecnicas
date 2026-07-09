@@ -38,11 +38,17 @@ const Layout = ({ children }) => {
 
     const menuItems = [
         { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-        { name: 'Nueva Ficha', path: '/nuevo-evento', icon: PlusCircle, roles: [1, 2] },
-        { name: 'Recintos', path: '/admin/recintos', icon: MapPin, roles: [1] },
-        { name: 'Catálogo', path: '/admin/catalogo', icon: Tag, roles: [1] },
-        { name: 'Tipos de Evento', path: '/admin/tipos-evento', icon: Calendar, roles: [1] },
-        { name: 'Usuarios', path: '/admin/usuarios', icon: UserIcon, roles: [1] },
+        { name: 'Nueva Ficha', path: '/nuevo-evento', icon: PlusCircle, roles: ['admin', 'moderador', 'creador'] },
+        { name: 'Aprobaciones', path: '/moderador/fichas-pendientes', icon: ShieldCheck, roles: ['admin', 'moderador'] },
+        { name: 'Solicitudes', path: '/encargado/solicitudes', icon: ShieldCheck, roles: ['encargado_departamento'] },
+        { name: 'Organigrama', path: '/moderador/organigrama', icon: UserIcon, roles: ['admin', 'moderador'] },
+        { name: 'Feedback', path: '/creador/feedback', icon: Mail, roles: ['creador'] },
+        { name: 'Notificaciones', path: '/auxiliar/notificaciones', icon: Mail, roles: ['auxiliares', 'auxiliar'] },
+        { name: 'Mis Eventos', path: '/auxiliar/eventos', icon: Calendar, roles: ['auxiliares', 'auxiliar'] },
+        { name: 'Recintos', path: '/admin/recintos', icon: MapPin, roles: ['admin'] },
+        { name: 'Catálogo', path: '/admin/catalogo', icon: Tag, roles: ['admin'] },
+        { name: 'Tipos de Evento', path: '/admin/tipos-evento', icon: Calendar, roles: ['admin'] },
+        { name: 'Usuarios', path: '/admin/usuarios', icon: UserIcon, roles: ['admin', 'encargado_departamento'] },
     ];
 
     return (
@@ -69,7 +75,7 @@ const Layout = ({ children }) => {
                 <nav className="flex-1 px-4 space-y-2">
                     <p className="px-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Menú Principal</p>
                     {menuItems.map((item) => (
-                        (!item.roles || item.roles.includes(user?.nivel_permiso)) && (
+                        (!item.roles || item.roles.includes(user?.role)) && (
                             <Link
                                 key={item.path}
                                 to={item.path}
@@ -127,7 +133,7 @@ const Layout = ({ children }) => {
                                 <div className="flex items-center justify-end gap-1.5">
                                     <div className={`w-1.5 h-1.5 rounded-full ${user?.nivel_permiso === 1 ? 'bg-emerald-500' : 'bg-slate-400'}`}></div>
                                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">
-                                        {user?.nivel_permiso === 1 ? 'Admin' : user?.nivel_permiso === 2 ? 'Editor' : 'Solicitante'}
+                                        {user?.role === 'admin' ? 'Admin' : user?.role === 'moderador' ? 'Moderador' : user?.role === 'encargado_departamento' ? 'Encargado' : user?.role === 'creador' ? 'Creador' : 'Auxiliar'}
                                     </p>
                                 </div>
                             </div>
@@ -153,7 +159,7 @@ const Layout = ({ children }) => {
                                         <div className="overflow-hidden">
                                             <p className="font-bold text-gray-900 truncate leading-tight">{user?.nombre}</p>
                                             <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider truncate">
-                                                {user?.nivel_permiso === 1 ? 'Administrador' : user?.nivel_permiso === 2 ? 'Editor (Auxiliar)' : 'Solicitante (Staff)'}
+                                                {user?.role === 'admin' ? 'Administrador' : user?.role}
                                             </p>
                                         </div>
                                     </div>

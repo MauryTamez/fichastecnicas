@@ -9,10 +9,15 @@ import CatalogAdmin from './pages/CatalogAdmin';
 import UserAdmin from './pages/UserAdmin';
 import VenueAdmin from './pages/VenueAdmin';
 import EventTypeAdmin from './pages/EventTypeAdmin';
+import Organigrama from './pages/Organigrama';
+import FeedbackReview from './pages/FeedbackReview';
+import PendingApprovals from './pages/PendingApprovals';
+import AuxiliarInbox from './pages/AuxiliarInbox';
 
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" />;
+  if (allowedRoles && !allowedRoles.includes(user.role)) return <Navigate to="/" />;
   return children;
 };
 
@@ -51,30 +56,84 @@ function App() {
             </ProtectedRoute>
           } />
           <Route path="/admin/catalogo" element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['admin']}>
               <Layout>
                 <CatalogAdmin />
               </Layout>
             </ProtectedRoute>
           } />
           <Route path="/admin/recintos" element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['admin']}>
               <Layout>
                 <VenueAdmin />
               </Layout>
             </ProtectedRoute>
           } />
           <Route path="/admin/usuarios" element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['admin']}>
               <Layout>
                 <UserAdmin />
               </Layout>
             </ProtectedRoute>
           } />
           <Route path="/admin/tipos-evento" element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['admin']}>
               <Layout>
                 <EventTypeAdmin />
+              </Layout>
+            </ProtectedRoute>
+          } />
+
+          {/* Nuevas Rutas FASE 3 / FASE 4 */}
+          <Route path="/moderador/organigrama" element={
+            <ProtectedRoute allowedRoles={['admin', 'moderador']}>
+              <Layout>
+                <Organigrama />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/moderador/fichas-pendientes" element={
+            <ProtectedRoute allowedRoles={['admin', 'moderador']}>
+              <Layout>
+                <PendingApprovals />
+              </Layout>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/encargado/solicitudes" element={
+            <ProtectedRoute allowedRoles={['admin', 'encargado_departamento']}>
+              <Layout>
+                <PendingApprovals />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/encargado/usuarios" element={
+            <ProtectedRoute allowedRoles={['admin', 'encargado_departamento']}>
+              <Layout>
+                <UserAdmin />
+              </Layout>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/creador/feedback" element={
+            <ProtectedRoute allowedRoles={['admin', 'creador']}>
+              <Layout>
+                <FeedbackReview />
+              </Layout>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/auxiliar/notificaciones" element={
+            <ProtectedRoute allowedRoles={['admin', 'auxiliares', 'auxiliar']}>
+              <Layout>
+                <AuxiliarInbox />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/auxiliar/eventos" element={
+            <ProtectedRoute allowedRoles={['admin', 'auxiliares', 'auxiliar']}>
+              <Layout>
+                <Dashboard />
               </Layout>
             </ProtectedRoute>
           } />
