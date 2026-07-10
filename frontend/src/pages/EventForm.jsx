@@ -147,10 +147,17 @@ const EventForm = () => {
         setError('');
         setLoading(true);
         try {
+            const payload = {
+                ...formData,
+                locationId: Number(formData.locationId),
+                organizationId: Number(formData.organizationId),
+                eventTypeId: Number(formData.eventTypeId),
+            };
+
             if (isEditMode) {
-                await api.put(`/events/${id}`, formData);
+                await api.put(`/events/${id}`, payload);
             } else {
-                await api.post('/events', formData);
+                await api.post('/events', payload);
             }
             navigate('/');
         } catch (err) {
