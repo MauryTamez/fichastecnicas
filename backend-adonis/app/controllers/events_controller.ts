@@ -116,6 +116,61 @@ export default class EventsController {
     })
   }
 
+  async show({ params, response }: HttpContext) {
+    try {
+      const event = await Event.query()
+        .where('id', params.id)
+        .preload('eventVersions', (query) => {
+          query.orderBy('id', 'desc')
+               .preload('versionContent')
+               .preload('versionActivities')
+        })
+        .preload('organization')
+        .preload('user')
+        .firstOrFail()
+
+      const mappedVersions = event.eventVersions.map(v => {
+        const content = v.versionContent;
+        return {
+          id: v.id,
+          versionNumber: content?.versionNumber || v.id,
+          isCurrentVersion: v.isCurrentVersion,
+          name: content?.name,
+          objective: content?.objective,
+          description: content?.description,
+          startsAt: content?.startsAt,
+          endsAt: content?.endsAt,
+          dressCode: content?.dressCode,
+          programImpacted: content?.programImpacted,
+          guestSpecifications: content?.guestSpecifications,
+          presidiumDetail: content?.presidiumDetail,
+          directorAction: content?.directorAction,
+          activities: v.versionActivities?.map((a: any) => ({
+            id: a.id,
+            name: a.name,
+            startsAt: a.startsAt ? DateTime.fromISO(a.startsAt).toFormat('HH:mm') : '',
+            endsAt: a.endsAt ? DateTime.fromISO(a.endsAt).toFormat('HH:mm') : '',
+            description: a.description
+          })) || []
+        }
+      })
+
+      return response.ok({
+        id: event.id,
+        currentState: event.currentState,
+        locationId: event.locationId,
+        organizationId: event.organizationId,
+        eventTypeId: event.eventTypeId,
+        userId: event.userId,
+        user: { name: event.user?.name },
+        versions: mappedVersions
+      })
+    } catch (error) {
+      console.error(error)
+      return response.notFound({ message: 'Evento no encontrado' })
+    }
+  }
+
   async store({ request, response, auth }: HttpContext) {
     const data = await request.validateUsing(createEventValidator)
     const userEmail = auth.use('web').user?.email || ''
@@ -144,7 +199,7 @@ export default class EventsController {
 
     try {
         const event = new Event()
-        event.currentState = EventState.IN_REVIEW
+        event.currentState = EventState.DRAFT
         event.organizationId = data.organizationId || 1 
         event.userId = auth.use('web').user!.id
         event.mainResponsibleId = auth.use('web').user!.id

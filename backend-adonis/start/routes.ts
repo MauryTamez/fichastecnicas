@@ -55,6 +55,7 @@ router.group(() => {
         // Eventos generales (index es filtrado por controlador)
         // Eventos generales (index es filtrado por controlador)
         router.get('/events', [EventsController, 'index'])
+        router.get('/events/:id', [EventsController, 'show'])
         router.patch('/events/:id/status', [EventsController, 'updateStatus'])
 
         const EventsPdfController = () => import('#controllers/events_pdf_controller')
