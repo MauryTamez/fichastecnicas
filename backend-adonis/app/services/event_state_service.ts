@@ -17,7 +17,7 @@ export class EventStateService {
       throw new Exception('Solo el creador del evento puede solicitar su revisión', { status: 403 })
     }
 
-    event.currentState = EventState.RESQUESTED
+    event.currentState = EventState.REQUESTED
     await event.save()
     
     return event
@@ -28,7 +28,7 @@ export class EventStateService {
    * Solo permitido si el usuario tiene el rol de "Subdirector".
    */
   public async acceptRequest(event: Event, user: User): Promise<Event> {
-    if (event.currentState !== EventState.RESQUESTED) {
+    if (event.currentState !== EventState.REQUESTED) {
       throw new Exception('El evento debe estar en estado solicitado para aceptar la solicitud', { status: 400 })
     }
 

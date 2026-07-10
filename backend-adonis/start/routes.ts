@@ -56,6 +56,7 @@ router.group(() => {
         router.get('/events', [EventsController, 'index'])
         router.get('/events/:id', [EventsController, 'show'])
         router.patch('/events/:id/status', [EventsController, 'updateStatus'])
+        router.post('/events/:id/request-review', [EventsController, 'requestReview'])
 
         const EventsPdfController = () => import('#controllers/events_pdf_controller')
         router.get('/events/:id/pdf', [EventsPdfController, 'generatePdf'])
@@ -90,7 +91,8 @@ router.group(() => {
 
         // 2. Moderador Group
         router.group(() => {
-            // Aprobación global y endpoints exclusivos del moderador
+            // Endpoints para moderador
+            router.get('/solicitudes', [EventsController, 'pendingApprovals'])
         }).prefix('/moderador').use(middleware.role(['admin', 'moderador']))
 
         // 3. Encargado de Departamento Group (Subdirector)
@@ -98,6 +100,7 @@ router.group(() => {
             // Endpoints para encargado
             const DepartmentsController = () => import('#controllers/departments_controller')
             router.get('/organigram', [DepartmentsController, 'organigram'])
+            router.get('/solicitudes', [EventsController, 'pendingApprovals'])
         }).prefix('/encargado').use(middleware.role(['admin', 'encargado_departamento']))
 
         // 4. Creador Group

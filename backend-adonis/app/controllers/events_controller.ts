@@ -8,6 +8,7 @@ import { createEventValidator, updateEventValidator } from '#validators/event'
 import db from '@adonisjs/lucid/services/db'
 import { EventState } from '../enums/event_state.js'
 import { RagService } from '#services/rag_service'
+import { EventStateService } from '#services/event_state_service'
 
 export default class EventsController {
   private ragService = new RagService()
@@ -90,7 +91,7 @@ export default class EventsController {
         eventTypeId: e.eventTypeId,
         user_id: e.userId,
         user: { nombre: e.user?.name },
-        estado: e.currentState === 'in_review' ? 'pendiente' : (e.currentState === 'scheduled' ? 'aceptado' : (e.currentState === 'rejected' ? 'rechazado' : 'pendiente')),
+        estado: e.currentState === 'in_review' ? 'pendiente' : (e.currentState === 'scheduled' ? 'aceptado' : (e.currentState === 'rejected' ? 'rechazado' : (e.currentState === 'draft' ? 'borrador' : (e.currentState === 'requested' ? 'solicitado' : 'pendiente')))),
         name: content?.name,
         objective: content?.objective,
         description: content?.description,
@@ -114,6 +115,45 @@ export default class EventsController {
       data: mapped,
       meta: events.getMeta()
     })
+  }
+
+  async pendingApprovals({ response, auth }: HttpContext) {
+    const user = auth.use('web').user!
+    await user.load('role')
+    const role = user.role?.name.toLowerCase()
+
+    let eventsQuery = Event.query()
+      .preload('eventVersions', (vQuery) => {
+        vQuery.where('isCurrentVersion', true).preload('versionContent')
+      })
+      .preload('user')
+
+    if (role === 'encargado_departamento') {
+      eventsQuery
+        .where('currentState', EventState.REQUESTED)
+        .whereHas('user', (uQuery) => {
+          uQuery.where('departmentId', user.departmentId || -1)
+        })
+    } else if (role === 'moderador') {
+      eventsQuery.where('currentState', EventState.IN_REVIEW)
+    } else {
+      return response.forbidden({ message: 'No tienes permiso para ver aprobaciones pendientes.' })
+    }
+
+    const events = await eventsQuery
+
+    const mapped = events.map(e => {
+      const content = e.eventVersions[0]?.versionContent;
+      return {
+        id: e.id,
+        titulo: content?.name || 'Sin título',
+        fecha_inicio: content?.startsAt || e.createdAt,
+        user_name: e.user?.name || 'Desconocido',
+        currentState: e.currentState
+      }
+    })
+
+    return response.ok({ data: mapped })
   }
 
   async show({ params, response }: HttpContext) {
@@ -390,6 +430,25 @@ export default class EventsController {
     await event.save()
 
     return response.ok({ message: 'Estado actualizado', event })
+  }
+
+  async requestReview({ params, response, auth }: HttpContext) {
+    const user = auth.use('web').user
+    if (!user) {
+      return response.unauthorized({ message: 'No estás autenticado' })
+    }
+
+    try {
+      const event = await Event.findOrFail(params.id)
+      const eventStateService = new EventStateService()
+      await eventStateService.requestReview(event, user)
+      return response.ok({ message: 'Revisión solicitada exitosamente', event })
+    } catch (error) {
+      if (error.status) {
+        return response.status(error.status).json({ message: error.message })
+      }
+      return response.internalServerError({ message: 'Error interno del servidor', error: error.message })
+    }
   }
 
   async destroy({ params, response, auth }: HttpContext) {

@@ -37,7 +37,7 @@ export default class extends BaseSeeder {
         phone: '1234567892',
         password: 'password',
         isInternal: true,
-        roleId: getRoleId('subdirector'),
+        roleId: getRoleId('encargado_departamento'),
         organizationId: 1,
         departmentId: 1,
       },

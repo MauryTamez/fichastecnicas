@@ -8,6 +8,16 @@ import { Link, useNavigate } from 'react-router-dom';
 import { getVenues } from '../api/venues';
 import Swal from 'sweetalert2';
 
+const getStatusColorConfig = (estado) => {
+    switch(estado) {
+        case 'aceptado': return { text: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-100', dot: 'bg-emerald-500', solid: 'bg-emerald-600', button: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200' };
+        case 'rechazado': return { text: 'text-red-700', bg: 'bg-red-50', border: 'border-red-100', dot: 'bg-red-500', solid: 'bg-red-600', button: 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200' };
+        case 'solicitado': return { text: 'text-blue-700', bg: 'bg-blue-50', border: 'border-blue-100', dot: 'bg-blue-500', solid: 'bg-blue-600', button: 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200' };
+        case 'borrador': return { text: 'text-gray-700', bg: 'bg-gray-50', border: 'border-gray-200', dot: 'bg-gray-500', solid: 'bg-gray-600', button: 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200' };
+        default: return { text: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-100', dot: 'bg-amber-500', solid: 'bg-amber-600', button: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200' };
+    }
+};
+
 const Dashboard = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
@@ -139,10 +149,7 @@ const Dashboard = () => {
                             {dayEvents.slice(0, 3).map(event => (
                                 <div
                                     key={event.id}
-                                    className={`text-[9px] px-1.5 py-1 rounded-md font-bold truncate transition-transform hover:scale-105 ${event.estado === 'aceptado' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
-                                        event.estado === 'rechazado' ? 'bg-red-50 text-red-700 border border-red-100' :
-                                            'bg-amber-50 text-amber-700 border border-amber-100'
-                                        }`}
+                                    className={`text-[9px] px-1.5 py-1 rounded-md font-bold truncate transition-transform hover:scale-105 ${getStatusColorConfig(event.estado).bg} ${getStatusColorConfig(event.estado).text} border ${getStatusColorConfig(event.estado).border}`}
                                 >
                                     {event.titulo}
                                 </div>
@@ -184,20 +191,11 @@ const Dashboard = () => {
     const EventCard = ({ event }) => (
         <div className="group bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-premium hover:border-emerald-100 transition-all animate-fade-in duration-300 relative overflow-hidden flex flex-col h-full">
             {/* Visual Accent */}
-            <div className={`absolute top-0 right-0 w-16 h-16 opacity-5 -mr-8 -mt-8 rounded-full ${event.estado === 'aceptado' ? 'bg-emerald-600' :
-                event.estado === 'rechazado' ? 'bg-red-600' :
-                    'bg-amber-600'
-                }`}></div>
+            <div className={`absolute top-0 right-0 w-16 h-16 opacity-5 -mr-8 -mt-8 rounded-full ${getStatusColorConfig(event.estado).solid}`}></div>
 
             <div className="flex justify-between items-start mb-4">
-                <div className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 border shadow-sm ${event.estado === 'aceptado' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
-                    event.estado === 'rechazado' ? 'bg-red-50 text-red-700 border-red-100' :
-                        'bg-amber-50 text-amber-700 border-amber-100'
-                    }`}>
-                    <div className={`w-1.5 h-1.5 rounded-full ${event.estado === 'aceptado' ? 'bg-emerald-500' :
-                        event.estado === 'rechazado' ? 'bg-red-500' :
-                            'bg-amber-500'
-                        }`}></div>
+                <div className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 border shadow-sm ${getStatusColorConfig(event.estado).bg} ${getStatusColorConfig(event.estado).text} ${getStatusColorConfig(event.estado).border}`}>
+                    <div className={`w-1.5 h-1.5 rounded-full ${getStatusColorConfig(event.estado).dot}`}></div>
                     {event.estado}
                 </div>
                 <div className="text-xs font-bold text-gray-400 flex flex-col items-end gap-1">
@@ -256,11 +254,11 @@ const Dashboard = () => {
                 </div>
             )}
 
-            {(event.estado === 'rechazado' || event.estado === 'pendiente') && (String(event.user_id) === String(user?.id) || user?.nivel_permiso === 1) && (
+            {(event.estado === 'rechazado' || event.estado === 'pendiente' || event.estado === 'borrador' || event.estado === 'solicitado') && (String(event.user_id) === String(user?.id) || user?.nivel_permiso === 1) && (
                 <div className="mt-4 pt-4 border-t border-gray-50">
                     <button
                         onClick={() => navigate(`/editar-evento/${event.id}`)}
-                        className={`w-full flex items-center justify-center gap-2 ${event.estado === 'rechazado' ? 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'} border py-2.5 rounded-xl text-xs font-bold transition-all`}
+                        className={`w-full flex items-center justify-center gap-2 ${getStatusColorConfig(event.estado).button} border py-2.5 rounded-xl text-xs font-bold transition-all`}
                     >
                         <RefreshCw size={14} />
                         {event.estado === 'rechazado' ? 'Reagendar Evento' : 'Editar Ficha Técnica'}

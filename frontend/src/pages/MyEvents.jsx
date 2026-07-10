@@ -37,8 +37,12 @@ const MyEvents = () => {
                 return <span className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-bold border border-emerald-200"><CheckCircle2 size={14} /> Aceptado</span>;
             case 'in_review':
                 return <span className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-700 rounded-full text-xs font-bold border border-amber-200"><Clock size={14} /> Pendiente</span>;
+            case 'requested':
+                return <span className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-bold border border-blue-200"><Clock size={14} /> Solicitado</span>;
             case 'rejected':
                 return <span className="flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-700 rounded-full text-xs font-bold border border-red-200"><XCircle size={14} /> Rechazado</span>;
+            case 'draft':
+                return <span className="flex items-center gap-1.5 px-3 py-1 bg-gray-50 text-gray-700 rounded-full text-xs font-bold border border-gray-200"><FileText size={14} /> Borrador</span>;
             default:
                 return <span className="flex items-center gap-1.5 px-3 py-1 bg-gray-50 text-gray-700 rounded-full text-xs font-bold border border-gray-200"><Filter size={14} /> {status}</span>;
         }

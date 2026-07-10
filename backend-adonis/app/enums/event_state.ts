@@ -1,6 +1,6 @@
 export enum EventState {
   DRAFT = 'draft',
-  RESQUESTED = 'resquested',
+  REQUESTED = 'requested',
   IN_REVIEW = 'in_review',
   SCHEDULED = 'scheduled',
   REJECTED = 'rejected',

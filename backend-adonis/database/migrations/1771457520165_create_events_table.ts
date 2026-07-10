@@ -9,6 +9,7 @@ export default class extends BaseSchema {
       table
         .enum('current_state', [
           'draft',
+          'requested',
           'in_review',
           'scheduled',
           'rejected',

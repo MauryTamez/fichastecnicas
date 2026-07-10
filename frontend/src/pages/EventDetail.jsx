@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
     ArrowLeft, Calendar, Clock, User, Users, Mic,
-    FileText, CheckCircle, XCircle, Check, MapPin, Edit, Download, History
+    FileText, CheckCircle, XCircle, Check, MapPin, Edit, Download, History, Send
 } from 'lucide-react';
 import { getVenues } from '../api/venues';
 import Swal from 'sweetalert2';
@@ -15,6 +15,7 @@ const StatusBadge = ({ currentState }) => {
     const stateMap = {
         'scheduled': { label: 'Aceptado', class: 'bg-emerald-50 text-emerald-700 border-emerald-100', dot: 'bg-emerald-500' },
         'rejected': { label: 'Rechazado', class: 'bg-red-50 text-red-700 border-red-100', dot: 'bg-red-500' },
+        'requested': { label: 'Solicitado', class: 'bg-blue-50 text-blue-700 border-blue-100', dot: 'bg-blue-500' },
         'in_review': { label: 'Pendiente', class: 'bg-amber-50 text-amber-700 border-amber-100', dot: 'bg-amber-500' },
         'draft': { label: 'Borrador', class: 'bg-gray-50 text-gray-700 border-gray-200', dot: 'bg-gray-500' },
         'cancelled': { label: 'Cancelado', class: 'bg-red-50 text-red-700 border-red-100', dot: 'bg-red-500' },
@@ -90,8 +91,21 @@ const EventDetail = () => {
             document.body.appendChild(link);
             link.click();
             link.parentNode.removeChild(link);
-        } catch (err) {
+        } catch (error) {
             Swal.fire('Error', 'Error al generar el PDF.', 'error');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const handleRequestReview = async () => {
+        setActionLoading(true);
+        try {
+            await api.post(`/events/${id}/request-review`);
+            setEvent(prev => ({ ...prev, currentState: 'requested' }));
+            Swal.fire('¡Éxito!', 'La solicitud de revisión ha sido enviada.', 'success');
+        } catch (error) {
+            Swal.fire('Error', error.response?.data?.message || 'Error al enviar la solicitud.', 'error');
         } finally {
             setActionLoading(false);
         }
@@ -169,13 +183,24 @@ const EventDetail = () => {
                         )}
                         
                         {canEdit && (
-                            <button
-                                onClick={() => navigate(`/editar-evento/${event.id}`)}
-                                disabled={actionLoading}
-                                className="flex items-center gap-2 bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 px-5 py-2.5 rounded-2xl font-bold text-sm transition-all disabled:opacity-60"
-                            >
-                                <Edit size={16} /> Editar
-                            </button>
+                            <>
+                                {event.currentState === 'draft' && (
+                                    <button
+                                        onClick={handleRequestReview}
+                                        disabled={actionLoading}
+                                        className="flex items-center gap-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200 px-5 py-2.5 rounded-2xl font-bold text-sm transition-all disabled:opacity-60"
+                                    >
+                                        <Send size={16} /> Enviar solicitud
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => navigate(`/editar-evento/${event.id}`)}
+                                    disabled={actionLoading}
+                                    className="flex items-center gap-2 bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 px-5 py-2.5 rounded-2xl font-bold text-sm transition-all disabled:opacity-60"
+                                >
+                                    <Edit size={16} /> Editar
+                                </button>
+                            </>
                         )}
                         <button
                             onClick={handleDownloadPdf}
