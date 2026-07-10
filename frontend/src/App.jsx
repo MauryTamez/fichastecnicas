@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import EventForm from './pages/EventForm';
 import EventDetail from './pages/EventDetail';
+import EventVersionsList from './pages/EventVersionsList';
 import Layout from './components/Layout';
 import CatalogAdmin from './pages/CatalogAdmin';
 import UserAdmin from './pages/UserAdmin';
@@ -13,6 +14,7 @@ import Organigrama from './pages/Organigrama';
 import FeedbackReview from './pages/FeedbackReview';
 import PendingApprovals from './pages/PendingApprovals';
 import AuxiliarInbox from './pages/AuxiliarInbox';
+import MyEvents from './pages/MyEvents';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user } = useAuth();
@@ -41,7 +43,14 @@ function App() {
               </Layout>
             </ProtectedRoute>
           } />
-          <Route path="/evento/:id" element={
+          <Route path="/evento/:id/versiones" element={
+            <ProtectedRoute>
+              <Layout>
+                <EventVersionsList />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/evento/:id/version/:versionId" element={
             <ProtectedRoute>
               <Layout>
                 <EventDetail />
@@ -119,6 +128,13 @@ function App() {
             <ProtectedRoute allowedRoles={['admin', 'creador']}>
               <Layout>
                 <FeedbackReview />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/creador/eventos" element={
+            <ProtectedRoute allowedRoles={['admin', 'creador']}>
+              <Layout>
+                <MyEvents />
               </Layout>
             </ProtectedRoute>
           } />

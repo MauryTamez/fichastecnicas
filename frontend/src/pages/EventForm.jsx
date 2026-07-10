@@ -148,9 +148,9 @@ const EventForm = () => {
         setLoading(true);
         try {
             if (isEditMode) {
-                await api.put(`/events/${id}`, formData);
+                await api.put(`/creador/events/${id}`, formData);
             } else {
-                await api.post('/events', formData);
+                await api.post('/creador/events', formData);
             }
             navigate('/');
         } catch (err) {

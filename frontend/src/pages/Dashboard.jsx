@@ -232,7 +232,7 @@ const Dashboard = () => {
                     </div>
                 </div>
 
-                <Link to={`/evento/${event.id}`} className="p-2 text-gray-300 hover:text-emerald-600 transition-colors flex-shrink-0">
+                <Link to={`/evento/${event.id}/versiones`} className="p-2 text-gray-300 hover:text-emerald-600 transition-colors flex-shrink-0">
                     <Info size={18} />
                 </Link>
             </div>

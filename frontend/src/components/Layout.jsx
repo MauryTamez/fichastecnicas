@@ -42,6 +42,7 @@ const Layout = ({ children }) => {
         { name: 'Aprobaciones', path: '/moderador/fichas-pendientes', icon: ShieldCheck, roles: ['admin', 'moderador'] },
         { name: 'Solicitudes', path: '/encargado/solicitudes', icon: ShieldCheck, roles: ['encargado_departamento'] },
         { name: 'Organigrama', path: '/moderador/organigrama', icon: UserIcon, roles: ['admin', 'moderador'] },
+        { name: 'Mis Eventos', path: '/creador/eventos', icon: Calendar, roles: ['creador'] },
         { name: 'Feedback', path: '/creador/feedback', icon: Mail, roles: ['creador'] },
         { name: 'Notificaciones', path: '/auxiliar/notificaciones', icon: Mail, roles: ['auxiliares', 'auxiliar'] },
         { name: 'Mis Eventos', path: '/auxiliar/eventos', icon: Calendar, roles: ['auxiliares', 'auxiliar'] },
