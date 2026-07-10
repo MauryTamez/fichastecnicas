@@ -16,7 +16,6 @@ const VenuesController = () => import('#controllers/venues_controller')
 const UsersController = () => import('#controllers/users_controller')
 const LoginControllerIntegration = () => import('#controllers/auth/login_controller')
 const EventTypesController = () => import('#controllers/event_types_controller')
-const DepartmentsController = () => import('#controllers/departments_controller')
 // --- Rutas de IA y Chatbot (Protegidas) ---
 const RagController = () => import('#controllers/rag_controller')
 
@@ -64,7 +63,7 @@ router.group(() => {
         // Data for dropdowns (accessible to all authenticated roles)
         router.get('/event-types', [EventTypesController, 'index'])
         router.get('/venues', [VenuesController, 'index'])
-        
+
         const CatalogsController = () => import('#controllers/catalogs_controller')
         router.get('/organizations', [CatalogsController, 'getOrganizations'])
         router.get('/catalog', [CatalogsController, 'index'])
