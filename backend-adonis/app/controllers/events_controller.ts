@@ -6,7 +6,7 @@ import VersionContent from '#models/version_content'
 import VersionActivity from '#models/version_activity'
 import { createEventValidator, updateEventValidator } from '#validators/event'
 import db from '@adonisjs/lucid/services/db'
-
+import { EventState } from '../enums/event_state.js'
 import { RagService } from '#services/rag_service'
 
 export default class EventsController {
@@ -17,7 +17,7 @@ export default class EventsController {
 
     const allEvents = await Event.query()
       .where('locationId', locationId)
-      .whereIn('currentState', ['scheduled', 'in_review'])
+      .whereIn('currentState', [EventState.SCHEDULED, EventState.IN_REVIEW])
       .if(currentEventId, (query) => query.whereNot('id', currentEventId as number))
       .preload('eventVersions', (v) => v.where('isCurrentVersion', true).preload('versionContent'))
 
@@ -56,7 +56,9 @@ export default class EventsController {
           q.where('departmentId', user.departmentId || 0)
         })
       } else if (roleName === 'creador') {
-        eventsQuery.where('userId', user.id)
+        eventsQuery.where((q) => {
+          q.where('userId', user.id).orWhere('mainResponsibleId', user.id)
+        })
       } else if (roleName === 'auxiliares' || roleName === 'auxiliar') {
         eventsQuery.whereHas('eventVersions', (v) => {
           v.where('isCurrentVersion', true)
@@ -130,7 +132,7 @@ export default class EventsController {
     if (overlaps.length > 0) {
       if (userEmail === 'direccion@fichas.com') {
         for (const conflict of overlaps) {
-          conflict.currentState = 'rejected'
+          conflict.currentState = EventState.REJECTED
           await conflict.save()
         }
       } else {
@@ -142,7 +144,7 @@ export default class EventsController {
 
     try {
         const event = new Event()
-        event.currentState = 'in_review'
+        event.currentState = EventState.IN_REVIEW
         event.organizationId = data.organizationId || 1 
         event.userId = auth.use('web').user!.id
         event.mainResponsibleId = auth.use('web').user!.id
@@ -240,7 +242,7 @@ export default class EventsController {
       if (overlaps.length > 0) {
         if (userEmail === 'direccion@fichas.com') {
           for (const conflict of overlaps) {
-            conflict.currentState = 'rejected'
+            conflict.currentState = EventState.REJECTED
             await conflict.save()
           }
         } else {
@@ -300,7 +302,7 @@ export default class EventsController {
         if (data.locationId) event.locationId = data.locationId
         if (data.organizationId) event.organizationId = data.organizationId
         if (data.eventTypeId) event.eventTypeId = data.eventTypeId
-        event.currentState = 'in_review' 
+        event.currentState = EventState.IN_REVIEW 
         event.useTransaction(transaction)
         await event.save()
 
@@ -322,14 +324,14 @@ export default class EventsController {
         return response.forbidden({ message: 'No tienes permiso para cambiar el estado de este evento' })
     }
 
-    const statusMap: Record<string, string> = {
-      'aceptado': 'scheduled',
-      'rechazado': 'rejected',
-      'pendiente': 'in_review'
+    const statusMap: Record<string, EventState> = {
+      'aceptado': EventState.SCHEDULED,
+      'rechazado': EventState.REJECTED,
+      'pendiente': EventState.IN_REVIEW
     }
 
-    const newStatus = statusMap[estado] || 'in_review'
-    event.currentState = newStatus as any
+    const newStatus = statusMap[estado] || EventState.IN_REVIEW
+    event.currentState = newStatus
     await event.save()
 
     return response.ok({ message: 'Estado actualizado', event })
@@ -342,7 +344,7 @@ export default class EventsController {
         return response.forbidden({ message: 'No tienes permiso para cancelar este evento' })
     }
 
-    event.currentState = 'cancelled'
+    event.currentState = EventState.CANCELLED
     await event.save()
     return response.ok({ message: 'Evento cancelado' })
   }

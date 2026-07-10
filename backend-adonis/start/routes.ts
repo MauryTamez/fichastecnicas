@@ -53,11 +53,9 @@ router.group(() => {
 
     router.group(() => {
         // Eventos generales (index es filtrado por controlador)
+        // Eventos generales (index es filtrado por controlador)
         router.get('/events', [EventsController, 'index'])
-        router.post('/events', [EventsController, 'store'])
-        router.put('/events/:id', [EventsController, 'update'])
         router.patch('/events/:id/status', [EventsController, 'updateStatus'])
-        router.delete('/events/:id', [EventsController, 'destroy'])
 
         const EventsPdfController = () => import('#controllers/events_pdf_controller')
         router.get('/events/:id/pdf', [EventsPdfController, 'generatePdf'])
@@ -104,7 +102,9 @@ router.group(() => {
 
         // 4. Creador Group
         router.group(() => {
-            // Endpoints exclusivos creador
+            router.post('/events', [EventsController, 'store'])
+            router.put('/events/:id', [EventsController, 'update'])
+            router.delete('/events/:id', [EventsController, 'destroy'])
         }).prefix('/creador').use(middleware.role(['admin', 'creador']))
 
         // 5. Auxiliares Group

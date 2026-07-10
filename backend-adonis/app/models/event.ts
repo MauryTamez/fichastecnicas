@@ -7,19 +7,14 @@ import EventType from './event_type.js'
 import EventVersion from './event_version.js'
 import EventVersionEmbedding from './event_version_embedding.js'
 import Location from './location.js'
+import { EventState } from '../enums/event_state.js'
 
 export default class Event extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
 
   @column()
-  declare currentState:
-    | 'draft'
-    | 'in_review'
-    | 'scheduled'
-    | 'rejected'
-    | 'cancelled'
-    | 'historical'
+  declare currentState: EventState
 
   @column()
   declare organizationId: number
