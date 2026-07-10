@@ -14,7 +14,7 @@ const EventForm = () => {
     const [organizations, setOrganizations] = useState([]);
     const [eventTypes, setEventTypes] = useState([]);
     const [step, setStep] = useState(1);
-    
+
     // Updated to match AdonisJS Event & VersionContent models
     const [formData, setFormData] = useState({
         name: '',
@@ -127,7 +127,7 @@ const EventForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         if (!formData.name.trim() || !formData.locationId || !formData.organizationId || !formData.eventTypeId) {
             setStep(1);
             setError('Por favor complete todos los campos obligatorios (Nombre, Organización, Tipo y Recinto).');
@@ -147,6 +147,13 @@ const EventForm = () => {
         setError('');
         setLoading(true);
         try {
+            const payload = {
+                ...formData,
+                locationId: Number(formData.locationId),
+                organizationId: Number(formData.organizationId),
+                eventTypeId: Number(formData.eventTypeId),
+            };
+
             if (isEditMode) {
                 await api.put(`/creador/events/${id}`, formData);
             } else {
@@ -654,7 +661,7 @@ const EventForm = () => {
                         </div>
                         <div className="p-8 space-y-4 bg-gray-50 flex-1">
                             <p className="text-sm font-medium text-gray-600 leading-relaxed">
-                                Describe el evento que deseas crear. Incluye todos los detalles que sepas: el nombre, objetivo, horarios aproximados, código de vestimenta, quiénes asistirán o qué actividades habrá. 
+                                Describe el evento que deseas crear. Incluye todos los detalles que sepas: el nombre, objetivo, horarios aproximados, código de vestimenta, quiénes asistirán o qué actividades habrá.
                                 La Inteligencia Artificial analizará tu solicitud y utilizará fichas técnicas pasadas para intentar rellenar todos los campos del formulario por ti.
                             </p>
                             <textarea

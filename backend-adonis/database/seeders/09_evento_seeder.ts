@@ -14,6 +14,7 @@ import LocationType from '#models/location_type'
 import Role from '#models/role'
 import Department from '#models/department'
 import db from '@adonisjs/lucid/services/db'
+import { EventState } from '../../app/enums/event_state.js'
 
 export default class extends BaseSeeder {
   async run() {
@@ -78,7 +79,7 @@ export default class extends BaseSeeder {
         eventTypeId: evt.event_type_id,
         userId: evt.created_by,
         mainResponsibleId: evt.main_responsible,
-        currentState: 'historical',
+        currentState: EventState.HISTORICAL,
         createdAt: DateTime.fromISO(evt.created_at),
         updatedAt: DateTime.fromISO(evt.updated_at)
       })
