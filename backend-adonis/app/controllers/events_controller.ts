@@ -146,6 +146,7 @@ export default class EventsController {
       const content = e.eventVersions[0]?.versionContent;
       return {
         id: e.id,
+        versionId: e.eventVersions[0]?.id,
         titulo: content?.name || 'Sin título',
         fecha_inicio: content?.startsAt || e.createdAt,
         user_name: e.user?.name || 'Desconocido',
@@ -164,6 +165,9 @@ export default class EventsController {
           query.orderBy('id', 'desc')
                .preload('versionContent')
                .preload('versionActivities')
+               .preload('versionFeedbacks', (fbQuery) => {
+                 fbQuery.preload('reviewer')
+               })
         })
         .preload('organization')
         .preload('user')
@@ -191,6 +195,17 @@ export default class EventsController {
             startsAt: a.startsAt ? DateTime.fromISO(a.startsAt).toFormat('HH:mm') : '',
             endsAt: a.endsAt ? DateTime.fromISO(a.endsAt).toFormat('HH:mm') : '',
             description: a.description
+          })) || [],
+          feedbacks: v.versionFeedbacks?.map((f: any) => ({
+            id: f.id,
+            fieldName: f.fieldName,
+            comment: f.comment,
+            status: f.status,
+            createdAt: f.createdAt,
+            reviewer: {
+              name: f.reviewer?.name,
+              role: f.reviewer?.role?.name
+            }
           })) || []
         }
       })
@@ -323,8 +338,23 @@ export default class EventsController {
 
     const userEmail = auth.use('web').user?.email || ''
     
-    const oldVersion = await EventVersion.query().where('eventId', event.id).where('isCurrentVersion', true).first()
+    const oldVersion = await EventVersion.query()
+      .where('eventId', event.id)
+      .where('isCurrentVersion', true)
+      .preload('versionFeedbacks')
+      .first()
     const oldContent = oldVersion ? await VersionContent.find(oldVersion.versionContentId) : null
+
+    // Validar restricción de edición basada en estado y feedbacks
+    if (event.currentState !== EventState.DRAFT) {
+      if (!oldVersion || !oldVersion.versionFeedbacks || oldVersion.versionFeedbacks.length === 0) {
+        return response.forbidden({ message: 'No puedes editar el evento porque no tiene feedback asignado.' })
+      }
+      const pendingFeedbacks = oldVersion.versionFeedbacks.filter(f => f.status === 'pending')
+      if (pendingFeedbacks.length > 0) {
+        return response.forbidden({ message: 'Debes marcar todos los feedbacks como resueltos antes de crear una nueva versión.' })
+      }
+    }
 
     const startsAtStr = data.startsAt || oldContent?.startsAt?.toISO()
     const endsAtStr = data.endsAt || oldContent?.endsAt?.toISO()
@@ -397,7 +427,20 @@ export default class EventsController {
         if (data.locationId) event.locationId = data.locationId
         if (data.organizationId) event.organizationId = data.organizationId
         if (data.eventTypeId) event.eventTypeId = data.eventTypeId
-        event.currentState = EventState.IN_REVIEW 
+        
+        // Mantener el estado de revisión si estaba en revisión o solicitado, pero indicar que hubo una actualización.
+        // Como el creador ya resolvió el feedback, puede volver a REQUESTED o IN_REVIEW.
+        // Asignaremos REQUESTED para que el encargado lo vuelva a ver, o se podría asignar IN_REVIEW si estaba ahí.
+        // Lo dejaremos en IN_REVIEW por simplicidad, o lo devolveremos a REQUESTED si así se desea.
+        // Aquí lo cambiaremos a REQUESTED si estaba en REQUESTED, de lo contrario IN_REVIEW.
+        if (event.currentState === EventState.REQUESTED) {
+          event.currentState = EventState.REQUESTED
+        } else if (event.currentState === EventState.IN_REVIEW) {
+          event.currentState = EventState.IN_REVIEW
+        } else {
+          event.currentState = EventState.IN_REVIEW 
+        }
+
         event.useTransaction(transaction)
         await event.save()
 
@@ -415,7 +458,7 @@ export default class EventsController {
     const { estado } = request.only(['estado'])
     const event = await Event.findOrFail(params.id)
 
-    if (auth.use('web').user?.role?.name !== 'admin' && auth.use('web').user?.role?.name !== 'auxiliar') {
+    if (auth.use('web').user?.role?.name !== 'admin' && auth.use('web').user?.role?.name !== 'auxiliar' && auth.use('web').user?.role?.name !== 'moderador') {
         return response.forbidden({ message: 'No tienes permiso para cambiar el estado de este evento' })
     }
 
@@ -449,6 +492,26 @@ export default class EventsController {
       }
       return response.internalServerError({ message: 'Error interno del servidor', error: error.message })
     }
+  }
+
+  async passToReview({ params, response, auth }: HttpContext) {
+    const user = auth.use('web').user!
+    await user.load('role')
+
+    const event = await Event.findOrFail(params.id)
+
+    if (user.role?.name?.toLowerCase() !== 'encargado_departamento' && user.role?.name?.toLowerCase() !== 'admin') {
+      return response.forbidden({ message: 'No tienes permiso para pasar este evento a revisión' })
+    }
+
+    if (event.currentState !== EventState.REQUESTED) {
+      return response.badRequest({ message: 'El evento no está en estado de solicitud' })
+    }
+
+    event.currentState = EventState.IN_REVIEW
+    await event.save()
+
+    return response.ok({ message: 'El evento ha pasado a revisión', event })
   }
 
   async destroy({ params, response, auth }: HttpContext) {

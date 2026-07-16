@@ -4,9 +4,11 @@ import api from '../api/axios';
 import { Calendar, User, Clock, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { useNavigate } from 'react-router-dom';
 
 const PendingApprovals = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -49,13 +51,17 @@ const PendingApprovals = () => {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {events.map((event) => (
-                        <div key={event.id} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-premium hover:border-emerald-100 transition-all group flex flex-col h-full cursor-pointer relative overflow-hidden">
+                        <div 
+                            key={event.id} 
+                            onClick={() => navigate(`/evento/${event.id}/version/${event.versionId}`)}
+                            className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-premium hover:border-emerald-100 transition-all group flex flex-col h-full cursor-pointer relative overflow-hidden"
+                        >
                             <div className="flex justify-between items-start mb-4 relative z-10">
                                 <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
                                     <Clock size={20} />
                                 </div>
                                 <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border border-blue-100">
-                                    Solicitado
+                                    {event.currentState === 'requested' ? 'Solicitado' : event.currentState === 'in_review' ? 'En Revisión' : event.currentState}
                                 </span>
                             </div>
                             

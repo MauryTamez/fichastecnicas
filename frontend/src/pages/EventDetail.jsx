@@ -9,6 +9,7 @@ import {
     FileText, CheckCircle, XCircle, Check, MapPin, Edit, Download, History, Send
 } from 'lucide-react';
 import { getVenues } from '../api/venues';
+import { createFeedback, resolveFeedback } from '../api/feedbacks';
 import Swal from 'sweetalert2';
 
 const StatusBadge = ({ currentState }) => {
@@ -41,6 +42,9 @@ const EventDetail = () => {
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
     const [error, setError] = useState('');
+
+    const [feedbackComment, setFeedbackComment] = useState('');
+    const [feedbackField, setFeedbackField] = useState('');
 
     useEffect(() => {
         const fetchData = async () => {
@@ -111,6 +115,57 @@ const EventDetail = () => {
         }
     };
 
+    const handlePassToReview = async () => {
+        setActionLoading(true);
+        try {
+            await api.post(`/events/${id}/pass-to-review`);
+            setEvent(prev => ({ ...prev, currentState: 'in_review' }));
+            Swal.fire('¡Aprobado!', 'El evento ha pasado a revisión (Pendiente).', 'success');
+        } catch (error) {
+            Swal.fire('Error', error.response?.data?.message || 'Error al pasar a revisión.', 'error');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const handleAddFeedback = async (e) => {
+        e.preventDefault();
+        if (!feedbackComment.trim()) return;
+        
+        setActionLoading(true);
+        try {
+            await createFeedback(id, versionId, {
+                comment: feedbackComment,
+                fieldName: feedbackField || null
+            });
+            Swal.fire('¡Éxito!', 'Feedback añadido correctamente.', 'success');
+            setFeedbackComment('');
+            setFeedbackField('');
+            // Reload event
+            const res = await api.get(`/events/${id}`);
+            setEvent(res.data);
+        } catch (error) {
+            Swal.fire('Error', error.response?.data?.message || 'Error al añadir feedback.', 'error');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const handleResolveFeedback = async (feedbackId) => {
+        setActionLoading(true);
+        try {
+            await resolveFeedback(feedbackId);
+            Swal.fire('¡Resuelto!', 'El feedback ha sido marcado como resuelto.', 'success');
+            // Reload event
+            const res = await api.get(`/events/${id}`);
+            setEvent(res.data);
+        } catch (error) {
+            Swal.fire('Error', error.response?.data?.message || 'Error al resolver feedback.', 'error');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
     if (loading) return (
         <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
             <div className="w-12 h-12 border-4 border-emerald-100 border-t-emerald-600 rounded-full animate-spin"></div>
@@ -130,7 +185,14 @@ const EventDetail = () => {
 
     const selectedVersion = event.versions?.find(v => String(v.id) === String(versionId)) || {};
     const isCurrentVersion = selectedVersion.isCurrentVersion === true;
-    const canEdit = isCurrentVersion && (String(event.userId) === String(user?.id) || user?.role === 'admin' || user?.nivel_permiso === 1);
+    
+    // El creador solo puede editar si está en draft o si tiene feedbacks
+    const hasPendingFeedbacks = selectedVersion.feedbacks?.some(f => f.status === 'pending');
+    const canEdit = isCurrentVersion && (String(event.userId) === String(user?.id) || user?.role === 'admin' || user?.nivel_permiso === 1) && (event.currentState === 'draft' || hasPendingFeedbacks);
+    
+    const isReviewer = user?.role === 'moderador' || user?.role === 'encargado_departamento' || user?.role === 'admin';
+    const canAddFeedback = isReviewer && isCurrentVersion && (event.currentState === 'in_review' || event.currentState === 'requested');
+    const isCreator = String(event.userId) === String(user?.id);
 
     return (
         <div className="max-w-4xl mx-auto pb-20 animate-fade-in font-sans">
@@ -154,6 +216,11 @@ const EventDetail = () => {
                                     <History size={14} /> Histórico (Modo Lectura)
                                 </span>
                             )}
+                            {isCurrentVersion && isReviewer && (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-xs font-black uppercase tracking-wider border border-blue-200">
+                                    <FileText size={14} /> Modo Revisión
+                                </span>
+                            )}
                         </div>
                         <div className="flex gap-2">
                             <StatusBadge currentState={event.currentState} />
@@ -163,12 +230,13 @@ const EventDetail = () => {
                         </div>
                     </div>
                     <div className="flex gap-3">
-                        {user?.nivel_permiso === 1 && event.currentState === 'in_review' && isCurrentVersion && (
+                        {(user?.nivel_permiso === 1 || user?.role === 'moderador') && event.currentState === 'in_review' && isCurrentVersion && (
                             <>
                                 <button
                                     onClick={() => handleStatus('aceptado')}
-                                    disabled={actionLoading}
-                                    className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-2xl font-bold text-sm shadow-lg shadow-emerald-100 transition-all disabled:opacity-60"
+                                    disabled={actionLoading || hasPendingFeedbacks}
+                                    title={hasPendingFeedbacks ? "Debes resolver todo el feedback pendiente primero" : ""}
+                                    className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-2xl font-bold text-sm shadow-lg shadow-emerald-100 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                                 >
                                     <CheckCircle size={16} /> Aceptar
                                 </button>
@@ -180,6 +248,17 @@ const EventDetail = () => {
                                     <XCircle size={16} /> Rechazar
                                 </button>
                             </>
+                        )}
+
+                        {user?.role === 'encargado_departamento' && event.currentState === 'requested' && isCurrentVersion && (
+                            <button
+                                onClick={handlePassToReview}
+                                disabled={actionLoading || hasPendingFeedbacks}
+                                title={hasPendingFeedbacks ? "Debes resolver todo el feedback pendiente primero" : ""}
+                                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl font-bold text-sm shadow-lg shadow-blue-100 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                            >
+                                <Check size={16} /> Aprobar Revisión
+                            </button>
                         )}
                         
                         {canEdit && (
@@ -227,11 +306,11 @@ const EventDetail = () => {
                     </div>
 
                     {/* Agenda / Minuto a Minuto */}
-                    {selectedVersion.activities && selectedVersion.activities.length > 0 && (
-                        <div className={`bg-white rounded-[2rem] p-8 border shadow-sm transition-colors ${!isCurrentVersion ? 'border-amber-100' : 'border-gray-100'}`}>
-                            <h2 className="text-lg font-display font-bold text-gray-900 mb-6 flex items-center gap-2">
-                                <Clock size={18} className="text-emerald-500" /> Agenda del Evento
-                            </h2>
+                    <div className={`bg-white rounded-[2rem] p-8 border shadow-sm transition-colors ${!isCurrentVersion ? 'border-amber-100' : 'border-gray-100'}`}>
+                        <h2 className="text-lg font-display font-bold text-gray-900 mb-6 flex items-center gap-2">
+                            <Clock size={18} className="text-emerald-500" /> Agenda del Evento
+                        </h2>
+                        {selectedVersion.activities && selectedVersion.activities.length > 0 ? (
                             <div className="space-y-4">
                                 {selectedVersion.activities.map((act, index) => (
                                     <div key={index} className="flex gap-4 group">
@@ -255,8 +334,10 @@ const EventDetail = () => {
                                     </div>
                                 ))}
                             </div>
-                        </div>
-                    )}
+                        ) : (
+                            <p className="text-sm text-gray-400 italic">No se registraron actividades.</p>
+                        )}
+                    </div>
 
                     {/* Technical Requirements / Detalles Específicos */}
                     <div className={`bg-white rounded-[2rem] p-8 border shadow-sm space-y-6 transition-colors ${!isCurrentVersion ? 'border-amber-100' : 'border-gray-100'}`}>
@@ -345,6 +426,84 @@ const EventDetail = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Feedbacks Section */}
+            {(selectedVersion.feedbacks?.length > 0 || canAddFeedback) && (
+                <div className="mt-8 bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm transition-colors">
+                    <h2 className="text-xl font-display font-bold text-gray-900 mb-6 flex items-center gap-2">
+                        <FileText size={20} className="text-blue-500" /> Feedbacks y Revisiones
+                    </h2>
+                    
+                    {selectedVersion.feedbacks?.length > 0 && (
+                        <div className="space-y-4 mb-8">
+                            {selectedVersion.feedbacks.map(f => (
+                                <div key={f.id} className={`p-5 rounded-2xl border ${f.status === 'resolved' ? 'bg-gray-50 border-gray-200' : 'bg-amber-50/50 border-amber-100'} flex justify-between items-start`}>
+                                    <div>
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <span className="font-bold text-gray-900 text-sm">{f.reviewer?.name}</span>
+                                            <span className="text-[10px] font-black uppercase text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md">{f.reviewer?.role}</span>
+                                            <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md ${f.status === 'resolved' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                                                {f.status === 'resolved' ? 'Resuelto' : 'Pendiente'}
+                                            </span>
+                                        </div>
+                                        {f.fieldName && (
+                                            <p className="text-xs font-bold text-blue-600 mb-1">Campo: {f.fieldName}</p>
+                                        )}
+                                        <p className="text-sm text-gray-700">{f.comment}</p>
+                                        <p className="text-xs text-gray-400 mt-2">{format(new Date(f.createdAt), "d 'de' MMMM yyyy HH:mm", { locale: es })}</p>
+                                    </div>
+                                    {isCreator && f.status === 'pending' && isCurrentVersion && (
+                                        <button 
+                                            onClick={() => handleResolveFeedback(f.id)}
+                                            disabled={actionLoading}
+                                            className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 px-4 py-2 rounded-xl text-xs font-bold transition-colors disabled:opacity-50"
+                                        >
+                                            Marcar Resuelto
+                                        </button>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {canAddFeedback && (
+                        <form onSubmit={handleAddFeedback} className="bg-gray-50 rounded-2xl p-6 border border-gray-200">
+                            <h3 className="text-sm font-bold text-gray-900 mb-4">Añadir Nuevo Feedback</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                <div className="md:col-span-1">
+                                    <label className="block text-xs font-black uppercase tracking-wider text-gray-500 mb-2">Campo Específico (Opcional)</label>
+                                    <input 
+                                        type="text" 
+                                        value={feedbackField}
+                                        onChange={(e) => setFeedbackField(e.target.value)}
+                                        placeholder="Ej. Objetivo, Dress Code" 
+                                        className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                    />
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="block text-xs font-black uppercase tracking-wider text-gray-500 mb-2">Comentario *</label>
+                                    <textarea 
+                                        value={feedbackComment}
+                                        onChange={(e) => setFeedbackComment(e.target.value)}
+                                        placeholder="Escribe el feedback aquí..." 
+                                        required
+                                        className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 min-h-[80px]"
+                                    ></textarea>
+                                </div>
+                            </div>
+                            <div className="flex justify-end">
+                                <button 
+                                    type="submit" 
+                                    disabled={actionLoading || !feedbackComment.trim()}
+                                    className="bg-gray-900 text-white hover:bg-gray-800 px-6 py-2.5 rounded-xl text-sm font-bold transition-colors disabled:opacity-50"
+                                >
+                                    Enviar Feedback
+                                </button>
+                            </div>
+                        </form>
+                    )}
+                </div>
+            )}
         </div>
     );
 };
