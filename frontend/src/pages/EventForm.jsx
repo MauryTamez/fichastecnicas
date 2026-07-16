@@ -5,6 +5,18 @@ import Swal from 'sweetalert2';
 import api from '../api/axios';
 import { getVenues } from '../api/venues';
 
+// Catálogos globales de opciones comunes con opción "Otro / Otra" integrada
+const MARCAS_POPULARES = [
+    "Toyota", "Nissan", "Chevrolet", "Ford", "Honda", 
+    "Kia", "Hyundai", "Mazda", "Volkswagen", "BMW", 
+    "Jeep", "Dodge", "GMC", "Subaru", "Otro / Otra"
+];
+
+const COLORES_COMUNES = [
+    "Blanco", "Negro", "Gris", "Plata", "Rojo", 
+    "Azul", "Verde", "Amarillo", "Naranja", "Café", "Otro / Otra"
+];
+
 const EventForm = () => {
     const { id } = useParams();
     const isEditMode = !!id;
@@ -60,7 +72,7 @@ const EventForm = () => {
         separadorHimno: false,
     });
 
-    // 🚗 ESTADOS CORREGIDOS PARA MÚLTIPLES CARROS
+    // 🚗 ESTADOS PARA MÚLTIPLES CARROS
     const [parkingList, setParkingList] = useState([]);
     const [currentVehicle, setCurrentVehicle] = useState({
         nombreResponsable: '',
@@ -103,14 +115,23 @@ const EventForm = () => {
 
     const handleVehicleChange = (e) => {
         const { name, value } = e.target;
-        setCurrentVehicle(prev => ({ ...prev, [name]: value }));
+        if (name === 'nombreResponsable') {
+            // Capitaliza automáticamente cada palabra
+            const formattedName = value.replace(/(^\w|\s\w)/g, (match) => match.toUpperCase());
+            setCurrentVehicle(prev => ({ ...prev, [name]: formattedName }));
+        } else if (name === 'placaVehiculo') {
+            // Convierte automáticamente las placas a mayúsculas
+            setCurrentVehicle(prev => ({ ...prev, [name]: value.toUpperCase() }));
+        } else {
+            setCurrentVehicle(prev => ({ ...prev, [name]: value }));
+        }
     };
 
     // Agregar carro a la lista dinámica
     const handleAddVehicle = (e) => {
         if (e) e.preventDefault();
         if (!currentVehicle.nombreResponsable.trim() || !currentVehicle.placaVehiculo.trim() || !currentVehicle.marcaVehiculo.trim()) {
-            Swal.fire('Campos incompletos', 'Nombre, Placas y Marca/Modelo son obligatorios para el acceso vehicular.', 'warning');
+            Swal.fire('Campos incompletos', 'Nombre, Placas y Marca son obligatorios para el acceso vehicular.', 'warning');
             return;
         }
         setParkingList(prev => [...prev, { ...currentVehicle }]);
@@ -135,21 +156,21 @@ const EventForm = () => {
                     setParkingList([]);
                     setCurrentVehicle({ nombreResponsable: '', marcaVehiculo: '', placaVehiculo: '', colorVehiculo: '' });
                 } else {
-                    setShowParkingModal(true); // Abrir modal al activar
+                    setShowParkingModal(true);
                 }
             }
             if (key === 'fotografia') {
                 if (!newValue) {
                     setHoraFotografia('');
                 } else {
-                    setShowPhotoModal(true); // Abrir modal al activar
+                    setShowPhotoModal(true);
                 }
             }
             if (key === 'presidium') {
                 if (!newValue) {
                     setPresidiumList([]);
                 } else {
-                    setShowPresidiumModal(true); // Abrir modal al activar
+                    setShowPresidiumModal(true);
                 }
             }
             return { ...prev, [key]: newValue };
@@ -194,14 +215,12 @@ const EventForm = () => {
                     api.get('/organizations'),
                     api.get('/event-types')
                 ]);
-         
                 setOrganizations(orgsRes.data || []);
                 setEventTypes(typesRes.data || []);
 
                 if (isEditMode) {
                     const eventsRes = await api.get('/events');
                     const currentEvent = eventsRes.data.data.find(e => String(e.id) === String(id));
-    
                     if (currentEvent) {
                         setFormData({
                             name: currentEvent.name || currentEvent.titulo || '',
@@ -220,7 +239,6 @@ const EventForm = () => {
                             directorAction: currentEvent.directorAction || '',
                             activities: currentEvent.activities || []
                         });
-
                         if (currentEvent.requerimientosOtros) {
                             setOtros(currentEvent.requerimientosOtros);
                             if (currentEvent.listaEstacionamiento) setParkingList(currentEvent.listaEstacionamiento);
@@ -243,7 +261,6 @@ const EventForm = () => {
     };
 
     const [error, setError] = useState('');
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!formData.name.trim() || !formData.locationId || !formData.organizationId || !formData.eventTypeId) {
@@ -271,7 +288,7 @@ const EventForm = () => {
                 organizationId: Number(formData.organizationId),
                 eventTypeId: Number(formData.eventTypeId),
                 requerimientosOtros: otros,
-                listaEstacionamiento: otros.estacionamiento ? parkingList : null, // Enviando el arreglo completo
+                listaEstacionamiento: otros.estacionamiento ? parkingList : null,
                 horaFotografia: otros.fotografia ? horaFotografia : null,
                 listaPresidium: otros.presidium ? presidiumList : null
             };
@@ -325,9 +342,7 @@ const EventForm = () => {
                             <button
                                 type="button"
                                 onClick={() => setStep(s.id)}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${step === s.id ?
-                                    'bg-emerald-600 text-white shadow-lg shadow-emerald-100' : 'text-gray-400 hover:text-gray-600'
-                                    }`}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${step === s.id ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-100' : 'text-gray-400 hover:text-gray-600'}`}
                             >
                                 <s.icon size={18} />
                                 <span className="text-sm font-bold">{s.name}</span>
@@ -449,6 +464,7 @@ const EventForm = () => {
                                             ))}
                                         </select>
                                     </div>
+
                                     <div>
                                         <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight">Tipo de Evento</label>
                                         <select
@@ -543,7 +559,6 @@ const EventForm = () => {
                                                         />
                                                         <span className="text-sm font-medium text-gray-700">{label}</span>
                                                     </label>
-                                                    {/* Botón para reabrir el modal en caso de que ya esté activo */}
                                                     {otros[key] && (key === 'estacionamiento' || key === 'fotografia' || key === 'presidium') && (
                                                         <button
                                                             type="button"
@@ -663,46 +678,47 @@ const EventForm = () => {
                                                     }
                                                     setFormData({
                                                         ...formData,
-                                                        activities: [...formData.activities, currentActivity]
+                                                        activities: [...formData.activities, currentActivity].sort((a, b) => a.startsAt.localeCompare(b.startsAt))
                                                     });
                                                     setCurrentActivity({ name: '', startsAt: '', endsAt: '', description: '' });
+                                                } else {
+                                                    Swal.fire('Campos incompletos', 'Asigna nombre, hora de inicio y de fin a la actividad', 'warning');
                                                 }
                                             }}
-                                            className="w-full py-3 bg-white border border-emerald-200 text-emerald-600 rounded-xl font-bold text-sm hover:bg-emerald-50 hover:shadow-sm transition-all flex items-center justify-center gap-2"
+                                            className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 shadow-md shadow-emerald-100"
                                         >
-                                            <Plus size={18} /> Agregar Actividad a la Agenda
+                                            <Plus size={18} /> Agregar Actividad
                                         </button>
-                                    </div>
 
-                                    <div className="mt-6 space-y-3">
-                                        {formData.activities.map((act, index) => (
-                                            <div key={index} className="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 shadow-sm animate-fade-in">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xs">
-                                                        {index + 1}
+                                        {formData.activities.length > 0 && (
+                                            <div className="space-y-2.5 mt-6 max-h-72 overflow-y-auto pr-1">
+                                                {formData.activities.map((act, index) => (
+                                                    <div key={index} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow transition-all duration-200 animate-fade-in">
+                                                        <div className="flex gap-4 items-center">
+                                                            <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center font-bold text-xs">
+                                                                {index + 1}
+                                                            </div>
+                                                            <div>
+                                                                <h4 className="text-sm font-bold text-slate-800">{act.name}</h4>
+                                                                <p className="text-xs text-gray-400 font-medium">{act.startsAt} - {act.endsAt}</p>
+                                                                {act.description && (
+                                                                    <p className="text-xs text-gray-500 mt-1 line-clamp-2">{act.description}</p>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setFormData({ ...formData, activities: formData.activities.filter((_, i) => i !== index) });
+                                                            }}
+                                                            className="p-2 text-gray-300 hover:text-red-500 transition-colors"
+                                                        >
+                                                            <X size={18} />
+                                                        </button>
                                                     </div>
-                                                    <div>
-                                                        <p className="font-bold text-gray-900">{act.name}</p>
-                                                        <p className="text-xs text-gray-400 font-medium">{act.startsAt} - {act.endsAt}</p>
-                                                        {act.description && (
-                                                            <p className="text-xs text-gray-500 mt-1 line-clamp-2">{act.description}</p>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        setFormData({
-                                                            ...formData,
-                                                            activities: formData.activities.filter((_, i) => i !== index)
-                                                        });
-                                                    }}
-                                                    className="p-2 text-gray-300 hover:text-red-500 transition-colors"
-                                                >
-                                                    <X size={18} />
-                                                </button>
+                                                ))}
                                             </div>
-                                        ))}
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -754,36 +770,55 @@ const EventForm = () => {
                                         onChange={handleChange}
                                     />
                                 </div>
+
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight">Programa Impactado</label>
                                     <input
                                         type="text"
                                         name="programImpacted"
                                         className="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium placeholder:text-gray-300"
+                                        placeholder="Programa académico/social al que beneficia..."
                                         value={formData.programImpacted}
                                         onChange={handleChange}
                                     />
                                 </div>
+
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight">Especificaciones de Invitados</label>
                                     <textarea
                                         name="guestSpecifications"
                                         rows="2"
                                         className="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium placeholder:text-gray-300"
+                                        placeholder="Detalles sobre invitados especiales o requerimientos específicos..."
                                         value={formData.guestSpecifications}
                                         onChange={handleChange}
                                     ></textarea>
                                 </div>
+
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight">Detalle de Presidium</label>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight">Tipo de Acomodo</label>
+                                    <input
+                                        type="text"
+                                        name="acomodo_tipo"
+                                        className="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium placeholder:text-gray-300"
+                                        placeholder="Ej: Auditorio, Herradura, Escuela..."
+                                        value={formData.acomodo_tipo}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight">Detalles de Presídium</label>
                                     <textarea
                                         name="presidiumDetail"
                                         rows="2"
                                         className="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium placeholder:text-gray-300"
+                                        placeholder="Indicaciones para acomodo o protocolo del presídium..."
                                         value={formData.presidiumDetail}
                                         onChange={handleChange}
                                     ></textarea>
                                 </div>
+
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight">Acción del Director</label>
                                     <textarea
@@ -805,13 +840,11 @@ const EventForm = () => {
                                 >
                                     {loading ? (
                                         <div className="flex items-center gap-2">
-                                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                            Guardando...
+                                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> Guardando...
                                         </div>
                                     ) : (
                                         <>
-                                            <Save size={20} />
-                                            Guardar Ficha Técnica
+                                            <Save size={20} /> Guardar Ficha Técnica
                                         </>
                                     )}
                                 </button>
@@ -824,59 +857,47 @@ const EventForm = () => {
                 <div className="hidden lg:block">
                     <div className="sticky top-10 bg-emerald-900 rounded-[2.5rem] p-10 text-white shadow relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-800 rounded-full blur-3xl opacity-40 -mr-20 -mt-20"></div>
-
                         <h3 className="text-2xl font-display font-bold mb-8 relative z-10">Resumen</h3>
-
                         <div className="space-y-6 relative z-10">
                             <div className="space-y-1">
                                 <p className="text-emerald-300 font-black text-[10px] uppercase tracking-widest">Proyecto</p>
                                 <p className="font-bold text-lg leading-tight truncate">{formData.name || 'Sin título'}</p>
                             </div>
-
                             <div className="space-y-1">
                                 <p className="text-emerald-300 font-black text-[10px] uppercase tracking-widest">Locación</p>
                                 <p className="font-bold text-lg leading-tight truncate">
-                                    {venues.find(v => String(v.id) === String(formData.locationId))?.nombre ||
-                                        venues.find(v => String(v.id) === String(formData.locationId))?.name || 'Pendiente'}
+                                    {venues.find(v => String(v.id) === String(formData.locationId))?.nombre || venues.find(v => String(v.id) === String(formData.locationId))?.name || 'Pendiente'}
                                 </p>
                             </div>
-
                             <div className="space-y-1">
                                 <p className="text-emerald-300 font-black text-[10px] uppercase tracking-widest">Programación</p>
                                 <p className="text-sm font-medium text-emerald-50/80">
                                     {formData.startsAt ? new Date(formData.startsAt).toLocaleString('es-ES', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Pendiente de definir'}
                                 </p>
                             </div>
-
                             <div className="pt-6 mt-6 border-t border-emerald-800 space-y-4">
                                 <div className={`flex items-center gap-2 text-sm ${formData.name ? 'text-emerald-400' : 'text-emerald-700'}`}>
                                     <CheckCircle2 size={16} /> Informacion basica
                                 </div>
                                 <div className={`flex items-center gap-2 text-sm ${formData.startsAt ? 'text-emerald-400' : 'text-emerald-700'}`}>
-                                    <CheckCircle2 size={16} /> Horarios definidos
+                                    <CheckCircle2 size={16} /> Fecha y Hora
                                 </div>
-                                <div className={`flex items-center gap-2 text-sm ${formData.objective ? 'text-emerald-400' : 'text-emerald-700'}`}>
-                                    <CheckCircle2 size={16} /> Detalles tecnicos
+                                <div className={`flex items-center gap-2 text-sm ${formData.locationId ? 'text-emerald-400' : 'text-emerald-700'}`}>
+                                    <CheckCircle2 size={16} /> Asignación de Recinto
                                 </div>
-                            </div>
-                        </div>
-
-                        <div className="mt-12 p-6 bg-emerald-950/40 rounded-3xl border border-emerald-800 relative z-10">
-                            <p className="text-[10px] text-emerald-400 font-bold uppercase mb-2">Versión</p>
-                            <div className="flex items-center gap-2 text-white font-bold">
-                                <div className="w-2 h-2 rounded-full bg-amber-400"></div>
-                                {isEditMode ? 'Creando nueva versión' : 'Borrador inicial'}
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* AI AutoFill Modal */}
+            {/* ========================================================================= */}
+            {/* 🤖 MODAL DE AUTORELLENADO POR IA */}
+            {/* ========================================================================= */}
             {showAIModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-fade-in">
-                    <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col">
-                        <div className="p-6 bg-gradient-to-r from-emerald-600 to-teal-600 text-white flex items-center justify-between">
+                    <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col animate-slide-up">
+                        <div className="p-6 bg-emerald-950 text-white flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <Sparkles size={24} className="text-emerald-200" />
                                 <h2 className="text-xl font-display font-bold">Asistente de Autorellenado IA</h2>
@@ -911,8 +932,7 @@ const EventForm = () => {
                             >
                                 {isAILoading ? (
                                     <>
-                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                        Procesando...
+                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> Procesando...
                                     </>
                                 ) : (
                                     <>
@@ -956,33 +976,39 @@ const EventForm = () => {
                                     placeholder="Placas (Ej: XYZ-123-A)"
                                     value={currentVehicle.placaVehiculo}
                                     onChange={handleVehicleChange}
-                                    className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none shadow-sm"
+                                    className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm uppercase outline-none shadow-sm animate-fade-in"
                                 />
-                                <input
-                                    type="text"
+                                <select
                                     name="marcaVehiculo"
-                                    placeholder="Marca y Modelo"
                                     value={currentVehicle.marcaVehiculo}
                                     onChange={handleVehicleChange}
-                                    className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none shadow-sm"
-                                />
-                                <input
-                                    type="text"
+                                    className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none shadow-sm font-medium text-slate-700"
+                                >
+                                    <option value="" disabled>Selecciona una marca...</option>
+                                    {MARCAS_POPULARES.map((marca) => (
+                                        <option key={marca} value={marca}>{marca}</option>
+                                    ))}
+                                </select>
+                                <select
                                     name="colorVehiculo"
-                                    placeholder="Color"
                                     value={currentVehicle.colorVehiculo}
                                     onChange={handleVehicleChange}
-                                    className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none shadow-sm"
-                                />
+                                    className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none shadow-sm font-medium text-slate-700"
+                                >
+                                    <option value="" disabled>Selecciona un color...</option>
+                                    {COLORES_COMUNES.map((color) => (
+                                        <option key={color} value={color}>{color}</option>
+                                    ))}
+                                </select>
                             </div>
                             <button
                                 type="button"
                                 onClick={handleAddVehicle}
-                                className="w-full py-3 bg-emerald-600 text-white font-bold rounded-xl text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm hover:bg-emerald-700 transition-colors"
+                                className="w-full py-2.5 bg-emerald-600 text-white rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm hover:bg-emerald-700 transition-colors"
                             >
-                                <Plus size={14} /> Registrar Auto
+                                <Plus size={14} /> Agregar Vehículo
                             </button>
-                            
+
                             {parkingList.length > 0 && (
                                 <div className="space-y-2 mt-2 border-t border-slate-200 pt-3 max-h-52 overflow-y-auto">
                                     {parkingList.map((vehicle, idx) => (
@@ -1033,22 +1059,28 @@ const EventForm = () => {
                         </div>
                         <div className="p-6 space-y-4 bg-slate-50">
                             <div>
-                                <label className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">Hora Exacta</label>
+                                <label className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">Hora Exacta para la Toma</label>
                                 <input
                                     type="time"
                                     value={horaFotografia}
                                     onChange={(e) => setHoraFotografia(e.target.value)}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none text-base text-slate-700 font-bold shadow-sm"
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white font-bold text-emerald-700 outline-none shadow-sm"
                                 />
                             </div>
                         </div>
                         <div className="p-4 bg-white border-t border-gray-100 flex justify-end">
                             <button
                                 type="button"
-                                onClick={() => setShowPhotoModal(false)}
+                                onClick={() => {
+                                    if (!horaFotografia) {
+                                        Swal.fire('Atención', 'Por favor especifica un horario para continuar.', 'info');
+                                        return;
+                                    }
+                                    setShowPhotoModal(false);
+                                }}
                                 className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-xl font-bold text-sm transition-all"
                             >
-                                Guardar Hora
+                                Guardar Horario
                             </button>
                         </div>
                     </div>
@@ -1056,7 +1088,7 @@ const EventForm = () => {
             )}
 
             {/* ========================================================================= */}
-            {/* 👥 MODAL DE MIEMBROS DEL PRESÍDIUM */}
+            {/* 👥 MODAL DE PRESÍDIUM */}
             {/* ========================================================================= */}
             {showPresidiumModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-fade-in">
@@ -1064,7 +1096,7 @@ const EventForm = () => {
                         <div className="p-6 bg-emerald-600 text-white flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <span className="text-xl">👥</span>
-                                <h2 className="text-xl font-display font-bold">Miembros del Presídium</h2>
+                                <h2 className="text-xl font-display font-bold">Listado de Integrantes del Presídium</h2>
                             </div>
                             <button onClick={() => setShowPresidiumModal(false)} className="text-emerald-100 hover:text-white transition-colors">
                                 <X size={24} />
@@ -1074,27 +1106,27 @@ const EventForm = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <input
                                     type="text"
-                                    placeholder="Nombre completo"
+                                    placeholder="Nombre Completo"
                                     value={currentMember.nombre}
-                                    onChange={(e) => setCurrentMember({...currentMember, nombre: e.target.value})}
+                                    onChange={(e) => setCurrentMember(prev => ({ ...prev, nombre: e.target.value }))}
                                     className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none shadow-sm"
                                 />
                                 <input
                                     type="text"
                                     placeholder="Puesto / Cargo"
                                     value={currentMember.puesto}
-                                    onChange={(e) => setCurrentMember({...currentMember, puesto: e.target.value})}
+                                    onChange={(e) => setCurrentMember(prev => ({ ...prev, puesto: e.target.value }))}
                                     className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none shadow-sm"
                                 />
                             </div>
                             <button
                                 type="button"
                                 onClick={handleAddMember}
-                                className="w-full py-3 bg-emerald-600 text-white font-bold rounded-xl text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm hover:bg-emerald-700 transition-colors"
+                                className="w-full py-2.5 bg-emerald-600 text-white rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm hover:bg-emerald-700 transition-colors"
                             >
                                 <Plus size={14} /> Agregar Integrante
                             </button>
-                            
+
                             {presidiumList.length > 0 && (
                                 <div className="space-y-2 mt-2 border-t border-slate-200 pt-3 max-h-52 overflow-y-auto">
                                     {presidiumList.map((member, idx) => (
