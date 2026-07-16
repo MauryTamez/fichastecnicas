@@ -15,7 +15,6 @@ const EventForm = () => {
     const [eventTypes, setEventTypes] = useState([]);
     const [step, setStep] = useState(1);
     
-    // Updated to match AdonisJS Event & VersionContent models
     const [formData, setFormData] = useState({
         name: '',
         objective: '',
@@ -47,6 +46,7 @@ const EventForm = () => {
     const [aiPrompt, setAIPrompt] = useState('');
     const [isAILoading, setIsAILoading] = useState(false);
     const [aiWarning, setAiWarning] = useState(false);
+
     const [otros, setOtros] = useState({
         manteles: false,
         banderas: false,
@@ -60,11 +60,32 @@ const EventForm = () => {
         separadorHimno: false,
     });
 
+    // 🚗 ESTADOS CORREGIDOS PARA MÚLTIPLES CARROS
+    const [parkingList, setParkingList] = useState([]);
+    const [currentVehicle, setCurrentVehicle] = useState({
+        nombreResponsable: '',
+        marcaVehiculo: '',
+        placaVehiculo: '',
+        colorVehiculo: ''
+    });
+
+    // 📸 Horario fotográfico
+    const [horaFotografia, setHoraFotografia] = useState('');
+
+    // 👥 Lista de presídium
+    const [presidiumList, setPresidiumList] = useState([]);
+    const [currentMember, setCurrentMember] = useState({ nombre: '', puesto: '' });
+
+    // 🪟 Estados para controlar la apertura de los modales individuales
+    const [showParkingModal, setShowParkingModal] = useState(false);
+    const [showPhotoModal, setShowPhotoModal] = useState(false);
+    const [showPresidiumModal, setShowPresidiumModal] = useState(false);
+
     const otrosItems = [
         { key: 'manteles', label: 'Manteles' },
         { key: 'banderas', label: 'Banderas' },
         { key: 'coffeeBreak', label: 'Mesa para Coffee break' },
-        { key: 'estacionamiento', label: 'Acceso a Estacionamiento' },
+        { key: 'estacionamiento', label: 'Acceso a Estacionamiento (Múltiples vehículos)' },
         { key: 'fotografia', label: 'Toma de Fotografía (especificar horario de la toma)' },
         { key: 'podium', label: 'Pódium' },
         { key: 'presidium', label: 'Presídium (Anexar listado con nombre y puesto)' },
@@ -74,22 +95,65 @@ const EventForm = () => {
     ];
 
     const audiovisualItems = [
-        'Sonido',
-        'Micrófono Inalámbrico de mano',
-        'Micrófono Inalámbrico de mano con base de mesa',
-        'Micrófono Presidencial',
-        'Micrófono de Diadema',
-        'Micrófono Alámbrico',
-        'Proyección de Presentación',
-        'Proyección de Video Institucional',
-        'Videograbación',
-        'Personal de Apoyo',
-        'Apuntador para pase de diapositivas',
-        'Música de fondo',
+        'Sonido', 'Micrófono Inalámbrico de mano', 'Micrófono Inalámbrico de mano con base de mesa',
+        'Micrófono Presidencial', 'Micrófono de Diadema', 'Micrófono Alámbrico',
+        'Proyección de Presentación', 'Proyección de Video Institucional', 'Videograbación',
+        'Personal de Apoyo', 'Apuntador para pase de diapositivas', 'Música de fondo',
     ];
 
+    const handleVehicleChange = (e) => {
+        const { name, value } = e.target;
+        setCurrentVehicle(prev => ({ ...prev, [name]: value }));
+    };
+
+    // Agregar carro a la lista dinámica
+    const handleAddVehicle = (e) => {
+        if (e) e.preventDefault();
+        if (!currentVehicle.nombreResponsable.trim() || !currentVehicle.placaVehiculo.trim() || !currentVehicle.marcaVehiculo.trim()) {
+            Swal.fire('Campos incompletos', 'Nombre, Placas y Marca/Modelo son obligatorios para el acceso vehicular.', 'warning');
+            return;
+        }
+        setParkingList(prev => [...prev, { ...currentVehicle }]);
+        setCurrentVehicle({ nombreResponsable: '', marcaVehiculo: '', placaVehiculo: '', colorVehiculo: '' });
+    };
+
+    const handleAddMember = (e) => {
+        if (e) e.preventDefault();
+        if (!currentMember.nombre.trim() || !currentMember.puesto.trim()) {
+            Swal.fire('Campos incompletos', 'Nombre y Puesto son requeridos para el integrante del presídium.', 'warning');
+            return;
+        }
+        setPresidiumList(prev => [...prev, { ...currentMember }]);
+        setCurrentMember({ nombre: '', puesto: '' });
+    };
+
     const toggleOtro = (key) => {
-        setOtros(prev => ({ ...prev, [key]: !prev[key] }));
+        setOtros(prev => {
+            const newValue = !prev[key];
+            if (key === 'estacionamiento') {
+                if (!newValue) {
+                    setParkingList([]);
+                    setCurrentVehicle({ nombreResponsable: '', marcaVehiculo: '', placaVehiculo: '', colorVehiculo: '' });
+                } else {
+                    setShowParkingModal(true); // Abrir modal al activar
+                }
+            }
+            if (key === 'fotografia') {
+                if (!newValue) {
+                    setHoraFotografia('');
+                } else {
+                    setShowPhotoModal(true); // Abrir modal al activar
+                }
+            }
+            if (key === 'presidium') {
+                if (!newValue) {
+                    setPresidiumList([]);
+                } else {
+                    setShowPresidiumModal(true); // Abrir modal al activar
+                }
+            }
+            return { ...prev, [key]: newValue };
+        });
     };
 
     const handleAutoFill = async () => {
@@ -123,21 +187,21 @@ const EventForm = () => {
     useEffect(() => {
         const fetchInitialData = async () => {
             try {
-                // We map locations to venues in the backend or frontend api
                 const venuesRes = await getVenues();
                 setVenues(venuesRes || []);
 
-                // Fetch catalogs from Adonis
                 const [orgsRes, typesRes] = await Promise.all([
                     api.get('/organizations'),
                     api.get('/event-types')
                 ]);
+         
                 setOrganizations(orgsRes.data || []);
                 setEventTypes(typesRes.data || []);
 
                 if (isEditMode) {
                     const eventsRes = await api.get('/events');
                     const currentEvent = eventsRes.data.data.find(e => String(e.id) === String(id));
+    
                     if (currentEvent) {
                         setFormData({
                             name: currentEvent.name || currentEvent.titulo || '',
@@ -156,6 +220,13 @@ const EventForm = () => {
                             directorAction: currentEvent.directorAction || '',
                             activities: currentEvent.activities || []
                         });
+
+                        if (currentEvent.requerimientosOtros) {
+                            setOtros(currentEvent.requerimientosOtros);
+                            if (currentEvent.listaEstacionamiento) setParkingList(currentEvent.listaEstacionamiento);
+                            if (currentEvent.horaFotografia) setHoraFotografia(currentEvent.horaFotografia);
+                            if (currentEvent.listaPresidium) setPresidiumList(currentEvent.listaPresidium);
+                        }
                     }
                 }
             } catch (error) {
@@ -175,7 +246,6 @@ const EventForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
         if (!formData.name.trim() || !formData.locationId || !formData.organizationId || !formData.eventTypeId) {
             setStep(1);
             setError('Por favor complete todos los campos obligatorios (Nombre, Organización, Tipo y Recinto).');
@@ -200,8 +270,11 @@ const EventForm = () => {
                 locationId: Number(formData.locationId),
                 organizationId: Number(formData.organizationId),
                 eventTypeId: Number(formData.eventTypeId),
+                requerimientosOtros: otros,
+                listaEstacionamiento: otros.estacionamiento ? parkingList : null, // Enviando el arreglo completo
+                horaFotografia: otros.fotografia ? horaFotografia : null,
+                listaPresidium: otros.presidium ? presidiumList : null
             };
-
             if (isEditMode) {
                 await api.put(`/events/${id}`, payload);
             } else {
@@ -221,17 +294,15 @@ const EventForm = () => {
         { id: 3, name: 'Detalles Específicos', icon: Briefcase },
     ];
 
-  const filteredVenues = useMemo(() => {
-  const personas = parseInt(formData.cantidadPersonas, 10);
-
-  if (!personas || isNaN(personas)) {
-    return [...venues].sort((a, b) => (Number(a.capacity) || 0) - (Number(b.capacity) || 0));
-  }
-
-  return venues
-    .filter(venue => (Number(venue.capacity) || 0) >= personas)
-    .sort((a, b) => (Number(a.capacity) || 0) - (Number(b.capacity) || 0));
-}, [venues, formData.cantidadPersonas]);
+    const filteredVenues = useMemo(() => {
+        const personas = parseInt(formData.cantidadPersonas, 10);
+        if (!personas || isNaN(personas)) {
+            return [...venues].sort((a, b) => (Number(a.capacity) || 0) - (Number(b.capacity) || 0));
+        }
+        return venues
+            .filter(venue => (Number(venue.capacity) || 0) >= personas)
+            .sort((a, b) => (Number(a.capacity) || 0) - (Number(b.capacity) || 0));
+    }, [venues, formData.cantidadPersonas]);
 
     return (
         <div className="max-w-5xl mx-auto pb-20 animate-fade-in font-sans">
@@ -254,7 +325,8 @@ const EventForm = () => {
                             <button
                                 type="button"
                                 onClick={() => setStep(s.id)}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${step === s.id ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-100' : 'text-gray-400 hover:text-gray-600'
+                                className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${step === s.id ?
+                                    'bg-emerald-600 text-white shadow-lg shadow-emerald-100' : 'text-gray-400 hover:text-gray-600'
                                     }`}
                             >
                                 <s.icon size={18} />
@@ -268,7 +340,6 @@ const EventForm = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
                 <form onSubmit={handleSubmit} className="lg:col-span-2 space-y-8">
-
                     {error && (
                         <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-2xl text-sm flex items-center gap-3">
                             <span className="flex-shrink-0 w-5 h-5 bg-red-100 rounded-full flex items-center justify-center font-bold text-xs">!</span>
@@ -353,11 +424,11 @@ const EventForm = () => {
                                             onChange={handleChange}
                                         >
                                             <option value="" disabled>Seleccione una locación...</option>
-                                           {filteredVenues.map((venue) => (
-  <option key={venue.id} value={venue.id}>
-    {venue.name} ({venue.capacity} personas)
-  </option>
-))}
+                                            {filteredVenues.map((venue) => (
+                                                <option key={venue.id} value={venue.id}>
+                                                    {venue.name} ({venue.capacity} personas)
+                                                </option>
+                                            ))}
                                         </select>
                                     </div>
                                 </div>
@@ -461,14 +532,33 @@ const EventForm = () => {
                                     </div>
                                     <div className="space-y-3">
                                         {otrosItems.map(({ key, label }) => (
-                                            <label key={key} className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3 transition-all duration-200 hover:scale-[1.01] hover:bg-slate-50 hover:border-emerald-200 shadow-sm">
-                                                <input
-                                                    type="checkbox"
-                                                    defaultChecked={false}
-                                                    className="mt-0.5 h-4 w-4 rounded-full border-gray-300 text-emerald-600 focus:ring-emerald-500"
-                                                />
-                                                <span className="text-sm font-medium text-gray-700">{label}</span>
-                                            </label>
+                                            <div key={key} className="space-y-3">
+                                                <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3 transition-all duration-200 hover:scale-[1.01] hover:bg-slate-50 hover:border-emerald-200 shadow-sm">
+                                                    <label className="flex items-start gap-3 cursor-pointer flex-1">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={otros[key]}
+                                                            onChange={() => toggleOtro(key)}
+                                                            className="mt-0.5 h-4 w-4 rounded-full border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                                                        />
+                                                        <span className="text-sm font-medium text-gray-700">{label}</span>
+                                                    </label>
+                                                    {/* Botón para reabrir el modal en caso de que ya esté activo */}
+                                                    {otros[key] && (key === 'estacionamiento' || key === 'fotografia' || key === 'presidium') && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                if (key === 'estacionamiento') setShowParkingModal(true);
+                                                                if (key === 'fotografia') setShowPhotoModal(true);
+                                                                if (key === 'presidium') setShowPresidiumModal(true);
+                                                            }}
+                                                            className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-lg font-bold hover:bg-emerald-100 transition-all"
+                                                        >
+                                                            Configurar
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
                                         ))}
                                     </div>
                                 </div>
@@ -629,7 +719,7 @@ const EventForm = () => {
                                 />
                             </div>
 
-                                <div className="mt-12 p-6 bg-amber-50/80 rounded-2xl border border-amber-100 flex gap-4 shadow-sm">
+                            <div className="mt-12 p-6 bg-amber-50/80 rounded-2xl border border-amber-100 flex gap-4 shadow-sm">
                                 <div className="text-amber-600"><Info size={24} /></div>
                                 <p className="text-sm text-amber-800 leading-relaxed font-medium">
                                     Asegúrese de incluir tiempo adicional para pruebas técnicas antes del inicio oficial.
@@ -644,7 +734,7 @@ const EventForm = () => {
                     )}
 
                     {step === 3 && (
-                        <div className="bg-white p-8 rounded-[2rem] shadow-premium border border-gray-100 animate-slide-up">
+                        <div className="bg-white p-8 rounded-[2rem] shadow border border-gray-100 animate-slide-up">
                             <div className="flex items-center gap-3 mb-8">
                                 <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
                                     <Briefcase size={24} />
@@ -732,7 +822,7 @@ const EventForm = () => {
 
                 {/* Sidebar Summary */}
                 <div className="hidden lg:block">
-                    <div className="sticky top-10 bg-emerald-900 rounded-[2.5rem] p-10 text-white shadow-premium relative overflow-hidden">
+                    <div className="sticky top-10 bg-emerald-900 rounded-[2.5rem] p-10 text-white shadow relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-800 rounded-full blur-3xl opacity-40 -mr-20 -mt-20"></div>
 
                         <h3 className="text-2xl font-display font-bold mb-8 relative z-10">Resumen</h3>
@@ -746,7 +836,8 @@ const EventForm = () => {
                             <div className="space-y-1">
                                 <p className="text-emerald-300 font-black text-[10px] uppercase tracking-widest">Locación</p>
                                 <p className="font-bold text-lg leading-tight truncate">
-                                    {venues.find(v => String(v.id) === String(formData.locationId))?.nombre || venues.find(v => String(v.id) === String(formData.locationId))?.name || 'Pendiente'}
+                                    {venues.find(v => String(v.id) === String(formData.locationId))?.nombre ||
+                                        venues.find(v => String(v.id) === String(formData.locationId))?.name || 'Pendiente'}
                                 </p>
                             </div>
 
@@ -759,13 +850,13 @@ const EventForm = () => {
 
                             <div className="pt-6 mt-6 border-t border-emerald-800 space-y-4">
                                 <div className={`flex items-center gap-2 text-sm ${formData.name ? 'text-emerald-400' : 'text-emerald-700'}`}>
-                                    <CheckCircle2 size={16} /> Información básica
+                                    <CheckCircle2 size={16} /> Informacion basica
                                 </div>
                                 <div className={`flex items-center gap-2 text-sm ${formData.startsAt ? 'text-emerald-400' : 'text-emerald-700'}`}>
                                     <CheckCircle2 size={16} /> Horarios definidos
                                 </div>
                                 <div className={`flex items-center gap-2 text-sm ${formData.objective ? 'text-emerald-400' : 'text-emerald-700'}`}>
-                                    <CheckCircle2 size={16} /> Detalles técnicos
+                                    <CheckCircle2 size={16} /> Detalles tecnicos
                                 </div>
                             </div>
                         </div>
@@ -796,12 +887,11 @@ const EventForm = () => {
                         </div>
                         <div className="p-8 space-y-4 bg-gray-50 flex-1">
                             <p className="text-sm font-medium text-gray-600 leading-relaxed">
-                                Describe el evento que deseas crear. Incluye todos los detalles que sepas: el nombre, objetivo, horarios aproximados, código de vestimenta, quiénes asistirán o qué actividades habrá. 
-                                La Inteligencia Artificial analizará tu solicitud y utilizará fichas técnicas pasadas para intentar rellenar todos los campos del formulario por ti.
+                                Describe el evento que deseas crear. La Inteligencia Artificial analizará tu solicitud y utilizará fichas técnicas pasadas para intentar rellenar todos los campos del formulario por ti.
                             </p>
                             <textarea
                                 className="w-full h-40 p-4 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none resize-none font-medium text-gray-700 shadow-inner"
-                                placeholder="Ej: Necesito una ficha para el Foro Anual de Innovación. Será de 10am a 2pm. Habrá una bienvenida por el director, luego una ponencia..."
+                                placeholder="Ej: Necesito una ficha para el Foro Anual de Innovación..."
                                 value={aiPrompt}
                                 onChange={(e) => setAIPrompt(e.target.value)}
                             ></textarea>
@@ -829,6 +919,209 @@ const EventForm = () => {
                                         <Sparkles size={18} /> Autorellenar
                                     </>
                                 )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ========================================================================= */}
+            {/* 🚗 MODAL DE CONTROL DE VEHÍCULOS (ESTACIONAMIENTO) */}
+            {/* ========================================================================= */}
+            {showParkingModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-fade-in">
+                    <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col animate-slide-up">
+                        <div className="p-6 bg-emerald-600 text-white flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <span className="text-xl">🚗</span>
+                                <h2 className="text-xl font-display font-bold">Control de Vehículos para Acceso</h2>
+                            </div>
+                            <button onClick={() => setShowParkingModal(false)} className="text-emerald-100 hover:text-white transition-colors">
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-4 bg-slate-50">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <input
+                                    type="text"
+                                    name="nombreResponsable"
+                                    placeholder="Nombre del Responsable"
+                                    value={currentVehicle.nombreResponsable}
+                                    onChange={handleVehicleChange}
+                                    className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none shadow-sm"
+                                />
+                                <input
+                                    type="text"
+                                    name="placaVehiculo"
+                                    placeholder="Placas (Ej: XYZ-123-A)"
+                                    value={currentVehicle.placaVehiculo}
+                                    onChange={handleVehicleChange}
+                                    className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none shadow-sm"
+                                />
+                                <input
+                                    type="text"
+                                    name="marcaVehiculo"
+                                    placeholder="Marca y Modelo"
+                                    value={currentVehicle.marcaVehiculo}
+                                    onChange={handleVehicleChange}
+                                    className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none shadow-sm"
+                                />
+                                <input
+                                    type="text"
+                                    name="colorVehiculo"
+                                    placeholder="Color"
+                                    value={currentVehicle.colorVehiculo}
+                                    onChange={handleVehicleChange}
+                                    className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none shadow-sm"
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleAddVehicle}
+                                className="w-full py-3 bg-emerald-600 text-white font-bold rounded-xl text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm hover:bg-emerald-700 transition-colors"
+                            >
+                                <Plus size={14} /> Registrar Auto
+                            </button>
+                            
+                            {parkingList.length > 0 && (
+                                <div className="space-y-2 mt-2 border-t border-slate-200 pt-3 max-h-52 overflow-y-auto">
+                                    {parkingList.map((vehicle, idx) => (
+                                        <div key={idx} className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-xl text-sm shadow-sm animate-fade-in">
+                                            <div className="truncate flex-1 pr-2">
+                                                <p className="font-bold text-slate-800 truncate">{vehicle.marcaVehiculo} • <span className="text-emerald-600">{vehicle.placaVehiculo}</span></p>
+                                                <p className="text-xs text-slate-400 font-medium truncate">Resp: {vehicle.nombreResponsable} {vehicle.colorVehiculo ? `(${vehicle.colorVehiculo})` : ''}</p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setParkingList(prev => prev.filter((_, i) => i !== idx))}
+                                                className="p-1.5 text-gray-300 hover:text-red-500 transition-colors"
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        <div className="p-4 bg-white border-t border-gray-100 flex justify-end">
+                            <button
+                                type="button"
+                                onClick={() => setShowParkingModal(false)}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-xl font-bold text-sm transition-all"
+                            >
+                                Listo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ========================================================================= */}
+            {/* 📸 MODAL DE TOMA DE FOTOGRAFÍA */}
+            {/* ========================================================================= */}
+            {showPhotoModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-fade-in">
+                    <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col animate-slide-up">
+                        <div className="p-6 bg-emerald-600 text-white flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <span className="text-xl">📸</span>
+                                <h2 className="text-xl font-display font-bold">Horario Programado (Foto)</h2>
+                            </div>
+                            <button onClick={() => setShowPhotoModal(false)} className="text-emerald-100 hover:text-white transition-colors">
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-4 bg-slate-50">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">Hora Exacta</label>
+                                <input
+                                    type="time"
+                                    value={horaFotografia}
+                                    onChange={(e) => setHoraFotografia(e.target.value)}
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none text-base text-slate-700 font-bold shadow-sm"
+                                />
+                            </div>
+                        </div>
+                        <div className="p-4 bg-white border-t border-gray-100 flex justify-end">
+                            <button
+                                type="button"
+                                onClick={() => setShowPhotoModal(false)}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-xl font-bold text-sm transition-all"
+                            >
+                                Guardar Hora
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ========================================================================= */}
+            {/* 👥 MODAL DE MIEMBROS DEL PRESÍDIUM */}
+            {/* ========================================================================= */}
+            {showPresidiumModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-fade-in">
+                    <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col animate-slide-up">
+                        <div className="p-6 bg-emerald-600 text-white flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <span className="text-xl">👥</span>
+                                <h2 className="text-xl font-display font-bold">Miembros del Presídium</h2>
+                            </div>
+                            <button onClick={() => setShowPresidiumModal(false)} className="text-emerald-100 hover:text-white transition-colors">
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-4 bg-slate-50">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <input
+                                    type="text"
+                                    placeholder="Nombre completo"
+                                    value={currentMember.nombre}
+                                    onChange={(e) => setCurrentMember({...currentMember, nombre: e.target.value})}
+                                    className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none shadow-sm"
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Puesto / Cargo"
+                                    value={currentMember.puesto}
+                                    onChange={(e) => setCurrentMember({...currentMember, puesto: e.target.value})}
+                                    className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none shadow-sm"
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleAddMember}
+                                className="w-full py-3 bg-emerald-600 text-white font-bold rounded-xl text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm hover:bg-emerald-700 transition-colors"
+                            >
+                                <Plus size={14} /> Agregar Integrante
+                            </button>
+                            
+                            {presidiumList.length > 0 && (
+                                <div className="space-y-2 mt-2 border-t border-slate-200 pt-3 max-h-52 overflow-y-auto">
+                                    {presidiumList.map((member, idx) => (
+                                        <div key={idx} className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-xl text-sm shadow-sm animate-fade-in">
+                                            <div className="truncate flex-1 pr-2">
+                                                <p className="font-bold text-slate-800 truncate">{member.nombre}</p>
+                                                <p className="text-xs text-slate-400 font-medium truncate">{member.puesto}</p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setPresidiumList(prev => prev.filter((_, i) => i !== idx))}
+                                                className="p-1.5 text-gray-300 hover:text-red-500 transition-colors"
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        <div className="p-4 bg-white border-t border-gray-100 flex justify-end">
+                            <button
+                                type="button"
+                                onClick={() => setShowPresidiumModal(false)}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-xl font-bold text-sm transition-all"
+                            >
+                                Listo
                             </button>
                         </div>
                     </div>
