@@ -22,6 +22,19 @@ export default class extends BaseSchema {
       table.integer('user_id').references('users.id').notNullable()
       table.integer('main_responsible').references('users.id').notNullable()
       table.integer('event_type_id').references('event_types.id').notNullable()
+      // --- Datos de la Ficha Técnica (Parte 1) ---
+      table.string('lugar').nullable()
+      table.string('departamento_solicitante').nullable()
+      table.string('nombre_evento').nullable()
+      table.string('fecha').nullable()
+      table.string('horario_inicio_fin').nullable()
+      table.string('responsable').nullable()
+      table.string('extension').nullable()
+      table.string('correo_electronico').nullable()
+      table.integer('cantidad_personas').nullable()
+      table.string('acomodo_tipo').nullable()
+
+
 
       table.timestamp('created_at')
       table.timestamp('updated_at')

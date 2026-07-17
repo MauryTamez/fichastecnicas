@@ -1,14 +1,14 @@
-import type { HttpContext } from '@adonisjs/core/http'
-import { DateTime } from 'luxon'
 import Event from '#models/event'
 import EventVersion from '#models/event_version'
-import VersionContent from '#models/version_content'
 import VersionActivity from '#models/version_activity'
+import VersionContent from '#models/version_content'
 import { createEventValidator, updateEventValidator } from '#validators/event'
+import type { HttpContext } from '@adonisjs/core/http'
 import db from '@adonisjs/lucid/services/db'
 import { EventState } from '../enums/event_state.js'
 import { RagService } from '#services/rag_service'
 import { EventStateService } from '#services/event_state_service'
+import { DateTime } from 'luxon'
 
 export default class EventsController {
   private ragService = new RagService()
@@ -25,7 +25,7 @@ export default class EventsController {
     return allEvents.filter(e => {
       const ver = e.eventVersions[0]
       if (!ver || !ver.versionContent) return false
-      
+
       const eventStart = ver.versionContent.startsAt
       const eventEnd = ver.versionContent.endsAt
 
@@ -63,9 +63,9 @@ export default class EventsController {
       } else if (roleName === 'auxiliares' || roleName === 'auxiliar') {
         eventsQuery.whereHas('eventVersions', (v) => {
           v.where('isCurrentVersion', true)
-           .whereHas('versionStaffings', (s) => {
-             s.where('userId', user.id)
-           })
+            .whereHas('versionStaffings', (s) => {
+              s.where('userId', user.id)
+            })
         })
       } else {
         // Fallback for other legacy roles
@@ -85,7 +85,7 @@ export default class EventsController {
         asistentes: content?.guestSpecifications || '',
         fecha_inicio: content?.startsAt || e.createdAt,
         fecha_fin: content?.endsAt || e.createdAt,
-        venue_id: e.locationId || 1, 
+        venue_id: e.locationId || 1,
         locationId: e.locationId,
         organizationId: e.organizationId,
         eventTypeId: e.eventTypeId,
@@ -163,11 +163,11 @@ export default class EventsController {
         .where('id', params.id)
         .preload('eventVersions', (query) => {
           query.orderBy('id', 'desc')
-               .preload('versionContent')
-               .preload('versionActivities')
-               .preload('versionFeedbacks', (fbQuery) => {
-                 fbQuery.preload('reviewer')
-               })
+            .preload('versionContent')
+            .preload('versionActivities')
+            .preload('versionFeedbacks', (fbQuery) => {
+              fbQuery.preload('reviewer')
+            })
         })
         .preload('organization')
         .preload('user')
@@ -229,13 +229,13 @@ export default class EventsController {
   async store({ request, response, auth }: HttpContext) {
     const data = await request.validateUsing(createEventValidator)
     const userEmail = auth.use('web').user?.email || ''
-    
+
     const locationId = data.locationId
     const startsAt = DateTime.fromISO(data.startsAt)
     const endsAt = DateTime.fromISO(data.endsAt)
 
     if (!startsAt.isValid || !endsAt.isValid) {
-        return response.badRequest({ message: 'Fechas inválidas' })
+      return response.badRequest({ message: 'Fechas inválidas' })
     }
 
     const overlaps = await this.checkOverlaps(startsAt, endsAt, locationId)
@@ -253,91 +253,91 @@ export default class EventsController {
     const transaction = await db.transaction()
 
     try {
-        const event = new Event()
-        event.currentState = EventState.DRAFT
-        event.organizationId = data.organizationId || 1 
-        event.userId = auth.use('web').user!.id
-        event.mainResponsibleId = auth.use('web').user!.id
-        event.eventTypeId = data.eventTypeId || 1
-        event.locationId = locationId
-        event.useTransaction(transaction)
-        await event.save()
+      const event = new Event()
+      event.currentState = EventState.DRAFT
+      event.organizationId = data.organizationId || 1
+      event.userId = auth.use('web').user!.id
+      event.mainResponsibleId = auth.use('web').user!.id
+      event.eventTypeId = data.eventTypeId || 1
+      event.locationId = locationId
+      event.useTransaction(transaction)
+      await event.save()
 
-        const content = new VersionContent()
-        content.versionNumber = 1
-        content.name = data.name
-        content.objective = data.objective || null
-        content.description = data.description || null
-        content.startsAt = startsAt
-        content.endsAt = endsAt
-        content.dressCode = data.dressCode || null
-        content.programImpacted = data.programImpacted || null
-        content.guestSpecifications = data.guestSpecifications || null
-        content.presidiumDetail = data.presidiumDetail || null
-        content.directorAction = data.directorAction || null
-        content.useTransaction(transaction)
-        await content.save()
+      const content = new VersionContent()
+      content.versionNumber = 1
+      content.name = data.name
+      content.objective = data.objective || null
+      content.description = data.description || null
+      content.startsAt = startsAt
+      content.endsAt = endsAt
+      content.dressCode = data.dressCode || null
+      content.programImpacted = data.programImpacted || null
+      content.guestSpecifications = data.guestSpecifications || null
+      content.presidiumDetail = data.presidiumDetail || null
+      content.directorAction = data.directorAction || null
+      content.useTransaction(transaction)
+      await content.save()
 
-        const version = new EventVersion()
-        version.isCurrentVersion = true
-        version.eventId = event.id
-        version.versionContentId = content.id
-        version.useTransaction(transaction)
-        await version.save()
+      const version = new EventVersion()
+      version.isCurrentVersion = true
+      version.eventId = event.id
+      version.versionContentId = content.id
+      version.useTransaction(transaction)
+      await version.save()
 
-        if (data.activities && Array.isArray(data.activities)) {
-          for (const act of data.activities) {
-            const activity = new VersionActivity()
-            activity.fill({
-                name: act.name,
-                description: act.description || null,
-                startsAt: DateTime.fromISO(act.startsAt),
-                endsAt: DateTime.fromISO(act.endsAt),
-                responsibleId: auth.use('web').user!.id,
-                locationId: event.locationId || 1
-            })
-            activity.useTransaction(transaction)
-            await activity.save()
-            await version.related('versionActivities').attach([activity.id], transaction)
-          }
+      if (data.activities && Array.isArray(data.activities)) {
+        for (const act of data.activities) {
+          const activity = new VersionActivity()
+          activity.fill({
+            name: act.name,
+            description: act.description || null,
+            startsAt: DateTime.fromISO(act.startsAt),
+            endsAt: DateTime.fromISO(act.endsAt),
+            responsibleId: auth.use('web').user!.id,
+            locationId: event.locationId || 1
+          })
+          activity.useTransaction(transaction)
+          await activity.save()
+          await version.related('versionActivities').attach([activity.id], transaction)
         }
+      }
 
-        await transaction.commit()
+      await transaction.commit()
 
-        // Vectorizar para IA
-        try {
-          const activitiesText = data.activities?.map((a: any) => `- ${a.name}: ${a.startsAt}`).join('\n') || ''
-          const fullContent = `
+      // Vectorizar para IA
+      try {
+        const activitiesText = data.activities?.map((a: any) => `- ${a.name}: ${a.startsAt}`).join('\n') || ''
+        const fullContent = `
             Ficha Técnica: ${content.name}
             Objetivo: ${content.objective}
             Descripción: ${content.description}
             Dress Code: ${content.dressCode}
             Agenda:\n${activitiesText}
           `.trim()
-          await this.ragService.vectorizeFichaTecnica(event.id, content.id, fullContent)
-        } catch (e) {
-          console.error('Error vectorizando ficha:', e)
-        }
+        await this.ragService.vectorizeFichaTecnica(event.id, content.id, fullContent)
+      } catch (e) {
+        console.error('Error vectorizando ficha:', e)
+      }
 
-        return response.created({ message: 'Ficha técnica creada', event })
+      return response.created({ message: 'Ficha técnica creada', event })
     } catch (error) {
-        await transaction.rollback()
-        console.error(error)
-        return response.internalServerError({ message: 'Error al crear el evento' })
+      await transaction.rollback()
+      console.error(error)
+      return response.internalServerError({ message: 'Error al crear el evento' })
     }
   }
 
   async update({ params, request, response, auth }: HttpContext) {
     const data = await request.validateUsing(updateEventValidator)
     const event = await Event.findOrFail(params.id)
-    
+
     // Authorization Check
     if (auth.use('web').user?.role?.name !== 'admin' && event.userId !== auth.use('web').user?.id) {
-        return response.forbidden({ message: 'No tienes permiso para editar este evento' })
+      return response.forbidden({ message: 'No tienes permiso para editar este evento' })
     }
 
     const userEmail = auth.use('web').user?.email || ''
-    
+
     const oldVersion = await EventVersion.query()
       .where('eventId', event.id)
       .where('isCurrentVersion', true)
@@ -375,82 +375,82 @@ export default class EventsController {
         }
       }
     }
-    
+
     const transaction = await db.transaction()
 
     try {
-        if (oldVersion) {
-          oldVersion.isCurrentVersion = false
-          oldVersion.useTransaction(transaction)
-          await oldVersion.save()
+      if (oldVersion) {
+        oldVersion.isCurrentVersion = false
+        oldVersion.useTransaction(transaction)
+        await oldVersion.save()
+      }
+
+      const content = new VersionContent()
+      content.versionNumber = (oldContent?.versionNumber || 0) + 1
+      content.name = data.name || oldContent?.name || ''
+      content.objective = data.objective !== undefined ? data.objective : oldContent?.objective || null
+      content.description = data.description !== undefined ? data.description : oldContent?.description || null
+      content.startsAt = startsAt || oldContent!.startsAt
+      content.endsAt = endsAt || oldContent!.endsAt
+      content.dressCode = data.dressCode !== undefined ? data.dressCode : oldContent?.dressCode || null
+      content.programImpacted = data.programImpacted !== undefined ? data.programImpacted : oldContent?.programImpacted || null
+      content.guestSpecifications = data.guestSpecifications !== undefined ? data.guestSpecifications : oldContent?.guestSpecifications || null
+      content.presidiumDetail = data.presidiumDetail !== undefined ? data.presidiumDetail : oldContent?.presidiumDetail || null
+      content.directorAction = data.directorAction !== undefined ? data.directorAction : oldContent?.directorAction || null
+      content.useTransaction(transaction)
+      await content.save()
+
+      const version = new EventVersion()
+      version.isCurrentVersion = true
+      version.eventId = event.id
+      version.versionContentId = content.id
+      version.useTransaction(transaction)
+      await version.save()
+
+      if (data.activities && Array.isArray(data.activities)) {
+        for (const act of data.activities) {
+          const activity = new VersionActivity()
+          activity.fill({
+            name: act.name,
+            description: act.description || null,
+            startsAt: DateTime.fromISO(act.startsAt),
+            endsAt: DateTime.fromISO(act.endsAt),
+            responsibleId: auth.use('web').user!.id,
+            locationId: event.locationId || 1
+          })
+          activity.useTransaction(transaction)
+          await activity.save()
+          await version.related('versionActivities').attach([activity.id], transaction)
         }
-        
-        const content = new VersionContent()
-        content.versionNumber = (oldContent?.versionNumber || 0) + 1
-        content.name = data.name || oldContent?.name || ''
-        content.objective = data.objective !== undefined ? data.objective : oldContent?.objective || null
-        content.description = data.description !== undefined ? data.description : oldContent?.description || null
-        content.startsAt = startsAt || oldContent!.startsAt
-        content.endsAt = endsAt || oldContent!.endsAt
-        content.dressCode = data.dressCode !== undefined ? data.dressCode : oldContent?.dressCode || null
-        content.programImpacted = data.programImpacted !== undefined ? data.programImpacted : oldContent?.programImpacted || null
-        content.guestSpecifications = data.guestSpecifications !== undefined ? data.guestSpecifications : oldContent?.guestSpecifications || null
-        content.presidiumDetail = data.presidiumDetail !== undefined ? data.presidiumDetail : oldContent?.presidiumDetail || null
-        content.directorAction = data.directorAction !== undefined ? data.directorAction : oldContent?.directorAction || null
-        content.useTransaction(transaction)
-        await content.save()
+      }
 
-        const version = new EventVersion()
-        version.isCurrentVersion = true
-        version.eventId = event.id
-        version.versionContentId = content.id
-        version.useTransaction(transaction)
-        await version.save()
+      if (data.locationId) event.locationId = data.locationId
+      if (data.organizationId) event.organizationId = data.organizationId
+      if (data.eventTypeId) event.eventTypeId = data.eventTypeId
 
-        if (data.activities && Array.isArray(data.activities)) {
-          for (const act of data.activities) {
-            const activity = new VersionActivity()
-            activity.fill({
-                name: act.name,
-                description: act.description || null,
-                startsAt: DateTime.fromISO(act.startsAt),
-                endsAt: DateTime.fromISO(act.endsAt),
-                responsibleId: auth.use('web').user!.id,
-                locationId: event.locationId || 1
-            })
-            activity.useTransaction(transaction)
-            await activity.save()
-            await version.related('versionActivities').attach([activity.id], transaction)
-          }
-        }
+      // Mantener el estado de revisión si estaba en revisión o solicitado, pero indicar que hubo una actualización.
+      // Como el creador ya resolvió el feedback, puede volver a REQUESTED o IN_REVIEW.
+      // Asignaremos REQUESTED para que el encargado lo vuelva a ver, o se podría asignar IN_REVIEW si estaba ahí.
+      // Lo dejaremos en IN_REVIEW por simplicidad, o lo devolveremos a REQUESTED si así se desea.
+      // Aquí lo cambiaremos a REQUESTED si estaba en REQUESTED, de lo contrario IN_REVIEW.
+      if (event.currentState === EventState.REQUESTED) {
+        event.currentState = EventState.REQUESTED
+      } else if (event.currentState === EventState.IN_REVIEW) {
+        event.currentState = EventState.IN_REVIEW
+      } else {
+        event.currentState = EventState.IN_REVIEW
+      }
 
-        if (data.locationId) event.locationId = data.locationId
-        if (data.organizationId) event.organizationId = data.organizationId
-        if (data.eventTypeId) event.eventTypeId = data.eventTypeId
-        
-        // Mantener el estado de revisión si estaba en revisión o solicitado, pero indicar que hubo una actualización.
-        // Como el creador ya resolvió el feedback, puede volver a REQUESTED o IN_REVIEW.
-        // Asignaremos REQUESTED para que el encargado lo vuelva a ver, o se podría asignar IN_REVIEW si estaba ahí.
-        // Lo dejaremos en IN_REVIEW por simplicidad, o lo devolveremos a REQUESTED si así se desea.
-        // Aquí lo cambiaremos a REQUESTED si estaba en REQUESTED, de lo contrario IN_REVIEW.
-        if (event.currentState === EventState.REQUESTED) {
-          event.currentState = EventState.REQUESTED
-        } else if (event.currentState === EventState.IN_REVIEW) {
-          event.currentState = EventState.IN_REVIEW
-        } else {
-          event.currentState = EventState.IN_REVIEW 
-        }
+      event.useTransaction(transaction)
+      await event.save()
 
-        event.useTransaction(transaction)
-        await event.save()
+      await transaction.commit()
 
-        await transaction.commit()
-
-        return response.ok({ message: 'Ficha técnica actualizada', event })
+      return response.ok({ message: 'Ficha técnica actualizada', event })
     } catch (error) {
-        await transaction.rollback()
-        console.error(error)
-        return response.internalServerError({ message: 'Error al actualizar el evento' })
+      await transaction.rollback()
+      console.error(error)
+      return response.internalServerError({ message: 'Error al actualizar el evento' })
     }
   }
 
@@ -459,7 +459,7 @@ export default class EventsController {
     const event = await Event.findOrFail(params.id)
 
     if (auth.use('web').user?.role?.name !== 'admin' && auth.use('web').user?.role?.name !== 'auxiliar' && auth.use('web').user?.role?.name !== 'moderador') {
-        return response.forbidden({ message: 'No tienes permiso para cambiar el estado de este evento' })
+      return response.forbidden({ message: 'No tienes permiso para cambiar el estado de este evento' })
     }
 
     const statusMap: Record<string, EventState> = {
@@ -518,7 +518,7 @@ export default class EventsController {
     const event = await Event.findOrFail(params.id)
 
     if (auth.use('web').user?.role?.name !== 'admin' && event.userId !== auth.use('web').user?.id) {
-        return response.forbidden({ message: 'No tienes permiso para cancelar este evento' })
+      return response.forbidden({ message: 'No tienes permiso para cancelar este evento' })
     }
 
     event.currentState = EventState.CANCELLED
