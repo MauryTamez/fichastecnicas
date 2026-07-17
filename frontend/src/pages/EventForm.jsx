@@ -5,20 +5,18 @@ import Swal from 'sweetalert2';
 import api from '../api/axios';
 import { getVenues } from '../api/venues';
 import { resolveFeedback } from '../api/feedbacks';
-import { Calendar, Clock, FileText, ArrowLeft, ArrowRight, Save, CheckCircle2, ChevronRight, Info, MapPin, Briefcase, Plus, X, Sparkles, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import Swal from 'sweetalert2';
 
 // Catálogos globales de opciones comunes con opción "Otro / Otra" integrada
 const MARCAS_POPULARES = [
-    "Toyota", "Nissan", "Chevrolet", "Ford", "Honda",
-    "Kia", "Hyundai", "Mazda", "Volkswagen", "BMW",
+    "Toyota", "Nissan", "Chevrolet", "Ford", "Honda", 
+    "Kia", "Hyundai", "Mazda", "Volkswagen", "BMW", 
     "Jeep", "Dodge", "GMC", "Subaru", "Otro / Otra"
 ];
 
 const COLORES_COMUNES = [
-    "Blanco", "Negro", "Gris", "Plata", "Rojo",
+    "Blanco", "Negro", "Gris", "Plata", "Rojo", 
     "Azul", "Verde", "Amarillo", "Naranja", "Café", "Otro / Otra"
 ];
 
@@ -33,8 +31,7 @@ const EventForm = () => {
     const [step, setStep] = useState(1);
     const [detailedEvent, setDetailedEvent] = useState(null);
     const [actionLoading, setActionLoading] = useState(false);
-
-    // Updated to match AdonisJS Event & VersionContent models
+    
     const [formData, setFormData] = useState({
         name: '',
         objective: '',
@@ -250,6 +247,12 @@ const EventForm = () => {
                                 directorAction: currentVersion.directorAction || currentEvent.directorAction || '',
                                 activities: currentVersion.activities || currentEvent.activities || []
                             });
+                            if (currentEvent.requerimientosOtros) {
+                                setOtros(currentEvent.requerimientosOtros);
+                                if (currentEvent.listaEstacionamiento) setParkingList(currentEvent.listaEstacionamiento);
+                                if (currentEvent.horaFotografia) setHoraFotografia(currentEvent.horaFotografia);
+                                if (currentEvent.listaPresidium) setPresidiumList(currentEvent.listaPresidium);
+                            }
                         }
                     } catch (e) {
                         const eventsRes = await api.get('/events');
@@ -273,6 +276,12 @@ const EventForm = () => {
                                 directorAction: currentEvent.directorAction || '',
                                 activities: currentEvent.activities || []
                             });
+                            if (currentEvent.requerimientosOtros) {
+                                setOtros(currentEvent.requerimientosOtros);
+                                if (currentEvent.listaEstacionamiento) setParkingList(currentEvent.listaEstacionamiento);
+                                if (currentEvent.horaFotografia) setHoraFotografia(currentEvent.horaFotografia);
+                                if (currentEvent.listaPresidium) setPresidiumList(currentEvent.listaPresidium);
+                            }
                         }
                     }
                 }
@@ -322,9 +331,9 @@ const EventForm = () => {
                 listaPresidium: otros.presidium ? presidiumList : null
             };
             if (isEditMode) {
-                await api.put(`/creador/events/${id}`, formData);
+                await api.put(`/creador/events/${id}`, payload);
             } else {
-                await api.post('/creador/events', formData);
+                await api.post('/creador/events', payload);
             }
             navigate('/');
         } catch (err) {
@@ -333,6 +342,7 @@ const EventForm = () => {
             setLoading(false);
         }
     };
+
 
     const handleResolveFeedback = async (feedbackId) => {
         setActionLoading(true);
@@ -358,11 +368,11 @@ const EventForm = () => {
     const filteredVenues = useMemo(() => {
         const personas = parseInt(formData.cantidadPersonas, 10);
         if (!personas || isNaN(personas)) {
-            return [...venues].sort((a, b) => (Number(a.capacity) || 0) - (Number(b.capacity) || 0));
+            return [...venues].sort((a, b) => (Number(a.capacidad || a.capacity) || 0) - (Number(b.capacidad || b.capacity) || 0));
         }
         return venues
-            .filter(venue => (Number(venue.capacity) || 0) >= personas)
-            .sort((a, b) => (Number(a.capacity) || 0) - (Number(b.capacity) || 0));
+            .filter(venue => (Number(venue.capacidad || venue.capacity) || 0) >= personas)
+            .sort((a, b) => (Number(a.capacidad || a.capacity) || 0) - (Number(b.capacidad || b.capacity) || 0));
     }, [venues, formData.cantidadPersonas]);
 
     return (
@@ -398,402 +408,504 @@ const EventForm = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                <div className="lg:col-span-2 space-y-8">
-                    <form onSubmit={handleSubmit} className="space-y-8">
+                <form onSubmit={handleSubmit} className="lg:col-span-2 space-y-8">
+                    {error && (
+                        <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-2xl text-sm flex items-center gap-3">
+                            <span className="flex-shrink-0 w-5 h-5 bg-red-100 rounded-full flex items-center justify-center font-bold text-xs">!</span>
+                            {error}
+                        </div>
+                    )}
 
-                        {error && (
-                            <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-2xl text-sm flex items-center gap-3">
-                                <span className="flex-shrink-0 w-5 h-5 bg-red-100 rounded-full flex items-center justify-center font-bold text-xs">!</span>
-                                {error}
+                    {aiWarning && (
+                        <div className="bg-amber-50 border border-amber-200 text-amber-800 px-5 py-4 rounded-2xl text-sm flex items-start gap-3 animate-fade-in shadow-sm">
+                            <AlertTriangle className="flex-shrink-0 w-5 h-5 text-amber-500 mt-0.5" />
+                            <div>
+                                <p className="font-bold mb-1">Verifica la información</p>
+                                <p>Estos datos fueron generados por Inteligencia Artificial y pueden contener inconsistencias. Por favor, revisa cuidadosamente todos los campos antes de guardar.</p>
                             </div>
-                        )}
+                            <button type="button" onClick={() => setAiWarning(false)} className="ml-auto p-1 text-amber-400 hover:text-amber-600 transition-colors">
+                                <X size={16} />
+                            </button>
+                        </div>
+                    )}
 
-                        {
-                            aiWarning && (
-                                <div className="bg-amber-50 border border-amber-200 text-amber-800 px-5 py-4 rounded-2xl text-sm flex items-start gap-3 animate-fade-in shadow-sm">
-                                    <AlertTriangle className="flex-shrink-0 w-5 h-5 text-amber-500 mt-0.5" />
-                                    <div>
-                                        <p className="font-bold mb-1">Verifica la información</p>
-                                        <p>Estos datos fueron generados por Inteligencia Artificial y pueden contener inconsistencias. Por favor, revisa cuidadosamente todos los campos antes de guardar.</p>
+                    {step === 1 && (
+                        <div className="bg-white p-8 rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(15,23,42,0.08)] border border-slate-100 animate-slide-up">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center ring-1 ring-emerald-100 shadow-sm">
+                                        <FileText size={24} />
                                     </div>
-                                    <button type="button" onClick={() => setAiWarning(false)} className="ml-auto p-1 text-amber-400 hover:text-amber-600 transition-colors">
-                                        <X size={16} />
-                                    </button>
+                                    <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">Información Básica</h2>
                                 </div>
-                            )}
+                                {!isEditMode && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowAIModal(true)}
+                                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5"
+                                    >
+                                        <Sparkles size={16} /> Autorellenar con IA
+                                    </button>
+                                )}
+                            </div>
 
-                        {
-                            step === 1 && (
-                                <div className="bg-white p-8 rounded-[2rem] shadow-premium border border-gray-100 animate-slide-up">
-                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center">
-                                                <FileText size={24} />
-                                            </div>
-                                            <h2 className="text-2xl font-display font-bold text-gray-900">Información Básica</h2>
-                                        </div>
-                                        {!isEditMode && (
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowAIModal(true)}
-                                                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5"
-                                            >
-                                                <Sparkles size={16} /> Autorellenar con IA
-                                            </button>
-                                        )}
+                            <div className="space-y-6">
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-2 ml-1 uppercase tracking-tight">Nombre del Evento</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        name="name"
+                                        className="block w-full px-4 py-3.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none font-medium text-slate-700 placeholder:text-slate-400 shadow-sm"
+                                        placeholder="Ej: Lanzamiento Web 3.0"
+                                        value={formData.name}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div className="rounded-[1.75rem] border border-slate-100 bg-white p-6 shadow-[0_12px_35px_-15px_rgba(15,23,42,0.12)]">
+                                        <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight flex items-center gap-2">
+                                            <MapPin size={16} className="text-emerald-500" />
+                                            Cantidad de Personas
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="cantidadPersonas"
+                                            min="1"
+                                            className="block w-full px-4 py-3.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none font-medium text-slate-700 placeholder:text-slate-400 shadow-sm"
+                                            placeholder="Ej. 170"
+                                            value={formData.cantidadPersonas || ''}
+                                            onChange={handleChange}
+                                        />
                                     </div>
 
-                                    <div className="space-y-6">
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight">Nombre del Evento</label>
-                                            <input
-                                                type="text"
-                                                required
-                                                name="name"
-                                                className="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium placeholder:text-gray-300"
-                                                placeholder="Ej: Lanzamiento Web 3.0"
-                                                value={formData.name}
-                                                onChange={handleChange}
-                                            />
-                                        </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight flex items-center gap-2">
+                                            <MapPin size={16} className="text-emerald-500" />
+                                            Recinto / Locación
+                                        </label>
+                                        <select
+                                            required
+                                            name="locationId"
+                                            className="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium text-gray-700 appearance-none"
+                                            value={formData.locationId}
+                                            onChange={handleChange}
+                                        >
+                                            <option value="" disabled>Seleccione una locación...</option>
+                                            {filteredVenues.map((venue) => (
+                                                <option key={venue.id} value={venue.id}>
+                                                    {venue.nombre || venue.name} ({venue.capacidad || venue.capacity} personas)
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <div>
-                                                <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight">Organización</label>
-                                                <select
-                                                    required
-                                                    name="organizationId"
-                                                    className="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium text-gray-700 appearance-none"
-                                                    value={formData.organizationId}
-                                                    onChange={handleChange}
-                                                >
-                                                    <option value="" disabled>Seleccione organización...</option>
-                                                    {organizations.map(o => (
-                                                        <option key={o.id} value={o.id}>{o.name}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight">Tipo de Evento</label>
-                                                <select
-                                                    required
-                                                    name="eventTypeId"
-                                                    className="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium text-gray-700 appearance-none"
-                                                    value={formData.eventTypeId}
-                                                    onChange={handleChange}
-                                                >
-                                                    <option value="" disabled>Seleccione tipo...</option>
-                                                    {eventTypes.map(t => (
-                                                        <option key={t.id} value={t.id}>{t.name}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight">Organización</label>
+                                        <select
+                                            required
+                                            name="organizationId"
+                                            className="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium text-gray-700 appearance-none"
+                                            value={formData.organizationId}
+                                            onChange={handleChange}
+                                        >
+                                            <option value="" disabled>Seleccione organización...</option>
+                                            {organizations.map(o => (
+                                                <option key={o.id} value={o.id}>{o.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
 
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight">Objetivo</label>
-                                            <input
-                                                type="text"
-                                                name="objective"
-                                                className="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium placeholder:text-gray-300"
-                                                placeholder="Objetivo principal del evento..."
-                                                value={formData.objective}
-                                                onChange={handleChange}
-                                            />
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight">Tipo de Evento</label>
+                                        <select
+                                            required
+                                            name="eventTypeId"
+                                            className="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium text-gray-700 appearance-none"
+                                            value={formData.eventTypeId}
+                                            onChange={handleChange}
+                                        >
+                                            <option value="" disabled>Seleccione tipo...</option>
+                                            {eventTypes.map(t => (
+                                                <option key={t.id} value={t.id}>{t.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight">Objetivo</label>
+                                    <input
+                                        type="text"
+                                        name="objective"
+                                        className="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium placeholder:text-gray-300"
+                                        placeholder="Objetivo principal del evento..."
+                                        value={formData.objective}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="mt-10 pt-8 border-t border-gray-50 flex justify-end">
+                                <button
+                                    type="button"
+                                    onClick={() => setStep(2)}
+                                    className="flex items-center gap-2 bg-emerald-600 text-white px-8 py-3.5 rounded-2xl font-bold shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition-all"
+                                >
+                                    Continuar
+                                    <ArrowRight size={18} />
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {step === 2 && (
+                        <div className="bg-white p-8 rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(15,23,42,0.08)] border border-slate-100 animate-slide-up">
+                            <div className="flex items-center gap-3 mb-8">
+                                <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center ring-1 ring-amber-100 shadow-sm">
+                                    <Calendar size={24} />
+                                </div>
+                                <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">Requerimientos de Evento</h2>
+                            </div>
+
+                            <div className="mt-8 grid grid-cols-1 xl:grid-cols-2 gap-6">
+                                <div className="rounded-[1.75rem] border border-slate-100 bg-white p-6 shadow-[0_12px_35px_-15px_rgba(15,23,42,0.12)]">
+                                    <div className="mb-4 flex items-center gap-2">
+                                        <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+                                            <Sparkles size={18} />
                                         </div>
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight">Descripción</label>
-                                            <textarea
-                                                name="description"
-                                                rows="4"
-                                                className="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium placeholder:text-gray-300"
-                                                placeholder="Detalles generales..."
-                                                value={formData.description}
-                                                onChange={handleChange}
-                                            ></textarea>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight flex items-center gap-2">
-                                                <MapPin size={16} className="text-emerald-500" />
-                                                Recinto / Locación
+                                        <h3 className="text-lg font-bold text-slate-800">Audiovisual</h3>
+                                    </div>
+                                    <div className="space-y-3">
+                                        {audiovisualItems.map((item) => (
+                                            <label key={item} className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3 transition-all duration-200 hover:scale-[1.01] hover:bg-slate-50 hover:border-emerald-200 shadow-sm">
+                                                <input
+                                                    type="checkbox"
+                                                    defaultChecked={false}
+                                                    className="mt-0.5 h-4 w-4 rounded-full border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                                                />
+                                                <span className="text-sm font-medium text-gray-700">{item}</span>
                                             </label>
-                                            <select
-                                                required
-                                                name="locationId"
-                                                className="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium text-gray-700 appearance-none"
-                                                value={formData.locationId}
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="rounded-[1.75rem] border border-slate-100 bg-white p-6 shadow-[0_12px_35px_-15px_rgba(15,23,42,0.12)]">
+                                    <div className="mb-4 flex items-center gap-2">
+                                        <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                                            <Briefcase size={18} />
+                                        </div>
+                                        <h3 className="text-lg font-bold text-slate-800">Otros Requerimientos</h3>
+                                    </div>
+                                    <div className="space-y-3">
+                                        {otrosItems.map(({ key, label }) => (
+                                            <div key={key} className="space-y-3">
+                                                <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3 transition-all duration-200 hover:scale-[1.01] hover:bg-slate-50 hover:border-emerald-200 shadow-sm">
+                                                    <label className="flex items-start gap-3 cursor-pointer flex-1">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={otros[key]}
+                                                            onChange={() => toggleOtro(key)}
+                                                            className="mt-0.5 h-4 w-4 rounded-full border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                                                        />
+                                                        <span className="text-sm font-medium text-gray-700">{label}</span>
+                                                    </label>
+                                                    {otros[key] && (key === 'estacionamiento' || key === 'fotografia' || key === 'presidium') && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                if (key === 'estacionamiento') setShowParkingModal(true);
+                                                                if (key === 'fotografia') setShowPhotoModal(true);
+                                                                if (key === 'presidium') setShowPresidiumModal(true);
+                                                            }}
+                                                            className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-lg font-bold hover:bg-emerald-100 transition-all"
+                                                        >
+                                                            Configurar
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="mt-8 rounded-[2rem] border border-slate-100 bg-white p-8 shadow-[0_12px_35px_-15px_rgba(15,23,42,0.12)]">
+                                <div className="flex items-center gap-3 mb-8">
+                                    <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center ring-1 ring-amber-100 shadow-sm">
+                                        <Calendar size={24} />
+                                    </div>
+                                    <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">Programación</h2>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-3 ml-1 flex items-center gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-emerald-500"></div> INICIO DEL EVENTO
+                                        </label>
+                                        <div className="p-1 px-2 border border-emerald-100 rounded-2xl bg-emerald-50/10 focus-within:ring-4 focus-within:ring-emerald-500/10 transition-all">
+                                            <input
+                                                type="datetime-local"
+                                                name="startsAt"
+                                                className="block w-full px-2 py-3 bg-transparent outline-none text-emerald-900 font-bold uppercase text-xs"
+                                                value={formData.startsAt}
                                                 onChange={handleChange}
-                                            >
-                                                <option value="" disabled>Seleccione una locación...</option>
-                                                {venues.map(v => (
-                                                    <option key={v.id} value={v.id}>{v.nombre || v.name}</option>
-                                                ))}
-                                            </select>
+                                            />
                                         </div>
                                     </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-3 ml-1 flex items-center gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-red-500"></div> FINALIZACIÓN
+                                        </label>
+                                        <div className="p-1 px-2 border border-red-100 rounded-2xl bg-red-50/10 focus-within:ring-4 focus-within:ring-red-500/10 transition-all">
+                                            <input
+                                                type="datetime-local"
+                                                name="endsAt"
+                                                className="block w-full px-2 py-3 bg-transparent outline-none text-red-900 font-bold uppercase text-xs"
+                                                value={formData.endsAt}
+                                                onChange={handleChange}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
 
-                                    <div className="mt-10 pt-8 border-t border-gray-50 flex justify-end">
+                                {/* Agenda Section */}
+                                <div className="mt-12">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <h3 className="text-xl font-display font-bold text-gray-900 flex items-center gap-2">
+                                            <Clock size={20} className="text-emerald-500" /> Agenda (Minuto a Minuto)
+                                        </h3>
+                                        <span className="bg-emerald-50 text-emerald-700 text-[10px] font-black px-3 py-1 rounded-full border border-emerald-100 uppercase">
+                                            {formData.activities.length} Actividades
+                                        </span>
+                                    </div>
+
+                                    <div className="bg-slate-50/70 p-6 rounded-3xl border border-slate-100 space-y-4 shadow-sm">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="md:col-span-2">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Nombre de la actividad (Ej: Bienvenida, Ponencia...)"
+                                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none font-medium text-slate-700 shadow-sm"
+                                                    value={currentActivity.name}
+                                                    onChange={(e) => setCurrentActivity({ ...currentActivity, name: e.target.value })}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Inicio</label>
+                                                <input
+                                                    type="time"
+                                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-4 focus:ring-emerald-500/10 outline-none font-bold text-emerald-700"
+                                                    value={currentActivity.startsAt}
+                                                    onChange={(e) => setCurrentActivity({ ...currentActivity, startsAt: e.target.value })}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Fin</label>
+                                                <input
+                                                    type="time"
+                                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-4 focus:ring-emerald-500/10 outline-none font-bold text-emerald-700"
+                                                    value={currentActivity.endsAt}
+                                                    onChange={(e) => setCurrentActivity({ ...currentActivity, endsAt: e.target.value })}
+                                                />
+                                            </div>
+                                            <div className="md:col-span-2 mt-2">
+                                                <textarea
+                                                    placeholder="Descripción o detalles de la actividad..."
+                                                    rows="2"
+                                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none font-medium text-slate-700 resize-none shadow-sm"
+                                                    value={currentActivity.description || ''}
+                                                    onChange={(e) => setCurrentActivity({ ...currentActivity, description: e.target.value })}
+                                                ></textarea>
+                                            </div>
+                                        </div>
                                         <button
                                             type="button"
-                                            onClick={() => setStep(2)}
-                                            className="flex items-center gap-2 bg-emerald-600 text-white px-8 py-3.5 rounded-2xl font-bold shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition-all"
-                                        >
-                                            Continuar
-                                            <ArrowRight size={18} />
-                                        </button>
-                                    </div>
-                                </div>
-                            )
-                        }
-
-                        {
-                            step === 2 && (
-                                <div className="bg-white p-8 rounded-[2rem] shadow-premium border border-gray-100 animate-slide-up">
-                                    <div className="flex items-center gap-3 mb-8">
-                                        <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center">
-                                            <Calendar size={24} />
-                                        </div>
-                                        <h2 className="text-2xl font-display font-bold text-gray-900">Programación</h2>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-3 ml-1 flex items-center gap-2">
-                                                <div className="w-2 h-2 rounded-full bg-emerald-500"></div> INICIO DEL EVENTO
-                                            </label>
-                                            <div className="p-1 px-2 border border-emerald-100 rounded-2xl bg-emerald-50/10 focus-within:ring-4 focus-within:ring-emerald-500/10 transition-all">
-                                                <input
-                                                    type="datetime-local"
-                                                    name="startsAt"
-                                                    className="block w-full px-2 py-3 bg-transparent outline-none text-emerald-900 font-bold uppercase text-xs"
-                                                    value={formData.startsAt}
-                                                    onChange={handleChange}
-                                                />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-3 ml-1 flex items-center gap-2">
-                                                <div className="w-2 h-2 rounded-full bg-red-500"></div> FINALIZACIÓN
-                                            </label>
-                                            <div className="p-1 px-2 border border-red-100 rounded-2xl bg-red-50/10 focus-within:ring-4 focus-within:ring-red-500/10 transition-all">
-                                                <input
-                                                    type="datetime-local"
-                                                    name="endsAt"
-                                                    className="block w-full px-2 py-3 bg-transparent outline-none text-red-900 font-bold uppercase text-xs"
-                                                    value={formData.endsAt}
-                                                    onChange={handleChange}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Agenda Section */}
-                                    <div className="mt-12">
-                                        <div className="flex items-center justify-between mb-6">
-                                            <h3 className="text-xl font-display font-bold text-gray-900 flex items-center gap-2">
-                                                <Clock size={20} className="text-emerald-500" /> Agenda (Minuto a Minuto)
-                                            </h3>
-                                            <span className="bg-emerald-50 text-emerald-700 text-[10px] font-black px-3 py-1 rounded-full border border-emerald-100 uppercase">
-                                                {formData.activities.length} Actividades
-                                            </span>
-                                        </div>
-
-                                        <div className="bg-gray-50/50 p-6 rounded-3xl border border-gray-100 space-y-4">
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <div className="md:col-span-2">
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Nombre de la actividad (Ej: Bienvenida, Ponencia...)"
-                                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-4 focus:ring-emerald-500/10 outline-none font-medium"
-                                                        value={currentActivity.name}
-                                                        onChange={(e) => setCurrentActivity({ ...currentActivity, name: e.target.value })}
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Inicio</label>
-                                                    <input
-                                                        type="time"
-                                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-4 focus:ring-emerald-500/10 outline-none font-bold text-emerald-700"
-                                                        value={currentActivity.startsAt}
-                                                        onChange={(e) => setCurrentActivity({ ...currentActivity, startsAt: e.target.value })}
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Fin</label>
-                                                    <input
-                                                        type="time"
-                                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-4 focus:ring-emerald-500/10 outline-none font-bold text-emerald-700"
-                                                        value={currentActivity.endsAt}
-                                                        onChange={(e) => setCurrentActivity({ ...currentActivity, endsAt: e.target.value })}
-                                                    />
-                                                </div>
-                                                <div className="md:col-span-2 mt-2">
-                                                    <textarea
-                                                        placeholder="Descripción o detalles de la actividad..."
-                                                        rows="2"
-                                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-4 focus:ring-emerald-500/10 outline-none font-medium resize-none"
-                                                        value={currentActivity.description || ''}
-                                                        onChange={(e) => setCurrentActivity({ ...currentActivity, description: e.target.value })}
-                                                    ></textarea>
-                                                </div>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    if (currentActivity.name && currentActivity.startsAt && currentActivity.endsAt) {
-                                                        if (currentActivity.startsAt >= currentActivity.endsAt) {
-                                                            Swal.fire('Error', 'La hora de fin debe ser posterior a la de inicio', 'error');
-                                                            return;
-                                                        }
-                                                        setFormData({
-                                                            ...formData,
-                                                            activities: [...formData.activities, currentActivity]
-                                                        });
-                                                        setCurrentActivity({ name: '', startsAt: '', endsAt: '', description: '' });
+                                            onClick={() => {
+                                                if (currentActivity.name && currentActivity.startsAt && currentActivity.endsAt) {
+                                                    if (currentActivity.startsAt >= currentActivity.endsAt) {
+                                                        Swal.fire('Error', 'La hora de fin debe ser posterior a la de inicio', 'error');
+                                                        return;
                                                     }
-                                                }}
-                                                className="w-full py-3 bg-white border border-emerald-200 text-emerald-600 rounded-xl font-bold text-sm hover:bg-emerald-50 transition-all flex items-center justify-center gap-2"
-                                            >
-                                                <Plus size={18} /> Agregar Actividad a la Agenda
-                                            </button>
-                                        </div>
-
-                                        <div className="mt-6 space-y-3">
-                                            {formData.activities.map((act, index) => (
-                                                <div key={index} className="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 shadow-sm animate-fade-in">
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xs">
-                                                            {index + 1}
-                                                        </div>
-                                                        <div>
-                                                            <p className="font-bold text-gray-900">{act.name}</p>
-                                                            <p className="text-xs text-gray-400 font-medium">{act.startsAt} - {act.endsAt}</p>
-                                                            {act.description && (
-                                                                <p className="text-xs text-gray-500 mt-1 line-clamp-2">{act.description}</p>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setFormData({
-                                                                ...formData,
-                                                                activities: formData.activities.filter((_, i) => i !== index)
-                                                            });
-                                                        }}
-                                                        className="p-2 text-gray-300 hover:text-red-500 transition-colors"
-                                                    >
-                                                        <X size={18} />
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div className="mt-12 p-6 bg-amber-50 rounded-2xl border border-amber-100 flex gap-4">
-                                        <div className="text-amber-600"><Info size={24} /></div>
-                                        <p className="text-sm text-amber-800 leading-relaxed font-medium">
-                                            Asegúrese de incluir tiempo adicional para pruebas técnicas antes del inicio oficial.
-                                        </p>
-                                    </div>
-
-                                    <div className="mt-12 pt-8 border-t border-gray-50 flex justify-between">
-                                        <button type="button" onClick={() => setStep(1)} className="px-8 py-3.5 rounded-2xl font-bold text-gray-400 hover:text-gray-600 transition-all">Atrás</button>
-                                        <button type="button" onClick={() => setStep(3)} className="flex items-center gap-2 bg-emerald-600 text-white px-8 py-3.5 rounded-2xl font-bold shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition-all">Continuar <ChevronRight size={18} /></button>
-                                    </div>
-                                </div>
-                            )
-                        }
-
-                        {
-                            step === 3 && (
-                                <div className="bg-white p-8 rounded-[2rem] shadow-premium border border-gray-100 animate-slide-up">
-                                    <div className="flex items-center gap-3 mb-8">
-                                        <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
-                                            <Briefcase size={24} />
-                                        </div>
-                                        <h2 className="text-2xl font-display font-bold text-gray-900">Detalles de la Ficha Técnica</h2>
-                                    </div>
-
-                                    <div className="space-y-6">
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight">Dress Code</label>
-                                            <input
-                                                type="text"
-                                                name="dressCode"
-                                                className="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium placeholder:text-gray-300"
-                                                placeholder="Ej: Formal, Casual, etc."
-                                                value={formData.dressCode}
-                                                onChange={handleChange}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight">Programa Impactado</label>
-                                            <input
-                                                type="text"
-                                                name="programImpacted"
-                                                className="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium placeholder:text-gray-300"
-                                                value={formData.programImpacted}
-                                                onChange={handleChange}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight">Especificaciones de Invitados</label>
-                                            <textarea
-                                                name="guestSpecifications"
-                                                rows="2"
-                                                className="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium placeholder:text-gray-300"
-                                                value={formData.guestSpecifications}
-                                                onChange={handleChange}
-                                            ></textarea>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight">Detalle de Presidium</label>
-                                            <textarea
-                                                name="presidiumDetail"
-                                                rows="2"
-                                                className="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium placeholder:text-gray-300"
-                                                value={formData.presidiumDetail}
-                                                onChange={handleChange}
-                                            ></textarea>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight">Acción del Director</label>
-                                            <textarea
-                                                name="directorAction"
-                                                rows="2"
-                                                className="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium placeholder:text-gray-300"
-                                                value={formData.directorAction}
-                                                onChange={handleChange}
-                                            ></textarea>
-                                        </div>
-                                    </div>
-
-                                    <div className="mt-12 pt-8 border-t border-gray-50 flex justify-between">
-                                        <button type="button" onClick={() => setStep(2)} className="px-8 py-3.5 rounded-2xl font-bold text-gray-400 hover:text-gray-600 transition-all">Atrás</button>
-                                        <button
-                                            type="submit"
-                                            disabled={loading}
-                                            className="flex items-center gap-2 bg-emerald-600 text-white px-10 py-3.5 rounded-2xl font-bold shadow-xl shadow-emerald-200 hover:bg-emerald-700 transition-all transform hover:-translate-y-1 active:translate-y-0"
+                                                    setFormData({
+                                                        ...formData,
+                                                        activities: [...formData.activities, currentActivity].sort((a, b) => a.startsAt.localeCompare(b.startsAt))
+                                                    });
+                                                    setCurrentActivity({ name: '', startsAt: '', endsAt: '', description: '' });
+                                                } else {
+                                                    Swal.fire('Campos incompletos', 'Asigna nombre, hora de inicio y de fin a la actividad', 'warning');
+                                                }
+                                            }}
+                                            className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 shadow-md shadow-emerald-100"
                                         >
-                                            {loading ? (
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                                    Guardando...
-                                                </div>
-                                            ) : (
-                                                <>
-                                                    <Save size={20} />
-                                                    Guardar Ficha Técnica
-                                                </>
-                                            )}
+                                            <Plus size={18} /> Agregar Actividad
                                         </button>
+
+                                        {formData.activities.length > 0 && (
+                                            <div className="space-y-2.5 mt-6 max-h-72 overflow-y-auto pr-1">
+                                                {formData.activities.map((act, index) => (
+                                                    <div key={index} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow transition-all duration-200 animate-fade-in">
+                                                        <div className="flex gap-4 items-center">
+                                                            <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center font-bold text-xs">
+                                                                {index + 1}
+                                                            </div>
+                                                            <div>
+                                                                <h4 className="text-sm font-bold text-slate-800">{act.name}</h4>
+                                                                <p className="text-xs text-gray-400 font-medium">{act.startsAt} - {act.endsAt}</p>
+                                                                {act.description && (
+                                                                    <p className="text-xs text-gray-500 mt-1 line-clamp-2">{act.description}</p>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setFormData({ ...formData, activities: formData.activities.filter((_, i) => i !== index) });
+                                                            }}
+                                                            className="p-2 text-gray-300 hover:text-red-500 transition-colors"
+                                                        >
+                                                            <X size={18} />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
-                            )
-                        }
-                    </form >
+                            </div>
 
+                            <div className="mt-6 rounded-[1.75rem] border border-slate-100 bg-white p-6 shadow-[0_12px_35px_-15px_rgba(15,23,42,0.12)]">
+                                <label className="block text-sm font-bold text-slate-700 mb-2 ml-1 uppercase tracking-tight">Observaciones</label>
+                                <textarea
+                                    name="otrosObservaciones"
+                                    rows="4"
+                                    className="block w-full px-4 py-3.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none font-medium text-slate-700 placeholder:text-slate-400 shadow-sm"
+                                    placeholder="Anota observaciones adicionales del evento..."
+                                    value={formData.otrosObservaciones}
+                                    onChange={handleChange}
+                                />
+                            </div>
+
+                            <div className="mt-12 p-6 bg-amber-50/80 rounded-2xl border border-amber-100 flex gap-4 shadow-sm">
+                                <div className="text-amber-600"><Info size={24} /></div>
+                                <p className="text-sm text-amber-800 leading-relaxed font-medium">
+                                    Asegúrese de incluir tiempo adicional para pruebas técnicas antes del inicio oficial.
+                                </p>
+                            </div>
+
+                            <div className="mt-12 pt-8 border-t border-gray-50 flex justify-between">
+                                <button type="button" onClick={() => setStep(1)} className="px-8 py-3.5 rounded-2xl font-bold text-slate-500 hover:text-slate-700 transition-all">Atrás</button>
+                                <button type="button" onClick={() => setStep(3)} className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-8 py-3.5 rounded-2xl font-bold shadow-lg shadow-emerald-200/70 hover:shadow-xl hover:shadow-emerald-200/80 transition-all">Continuar <ChevronRight size={18} /></button>
+                            </div>
+                        </div>
+                    )}
+
+                    {step === 3 && (
+                        <div className="bg-white p-8 rounded-[2rem] shadow border border-gray-100 animate-slide-up">
+                            <div className="flex items-center gap-3 mb-8">
+                                <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
+                                    <Briefcase size={24} />
+                                </div>
+                                <h2 className="text-2xl font-display font-bold text-gray-900">Detalles de la Ficha Técnica</h2>
+                            </div>
+
+                            <div className="space-y-6">
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight">Dress Code</label>
+                                    <input
+                                        type="text"
+                                        name="dressCode"
+                                        className="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium placeholder:text-gray-300"
+                                        placeholder="Ej: Formal, Casual, etc."
+                                        value={formData.dressCode}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight">Programa Impactado</label>
+                                    <input
+                                        type="text"
+                                        name="programImpacted"
+                                        className="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium placeholder:text-gray-300"
+                                        placeholder="Programa académico/social al que beneficia..."
+                                        value={formData.programImpacted}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight">Especificaciones de Invitados</label>
+                                    <textarea
+                                        name="guestSpecifications"
+                                        rows="2"
+                                        className="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium placeholder:text-gray-300"
+                                        placeholder="Detalles sobre invitados especiales o requerimientos específicos..."
+                                        value={formData.guestSpecifications}
+                                        onChange={handleChange}
+                                    ></textarea>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight">Tipo de Acomodo</label>
+                                    <input
+                                        type="text"
+                                        name="acomodo_tipo"
+                                        className="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium placeholder:text-gray-300"
+                                        placeholder="Ej: Auditorio, Herradura, Escuela..."
+                                        value={formData.acomodo_tipo}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight">Detalles de Presídium</label>
+                                    <textarea
+                                        name="presidiumDetail"
+                                        rows="2"
+                                        className="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium placeholder:text-gray-300"
+                                        placeholder="Indicaciones para acomodo o protocolo del presídium..."
+                                        value={formData.presidiumDetail}
+                                        onChange={handleChange}
+                                    ></textarea>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight">Acción del Director</label>
+                                    <textarea
+                                        name="directorAction"
+                                        rows="2"
+                                        className="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium placeholder:text-gray-300"
+                                        value={formData.directorAction}
+                                        onChange={handleChange}
+                                    ></textarea>
+                                </div>
+                            </div>
+
+                            <div className="mt-12 pt-8 border-t border-gray-50 flex justify-between">
+                                <button type="button" onClick={() => setStep(2)} className="px-8 py-3.5 rounded-2xl font-bold text-slate-500 hover:text-slate-700 transition-all">Atrás</button>
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-10 py-3.5 rounded-2xl font-bold shadow-xl shadow-emerald-200/70 hover:shadow-2xl hover:shadow-emerald-200/80 transition-all transform hover:-translate-y-1 active:translate-y-0"
+                                >
+                                    {loading ? (
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> Guardando...
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <Save size={20} /> Guardar Ficha Técnica
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </form>
                     {/* Feedbacks Section for Edit Mode */}
                     {
                         isEditMode && detailedEvent && (() => {
@@ -802,38 +914,34 @@ const EventForm = () => {
                             if (feedbacks.length === 0) return null;
 
                             return (
-                                <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm transition-colors animate-slide-up">
+                                <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm transition-colors animate-slide-up mt-8">
                                     <h2 className="text-xl font-display font-bold text-gray-900 mb-6 flex items-center gap-2">
                                         <FileText size={20} className="text-blue-500" /> Feedbacks y Revisiones
                                     </h2>
-
                                     <div className="space-y-4">
                                         {feedbacks.map(f => (
-                                            <div key={f.id} className={`p-5 rounded-2xl border ${f.status === 'resolved' ? 'bg-gray-50 border-gray-200' : 'bg-amber-50/50 border-amber-100'} flex justify-between items-start`}>
-                                                <div>
-                                                    <div className="flex items-center gap-3 mb-2">
-                                                        <span className="font-bold text-gray-900 text-sm">{f.reviewer?.name}</span>
-                                                        <span className="text-[10px] font-black uppercase text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md">{f.reviewer?.role}</span>
-                                                        <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md ${f.status === 'resolved' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                                            <div key={f.id} className={`p-5 rounded-2xl border ${f.status === 'resolved' ? 'bg-green-50/50 border-green-100' : 'bg-red-50/50 border-red-100'}`}>
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <div>
+                                                        <span className={`text-xs font-bold px-2.5 py-1 rounded-lg uppercase tracking-wide ${f.status === 'resolved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                                                             {f.status === 'resolved' ? 'Resuelto' : 'Pendiente'}
                                                         </span>
+                                                        <span className="text-xs text-gray-500 ml-3">
+                                                            {format(new Date(f.createdAt), "d 'de' MMMM, yyyy - HH:mm", { locale: es })}
+                                                        </span>
                                                     </div>
-                                                    {f.fieldName && (
-                                                        <p className="text-xs font-bold text-blue-600 mb-1">Campo: {f.fieldName}</p>
+                                                    {f.status === 'pending' && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleResolveFeedback(f.id)}
+                                                            disabled={actionLoading}
+                                                            className="text-sm bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-xl font-bold hover:bg-gray-50 transition-colors shadow-sm disabled:opacity-50"
+                                                        >
+                                                            Marcar como Resuelto
+                                                        </button>
                                                     )}
-                                                    <p className="text-sm text-gray-700">{f.comment}</p>
-                                                    <p className="text-xs text-gray-400 mt-2">{format(new Date(f.createdAt), "d 'de' MMMM yyyy HH:mm", { locale: es })}</p>
                                                 </div>
-                                                {f.status === 'pending' && (
-                                                    <button
-                                                        onClick={() => handleResolveFeedback(f.id)}
-                                                        disabled={actionLoading}
-                                                        type="button"
-                                                        className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 px-4 py-2 rounded-xl text-xs font-bold transition-colors disabled:opacity-50"
-                                                    >
-                                                        Marcar Resuelto
-                                                    </button>
-                                                )}
+                                                <p className="text-sm text-gray-800 font-medium whitespace-pre-line mt-3">{f.comment}</p>
                                             </div>
                                         ))}
                                     </div>
@@ -841,10 +949,10 @@ const EventForm = () => {
                             );
                         })()
                     }
-                </div >
+
 
                 {/* Sidebar Summary */}
-                < div className="hidden lg:block" >
+                <div className="hidden lg:block">
                     <div className="sticky top-10 bg-emerald-900 rounded-[2.5rem] p-10 text-white shadow relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-800 rounded-full blur-3xl opacity-40 -mr-20 -mt-20"></div>
                         <h3 className="text-2xl font-display font-bold mb-8 relative z-10">Resumen</h3>
@@ -878,287 +986,278 @@ const EventForm = () => {
                             </div>
                         </div>
                     </div>
-                </div >
-            </div >
+                </div>
+            </div>
 
             {/* ========================================================================= */}
             {/* 🤖 MODAL DE AUTORELLENADO POR IA */}
             {/* ========================================================================= */}
-            {
-                showAIModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-fade-in">
-                        <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col animate-slide-up">
-                            <div className="p-6 bg-emerald-950 text-white flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <Sparkles size={24} className="text-emerald-200" />
-                                    <h2 className="text-xl font-display font-bold">Asistente de Autorellenado IA</h2>
-                                </div>
-                                <button onClick={() => setShowAIModal(false)} className="text-emerald-100 hover:text-white transition-colors">
-                                    <X size={24} />
-                                </button>
+            {showAIModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-fade-in">
+                    <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col animate-slide-up">
+                        <div className="p-6 bg-emerald-950 text-white flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <Sparkles size={24} className="text-emerald-200" />
+                                <h2 className="text-xl font-display font-bold">Asistente de Autorellenado IA</h2>
                             </div>
-                            <div className="p-8 space-y-4 bg-gray-50 flex-1">
-                                <p className="text-sm font-medium text-gray-600 leading-relaxed">
-                                    Describe el evento que deseas crear.Incluye todos los detalles que sepas: el nombre, objetivo, horarios aproximados, código de vestimenta, quiénes asistirán o qué actividades habrá.
-                                    La Inteligencia Artificial analizará tu solicitud y utilizará fichas técnicas pasadas para intentar rellenar todos los campos del formulario por ti.
-                                </p >
-                                <textarea
-                                    className="w-full h-40 p-4 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none resize-none font-medium text-gray-700 shadow-inner"
-                                    placeholder="Ej: Necesito una ficha para el Foro Anual de Innovación..."
-                                    value={aiPrompt}
-                                    onChange={(e) => setAIPrompt(e.target.value)}
-                                ></textarea>
-                            </div >
-                            <div className="p-6 bg-white border-t border-gray-100 flex justify-end gap-3">
-                                <button
-                                    onClick={() => setShowAIModal(false)}
-                                    className="px-6 py-2.5 rounded-xl font-bold text-gray-500 hover:bg-gray-50 border border-transparent transition-all"
-                                    disabled={isAILoading}
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    onClick={handleAutoFill}
-                                    disabled={!aiPrompt.trim() || isAILoading}
-                                    className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 disabled:cursor-not-allowed text-white px-8 py-2.5 rounded-xl font-bold shadow-lg shadow-emerald-100 transition-all"
-                                >
-                                    {isAILoading ? (
-                                        <>
-                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> Procesando...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Sparkles size={18} /> Autorellenar
-                                        </>
-                                    )}
-                                </button>
-                            </div>
-                        </div >
-                    </div >
-                )
-            }
+                            <button onClick={() => setShowAIModal(false)} className="text-emerald-100 hover:text-white transition-colors">
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <div className="p-8 space-y-4 bg-gray-50 flex-1">
+                            <p className="text-sm font-medium text-gray-600 leading-relaxed">
+                                Describe el evento que deseas crear. La Inteligencia Artificial analizará tu solicitud y utilizará fichas técnicas pasadas para intentar rellenar todos los campos del formulario por ti.
+                            </p>
+                            <textarea
+                                className="w-full h-40 p-4 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none resize-none font-medium text-gray-700 shadow-inner"
+                                placeholder="Ej: Necesito una ficha para el Foro Anual de Innovación..."
+                                value={aiPrompt}
+                                onChange={(e) => setAIPrompt(e.target.value)}
+                            ></textarea>
+                        </div>
+                        <div className="p-6 bg-white border-t border-gray-100 flex justify-end gap-3">
+                            <button
+                                onClick={() => setShowAIModal(false)}
+                                className="px-6 py-2.5 rounded-xl font-bold text-gray-500 hover:bg-gray-50 border border-transparent transition-all"
+                                disabled={isAILoading}
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleAutoFill}
+                                disabled={!aiPrompt.trim() || isAILoading}
+                                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 disabled:cursor-not-allowed text-white px-8 py-2.5 rounded-xl font-bold shadow-lg shadow-emerald-100 transition-all"
+                            >
+                                {isAILoading ? (
+                                    <>
+                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> Procesando...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Sparkles size={18} /> Autorellenar
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* ========================================================================= */}
             {/* 🚗 MODAL DE CONTROL DE VEHÍCULOS (ESTACIONAMIENTO) */}
             {/* ========================================================================= */}
-            {
-                showParkingModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-fade-in">
-                        <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col animate-slide-up">
-                            <div className="p-6 bg-emerald-600 text-white flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <span className="text-xl">🚗</span>
-                                    <h2 className="text-xl font-display font-bold">Control de Vehículos para Acceso</h2>
-                                </div>
-                                <button onClick={() => setShowParkingModal(false)} className="text-emerald-100 hover:text-white transition-colors">
-                                    <X size={24} />
-                                </button>
+            {showParkingModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-fade-in">
+                    <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col animate-slide-up">
+                        <div className="p-6 bg-emerald-600 text-white flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <span className="text-xl">🚗</span>
+                                <h2 className="text-xl font-display font-bold">Control de Vehículos para Acceso</h2>
                             </div>
-                            <div className="p-6 space-y-4 bg-slate-50">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    <input
-                                        type="text"
-                                        name="nombreResponsable"
-                                        placeholder="Nombre del Responsable"
-                                        value={currentVehicle.nombreResponsable}
-                                        onChange={handleVehicleChange}
-                                        className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none shadow-sm"
-                                    />
-                                    <input
-                                        type="text"
-                                        name="placaVehiculo"
-                                        placeholder="Placas (Ej: XYZ-123-A)"
-                                        value={currentVehicle.placaVehiculo}
-                                        onChange={handleVehicleChange}
-                                        className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm uppercase outline-none shadow-sm animate-fade-in"
-                                    />
-                                    <select
-                                        name="marcaVehiculo"
-                                        value={currentVehicle.marcaVehiculo}
-                                        onChange={handleVehicleChange}
-                                        className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none shadow-sm font-medium text-slate-700"
-                                    >
-                                        <option value="" disabled>Selecciona una marca...</option>
-                                        {MARCAS_POPULARES.map((marca) => (
-                                            <option key={marca} value={marca}>{marca}</option>
-                                        ))}
-                                    </select>
-                                    <select
-                                        name="colorVehiculo"
-                                        value={currentVehicle.colorVehiculo}
-                                        onChange={handleVehicleChange}
-                                        className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none shadow-sm font-medium text-slate-700"
-                                    >
-                                        <option value="" disabled>Selecciona un color...</option>
-                                        {COLORES_COMUNES.map((color) => (
-                                            <option key={color} value={color}>{color}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={handleAddVehicle}
-                                    className="w-full py-2.5 bg-emerald-600 text-white rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm hover:bg-emerald-700 transition-colors"
+                            <button onClick={() => setShowParkingModal(false)} className="text-emerald-100 hover:text-white transition-colors">
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-4 bg-slate-50">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <input
+                                    type="text"
+                                    name="nombreResponsable"
+                                    placeholder="Nombre del Responsable"
+                                    value={currentVehicle.nombreResponsable}
+                                    onChange={handleVehicleChange}
+                                    className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none shadow-sm"
+                                />
+                                <input
+                                    type="text"
+                                    name="placaVehiculo"
+                                    placeholder="Placas (Ej: XYZ-123-A)"
+                                    value={currentVehicle.placaVehiculo}
+                                    onChange={handleVehicleChange}
+                                    className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm uppercase outline-none shadow-sm animate-fade-in"
+                                />
+                                <select
+                                    name="marcaVehiculo"
+                                    value={currentVehicle.marcaVehiculo}
+                                    onChange={handleVehicleChange}
+                                    className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none shadow-sm font-medium text-slate-700"
                                 >
-                                    <Plus size={14} /> Agregar Vehículo
-                                </button>
+                                    <option value="" disabled>Selecciona una marca...</option>
+                                    {MARCAS_POPULARES.map((marca) => (
+                                        <option key={marca} value={marca}>{marca}</option>
+                                    ))}
+                                </select>
+                                <select
+                                    name="colorVehiculo"
+                                    value={currentVehicle.colorVehiculo}
+                                    onChange={handleVehicleChange}
+                                    className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none shadow-sm font-medium text-slate-700"
+                                >
+                                    <option value="" disabled>Selecciona un color...</option>
+                                    {COLORES_COMUNES.map((color) => (
+                                        <option key={color} value={color}>{color}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleAddVehicle}
+                                className="w-full py-2.5 bg-emerald-600 text-white rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm hover:bg-emerald-700 transition-colors"
+                            >
+                                <Plus size={14} /> Agregar Vehículo
+                            </button>
 
-                                {parkingList.length > 0 && (
-                                    <div className="space-y-2 mt-2 border-t border-slate-200 pt-3 max-h-52 overflow-y-auto">
-                                        {parkingList.map((vehicle, idx) => (
-                                            <div key={idx} className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-xl text-sm shadow-sm animate-fade-in">
-                                                <div className="truncate flex-1 pr-2">
-                                                    <p className="font-bold text-slate-800 truncate">{vehicle.marcaVehiculo} • <span className="text-emerald-600">{vehicle.placaVehiculo}</span></p>
-                                                    <p className="text-xs text-slate-400 font-medium truncate">Resp: {vehicle.nombreResponsable} {vehicle.colorVehiculo ? `(${vehicle.colorVehiculo})` : ''}</p>
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setParkingList(prev => prev.filter((_, i) => i !== idx))}
-                                                    className="p-1.5 text-gray-300 hover:text-red-500 transition-colors"
-                                                >
-                                                    <X size={16} />
-                                                </button>
+                            {parkingList.length > 0 && (
+                                <div className="space-y-2 mt-2 border-t border-slate-200 pt-3 max-h-52 overflow-y-auto">
+                                    {parkingList.map((vehicle, idx) => (
+                                        <div key={idx} className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-xl text-sm shadow-sm animate-fade-in">
+                                            <div className="truncate flex-1 pr-2">
+                                                <p className="font-bold text-slate-800 truncate">{vehicle.marcaVehiculo} • <span className="text-emerald-600">{vehicle.placaVehiculo}</span></p>
+                                                <p className="text-xs text-slate-400 font-medium truncate">Resp: {vehicle.nombreResponsable} {vehicle.colorVehiculo ? `(${vehicle.colorVehiculo})` : ''}</p>
                                             </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="p-4 bg-white border-t border-gray-100 flex justify-end">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowParkingModal(false)}
-                                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-xl font-bold text-sm transition-all"
-                                >
-                                    Listo
-                                </button>
-                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setParkingList(prev => prev.filter((_, i) => i !== idx))}
+                                                className="p-1.5 text-gray-300 hover:text-red-500 transition-colors"
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        <div className="p-4 bg-white border-t border-gray-100 flex justify-end">
+                            <button
+                                type="button"
+                                onClick={() => setShowParkingModal(false)}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-xl font-bold text-sm transition-all"
+                            >
+                                Listo
+                            </button>
                         </div>
                     </div>
-                )
-            }
+                </div>
+            )}
 
             {/* ========================================================================= */}
             {/* 📸 MODAL DE TOMA DE FOTOGRAFÍA */}
             {/* ========================================================================= */}
-            {
-                showPhotoModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-fade-in">
-                        <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col animate-slide-up">
-                            <div className="p-6 bg-emerald-600 text-white flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <span className="text-xl">📸</span>
-                                    <h2 className="text-xl font-display font-bold">Horario Programado (Foto)</h2>
-                                </div>
-                                <button onClick={() => setShowPhotoModal(false)} className="text-emerald-100 hover:text-white transition-colors">
-                                    <X size={24} />
-                                </button>
+            {showPhotoModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-fade-in">
+                    <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col animate-slide-up">
+                        <div className="p-6 bg-emerald-600 text-white flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <span className="text-xl">📸</span>
+                                <h2 className="text-xl font-display font-bold">Horario Programado (Foto)</h2>
                             </div>
-                            <div className="p-6 space-y-4 bg-slate-50">
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">Hora Exacta para la Toma</label>
-                                    <input
-                                        type="time"
-                                        value={horaFotografia}
-                                        onChange={(e) => setHoraFotografia(e.target.value)}
-                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white font-bold text-emerald-700 outline-none shadow-sm"
-                                    />
-                                </div>
-                            </div>
-                            <div className="p-4 bg-white border-t border-gray-100 flex justify-end">
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        if (!horaFotografia) {
-                                            Swal.fire('Atención', 'Por favor especifica un horario para continuar.', 'info');
-                                            return;
-                                        }
-                                        setShowPhotoModal(false);
-                                    }}
-                                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-xl font-bold text-sm transition-all"
-                                >
-                                    Guardar Horario
-                                </button>
+                            <button onClick={() => setShowPhotoModal(false)} className="text-emerald-100 hover:text-white transition-colors">
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-4 bg-slate-50">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">Hora Exacta para la Toma</label>
+                                <input
+                                    type="time"
+                                    value={horaFotografia}
+                                    onChange={(e) => setHoraFotografia(e.target.value)}
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white font-bold text-emerald-700 outline-none shadow-sm"
+                                />
                             </div>
                         </div>
+                        <div className="p-4 bg-white border-t border-gray-100 flex justify-end">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (!horaFotografia) {
+                                        Swal.fire('Atención', 'Por favor especifica un horario para continuar.', 'info');
+                                        return;
+                                    }
+                                    setShowPhotoModal(false);
+                                }}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-xl font-bold text-sm transition-all"
+                            >
+                                Guardar Horario
+                            </button>
+                        </div>
                     </div>
-                )
-            }
+                </div>
+            )}
 
             {/* ========================================================================= */}
             {/* 👥 MODAL DE PRESÍDIUM */}
             {/* ========================================================================= */}
-            {
-                showPresidiumModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-fade-in">
-                        <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col animate-slide-up">
-                            <div className="p-6 bg-emerald-600 text-white flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <span className="text-xl">👥</span>
-                                    <h2 className="text-xl font-display font-bold">Listado de Integrantes del Presídium</h2>
-                                </div>
-                                <button onClick={() => setShowPresidiumModal(false)} className="text-emerald-100 hover:text-white transition-colors">
-                                    <X size={24} />
-                                </button>
+            {showPresidiumModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-fade-in">
+                    <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col animate-slide-up">
+                        <div className="p-6 bg-emerald-600 text-white flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <span className="text-xl">👥</span>
+                                <h2 className="text-xl font-display font-bold">Listado de Integrantes del Presídium</h2>
                             </div>
-                            <div className="p-6 space-y-4 bg-slate-50">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    <input
-                                        type="text"
-                                        placeholder="Nombre Completo"
-                                        value={currentMember.nombre}
-                                        onChange={(e) => setCurrentMember(prev => ({ ...prev, nombre: e.target.value }))}
-                                        className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none shadow-sm"
-                                    />
-                                    <input
-                                        type="text"
-                                        placeholder="Puesto / Cargo"
-                                        value={currentMember.puesto}
-                                        onChange={(e) => setCurrentMember(prev => ({ ...prev, puesto: e.target.value }))}
-                                        className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none shadow-sm"
-                                    />
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={handleAddMember}
-                                    className="w-full py-2.5 bg-emerald-600 text-white rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm hover:bg-emerald-700 transition-colors"
-                                >
-                                    <Plus size={14} /> Agregar Integrante
-                                </button>
+                            <button onClick={() => setShowPresidiumModal(false)} className="text-emerald-100 hover:text-white transition-colors">
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-4 bg-slate-50">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <input
+                                    type="text"
+                                    placeholder="Nombre Completo"
+                                    value={currentMember.nombre}
+                                    onChange={(e) => setCurrentMember(prev => ({ ...prev, nombre: e.target.value }))}
+                                    className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none shadow-sm"
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Puesto / Cargo"
+                                    value={currentMember.puesto}
+                                    onChange={(e) => setCurrentMember(prev => ({ ...prev, puesto: e.target.value }))}
+                                    className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none shadow-sm"
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleAddMember}
+                                className="w-full py-2.5 bg-emerald-600 text-white rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm hover:bg-emerald-700 transition-colors"
+                            >
+                                <Plus size={14} /> Agregar Integrante
+                            </button>
 
-                                {presidiumList.length > 0 && (
-                                    <div className="space-y-2 mt-2 border-t border-slate-200 pt-3 max-h-52 overflow-y-auto">
-                                        {presidiumList.map((member, idx) => (
-                                            <div key={idx} className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-xl text-sm shadow-sm animate-fade-in">
-                                                <div className="truncate flex-1 pr-2">
-                                                    <p className="font-bold text-slate-800 truncate">{member.nombre}</p>
-                                                    <p className="text-xs text-slate-400 font-medium truncate">{member.puesto}</p>
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setPresidiumList(prev => prev.filter((_, i) => i !== idx))}
-                                                    className="p-1.5 text-gray-300 hover:text-red-500 transition-colors"
-                                                >
-                                                    <X size={16} />
-                                                </button>
+                            {presidiumList.length > 0 && (
+                                <div className="space-y-2 mt-2 border-t border-slate-200 pt-3 max-h-52 overflow-y-auto">
+                                    {presidiumList.map((member, idx) => (
+                                        <div key={idx} className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-xl text-sm shadow-sm animate-fade-in">
+                                            <div className="truncate flex-1 pr-2">
+                                                <p className="font-bold text-slate-800 truncate">{member.nombre}</p>
+                                                <p className="text-xs text-slate-400 font-medium truncate">{member.puesto}</p>
                                             </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="p-4 bg-white border-t border-gray-100 flex justify-end">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPresidiumModal(false)}
-                                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-xl font-bold text-sm transition-all"
-                                >
-                                    Listo
-                                </button>
-                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setPresidiumList(prev => prev.filter((_, i) => i !== idx))}
+                                                className="p-1.5 text-gray-300 hover:text-red-500 transition-colors"
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        <div className="p-4 bg-white border-t border-gray-100 flex justify-end">
+                            <button
+                                type="button"
+                                onClick={() => setShowPresidiumModal(false)}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-xl font-bold text-sm transition-all"
+                            >
+                                Listo
+                            </button>
                         </div>
                     </div>
-                )
-            }
-        </div >
+                </div>
+            )}
+        </div>
     );
 };
 
