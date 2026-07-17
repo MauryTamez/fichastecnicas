@@ -14,6 +14,7 @@ const getStatusColorConfig = (estado) => {
         case 'rechazado': return { text: 'text-red-700', bg: 'bg-red-50', border: 'border-red-100', dot: 'bg-red-500', solid: 'bg-red-600', button: 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200' };
         case 'solicitado': return { text: 'text-blue-700', bg: 'bg-blue-50', border: 'border-blue-100', dot: 'bg-blue-500', solid: 'bg-blue-600', button: 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200' };
         case 'borrador': return { text: 'text-gray-700', bg: 'bg-gray-50', border: 'border-gray-200', dot: 'bg-gray-500', solid: 'bg-gray-600', button: 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200' };
+        case 'histórico': return { text: 'text-indigo-700', bg: 'bg-indigo-50', border: 'border-indigo-100', dot: 'bg-indigo-500', solid: 'bg-indigo-600', button: 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200' };
         default: return { text: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-100', dot: 'bg-amber-500', solid: 'bg-amber-600', button: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200' };
     }
 };
@@ -120,11 +121,12 @@ const Dashboard = () => {
         let day = startDate;
 
         const weekdayHeaders = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+        const dashboardEvents = events.filter(e => e.currentState === 'scheduled' || e.currentState === 'historical');
 
         while (day <= endDate) {
             for (let i = 0; i < 7; i++) {
                 const cloneDay = day;
-                const dayEvents = events.filter(e => isSameDay(new Date(e.fecha_inicio), cloneDay));
+                const dayEvents = dashboardEvents.filter(e => isSameDay(new Date(e.fecha_inicio), cloneDay));
                 const isSelected = isSameDay(day, selectedDay);
                 const isCurrentMonth = isSameMonth(day, monthStart);
                 const isTodayFormatted = isSameDay(day, new Date());
@@ -189,7 +191,10 @@ const Dashboard = () => {
     };
 
     const EventCard = ({ event }) => (
-        <div className="group bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-premium hover:border-emerald-100 transition-all animate-fade-in duration-300 relative overflow-hidden flex flex-col h-full">
+        <div 
+            onClick={() => navigate(`/evento/${event.id}/versiones`)}
+            className="group cursor-pointer bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-premium hover:border-emerald-100 transition-all animate-fade-in duration-300 relative overflow-hidden flex flex-col h-full"
+        >
             {/* Visual Accent */}
             <div className={`absolute top-0 right-0 w-16 h-16 opacity-5 -mr-8 -mt-8 rounded-full ${getStatusColorConfig(event.estado).solid}`}></div>
 
@@ -229,23 +234,19 @@ const Dashboard = () => {
                         <p className="text-sm font-bold text-gray-700 -mt-0.5 max-w-[100px] truncate">{event.user?.nombre || 'General'}</p>
                     </div>
                 </div>
-
-                <Link to={`/evento/${event.id}/versiones`} className="p-2 text-gray-300 hover:text-emerald-600 transition-colors flex-shrink-0">
-                    <Info size={18} />
-                </Link>
             </div>
 
             {user?.nivel_permiso === 1 && event.estado === 'pendiente' && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
                     <button
-                        onClick={() => handleStatusChange(event.id, 'aceptado')}
+                        onClick={(e) => { e.stopPropagation(); handleStatusChange(event.id, 'aceptado'); }}
                         className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-bold transition-all shadow-md shadow-emerald-100 border border-emerald-500"
                     >
                         <CheckCircle size={14} />
                         Aceptar
                     </button>
                     <button
-                        onClick={() => handleStatusChange(event.id, 'rechazado')}
+                        onClick={(e) => { e.stopPropagation(); handleStatusChange(event.id, 'rechazado'); }}
                         className="flex items-center justify-center gap-2 bg-white border border-red-100 text-red-600 hover:bg-red-50 py-2.5 rounded-xl text-xs font-bold transition-all"
                     >
                         <XCircle size={14} />
@@ -257,7 +258,7 @@ const Dashboard = () => {
             {(event.estado === 'rechazado' || event.estado === 'pendiente' || event.estado === 'borrador' || event.estado === 'solicitado') && (String(event.user_id) === String(user?.id) || user?.nivel_permiso === 1) && (
                 <div className="mt-4 pt-4 border-t border-gray-50">
                     <button
-                        onClick={() => navigate(`/editar-evento/${event.id}`)}
+                        onClick={(e) => { e.stopPropagation(); navigate(`/editar-evento/${event.id}`); }}
                         className={`w-full flex items-center justify-center gap-2 ${getStatusColorConfig(event.estado).button} border py-2.5 rounded-xl text-xs font-bold transition-all`}
                     >
                         <RefreshCw size={14} />
@@ -269,8 +270,10 @@ const Dashboard = () => {
     );
 
     const renderContent = () => {
+        const dashboardEvents = events.filter(e => e.currentState === 'scheduled' || e.currentState === 'historical');
+
         if (view === 'calendar') {
-            const selectedDayEvents = events.filter(e => isSameDay(new Date(e.fecha_inicio), selectedDay));
+            const selectedDayEvents = dashboardEvents.filter(e => isSameDay(new Date(e.fecha_inicio), selectedDay));
 
             return (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
@@ -343,7 +346,7 @@ const Dashboard = () => {
                     </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {events.map(event => <EventCard key={event.id} event={event} />)}
+                    {dashboardEvents.map(event => <EventCard key={event.id} event={event} />)}
                 </div>
             </div>
         );

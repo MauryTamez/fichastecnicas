@@ -91,7 +91,7 @@ export default class EventsController {
         eventTypeId: e.eventTypeId,
         user_id: e.userId,
         user: { nombre: e.user?.name },
-        estado: e.currentState === 'in_review' ? 'pendiente' : (e.currentState === 'scheduled' ? 'aceptado' : (e.currentState === 'rejected' ? 'rechazado' : (e.currentState === 'draft' ? 'borrador' : (e.currentState === 'requested' ? 'solicitado' : 'pendiente')))),
+        estado: e.currentState === 'in_review' ? 'pendiente' : (e.currentState === 'scheduled' ? 'aceptado' : (e.currentState === 'rejected' ? 'rechazado' : (e.currentState === 'draft' ? 'borrador' : (e.currentState === 'requested' ? 'solicitado' : (e.currentState === 'historical' ? 'histórico' : 'pendiente'))))),
         name: content?.name,
         objective: content?.objective,
         description: content?.description,
