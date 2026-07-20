@@ -5,6 +5,7 @@ import { Calendar, User, Clock, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
+import EventStateBadge from '../components/EventStateBadge';
 
 const PendingApprovals = () => {
     const { user } = useAuth();
@@ -60,9 +61,7 @@ const PendingApprovals = () => {
                                 <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
                                     <Clock size={20} />
                                 </div>
-                                <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border border-blue-100">
-                                    {event.currentState === 'requested' ? 'Solicitado' : event.currentState === 'in_review' ? 'En Revisión' : event.currentState}
-                                </span>
+                                <EventStateBadge state={event.currentState} />
                             </div>
                             
                             <h3 className="text-lg font-display font-bold text-gray-900 leading-tight mb-2 group-hover:text-emerald-700 transition-colors line-clamp-2">

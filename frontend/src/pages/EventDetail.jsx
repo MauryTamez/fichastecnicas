@@ -12,25 +12,7 @@ import { getVenues } from '../api/venues';
 import { createFeedback, resolveFeedback } from '../api/feedbacks';
 import Swal from 'sweetalert2';
 
-const StatusBadge = ({ currentState }) => {
-    const stateMap = {
-        'scheduled': { label: 'Aceptado', class: 'bg-emerald-50 text-emerald-700 border-emerald-100', dot: 'bg-emerald-500' },
-        'rejected': { label: 'Rechazado', class: 'bg-red-50 text-red-700 border-red-100', dot: 'bg-red-500' },
-        'requested': { label: 'Solicitado', class: 'bg-blue-50 text-blue-700 border-blue-100', dot: 'bg-blue-500' },
-        'in_review': { label: 'Pendiente', class: 'bg-amber-50 text-amber-700 border-amber-100', dot: 'bg-amber-500' },
-        'draft': { label: 'Borrador', class: 'bg-gray-50 text-gray-700 border-gray-200', dot: 'bg-gray-500' },
-        'cancelled': { label: 'Cancelado', class: 'bg-red-50 text-red-700 border-red-100', dot: 'bg-red-500' },
-    };
-    
-    const config = stateMap[currentState] || stateMap['in_review'];
-    
-    return (
-        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider border ${config.class}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`}></span>
-            {config.label}
-        </span>
-    );
-};
+import EventStateBadge from '../components/EventStateBadge';
 
 const EventDetail = () => {
     const { id, versionId } = useParams();
@@ -223,7 +205,7 @@ const EventDetail = () => {
                             )}
                         </div>
                         <div className="flex gap-2">
-                            <StatusBadge currentState={event.currentState} />
+                            <EventStateBadge state={event.currentState} />
                             <span className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs font-bold border border-gray-200">
                                 Versión {selectedVersion.versionNumber}
                             </span>

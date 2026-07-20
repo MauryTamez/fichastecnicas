@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight, CheckCircle, XCircle, Clock, Info, Plus, Cal
 import { Link, useNavigate } from 'react-router-dom';
 import { getVenues } from '../api/venues';
 import Swal from 'sweetalert2';
+import EventStateBadge from '../components/EventStateBadge';
 
 const getStatusColorConfig = (estado) => {
     switch(estado) {
@@ -199,10 +200,7 @@ const Dashboard = () => {
             <div className={`absolute top-0 right-0 w-16 h-16 opacity-5 -mr-8 -mt-8 rounded-full ${getStatusColorConfig(event.estado).solid}`}></div>
 
             <div className="flex justify-between items-start mb-4">
-                <div className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 border shadow-sm ${getStatusColorConfig(event.estado).bg} ${getStatusColorConfig(event.estado).text} ${getStatusColorConfig(event.estado).border}`}>
-                    <div className={`w-1.5 h-1.5 rounded-full ${getStatusColorConfig(event.estado).dot}`}></div>
-                    {event.estado}
-                </div>
+                <EventStateBadge state={event.currentState || event.estado} />
                 <div className="text-xs font-bold text-gray-400 flex flex-col items-end gap-1">
                     <div className="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-md">
                         <Clock size={14} className="text-gray-300" />
