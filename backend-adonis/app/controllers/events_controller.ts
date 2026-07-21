@@ -189,6 +189,38 @@ export default class EventsController {
           guestSpecifications: content?.guestSpecifications,
           presidiumDetail: content?.presidiumDetail,
           directorAction: content?.directorAction,
+          cantidadPersonas: content?.cantidadPersonas,
+          acomodo_tipo: content?.acomodoTipo,
+          audiovisual: {
+            sonido: Boolean(content?.sonido),
+            microfonoInalambrico: Boolean(content?.microfonoInalambricoMano),
+            microfonoMesa: Boolean(content?.microfonoInalambricoMesa),
+            microfonoPresidencial: Boolean(content?.microfonoPresidencial),
+            microfonoDiadema: Boolean(content?.microfonoDiadema),
+            microfonoAlambrico: Boolean(content?.microfonoAlambrico),
+            proyeccionPresentacion: Boolean(content?.proyeccionPresentacion),
+            proyeccionVideo: Boolean(content?.proyeccionVideo),
+            videograbacion: Boolean(content?.videograbacion),
+            personalApoyo: Boolean(content?.personalApoyo),
+            apuntador: Boolean(content?.apuntador),
+            musicaFondo: Boolean(content?.musicaFondo),
+          },
+          requerimientosOtros: {
+            manteles: Boolean(content?.manteles),
+            banderas: Boolean(content?.banderas),
+            coffeeBreak: Boolean(content?.mesaCoffeeBreak),
+            estacionamiento: Boolean(content?.estacionamiento),
+            fotografia: Boolean(content?.tomaFotografia),
+            podium: Boolean(content?.podium),
+            presidium: Boolean(content?.presidium),
+            edecanes: Boolean(content?.edecanes),
+            himno: Boolean(content?.himnoUanl),
+            separadorHimno: Boolean(content?.separadorHimno),
+          },
+          otrosObservaciones: content?.otrosObservaciones || '',
+          listaEstacionamiento: content?.listaEstacionamiento || [],
+          horaFotografia: content?.horaFotografia || '',
+          listaPresidium: content?.listaPresidium || [],
           activities: v.versionActivities?.map((a: any) => ({
             id: a.id,
             name: a.name,
@@ -276,20 +308,37 @@ export default class EventsController {
         content.presidiumDetail = data.presidiumDetail || null
         content.directorAction = data.directorAction || null
         content.cantidadPersonas = data.cantidadPersonas || null
-content.acomodoTipo = data.acomodoTipo || null
+        content.acomodoTipo = data.acomodoTipo || data.acomodo_tipo || null
 
-content.sonido = data.audiovisual?.sonido || false
-content.microfonoInalambricoMano = data.audiovisual?.microfonoInalambrico || false
-content.microfonoInalambricoMesa = data.audiovisual?.microfonoMesa || false
-content.microfonoPresidencial = data.audiovisual?.microfonoPresidencial || false
-content.microfonoDiadema = data.audiovisual?.microfonoDiadema || false
-content.microfonoAlambrico = data.audiovisual?.microfonoAlambrico || false
-content.proyeccionPresentacion = data.audiovisual?.proyeccionPresentacion || false
-content.proyeccionVideo = data.audiovisual?.proyeccionVideo || false
-content.videograbacion = data.audiovisual?.videograbacion || false
-content.personalApoyo = data.audiovisual?.personalApoyo || false
-content.apuntador = data.audiovisual?.apuntador || false
-content.musicaFondo = data.audiovisual?.musicaFondo || false
+        content.sonido = Boolean(data.audiovisual?.sonido)
+        content.microfonoInalambricoMano = Boolean(data.audiovisual?.microfonoInalambrico)
+        content.microfonoInalambricoMesa = Boolean(data.audiovisual?.microfonoMesa)
+        content.microfonoPresidencial = Boolean(data.audiovisual?.microfonoPresidencial)
+        content.microfonoDiadema = Boolean(data.audiovisual?.microfonoDiadema)
+        content.microfonoAlambrico = Boolean(data.audiovisual?.microfonoAlambrico)
+        content.proyeccionPresentacion = Boolean(data.audiovisual?.proyeccionPresentacion)
+        content.proyeccionVideo = Boolean(data.audiovisual?.proyeccionVideo)
+        content.videograbacion = Boolean(data.audiovisual?.videograbacion)
+        content.personalApoyo = Boolean(data.audiovisual?.personalApoyo)
+        content.apuntador = Boolean(data.audiovisual?.apuntador)
+        content.musicaFondo = Boolean(data.audiovisual?.musicaFondo)
+
+        content.manteles = Boolean(data.requerimientosOtros?.manteles)
+        content.banderas = Boolean(data.requerimientosOtros?.banderas)
+        content.mesaCoffeeBreak = Boolean(data.requerimientosOtros?.coffeeBreak)
+        content.estacionamiento = Boolean(data.requerimientosOtros?.estacionamiento)
+        content.tomaFotografia = Boolean(data.requerimientosOtros?.fotografia)
+        content.podium = Boolean(data.requerimientosOtros?.podium)
+        content.presidium = Boolean(data.requerimientosOtros?.presidium)
+        content.edecanes = Boolean(data.requerimientosOtros?.edecanes)
+        content.himnoUanl = Boolean(data.requerimientosOtros?.himno)
+        content.separadorHimno = Boolean(data.requerimientosOtros?.separadorHimno)
+
+        content.otrosObservaciones = data.otrosObservaciones || null
+        content.listaEstacionamiento = data.listaEstacionamiento || null
+        content.horaFotografia = data.horaFotografia || null
+        content.listaPresidium = data.listaPresidium || null
+
         content.useTransaction(transaction)
         await content.save()
 
@@ -413,6 +462,40 @@ content.musicaFondo = data.audiovisual?.musicaFondo || false
       content.guestSpecifications = data.guestSpecifications !== undefined ? data.guestSpecifications : oldContent?.guestSpecifications || null
       content.presidiumDetail = data.presidiumDetail !== undefined ? data.presidiumDetail : oldContent?.presidiumDetail || null
       content.directorAction = data.directorAction !== undefined ? data.directorAction : oldContent?.directorAction || null
+      content.cantidadPersonas = data.cantidadPersonas !== undefined ? data.cantidadPersonas : (oldContent?.cantidadPersonas || null)
+      content.acomodoTipo = data.acomodoTipo !== undefined ? data.acomodoTipo : (data.acomodo_tipo !== undefined ? data.acomodo_tipo : (oldContent?.acomodoTipo || null))
+
+      const av = data.audiovisual
+      content.sonido = av?.sonido !== undefined ? Boolean(av.sonido) : (oldContent?.sonido || false)
+      content.microfonoInalambricoMano = av?.microfonoInalambrico !== undefined ? Boolean(av.microfonoInalambrico) : (oldContent?.microfonoInalambricoMano || false)
+      content.microfonoInalambricoMesa = av?.microfonoMesa !== undefined ? Boolean(av.microfonoMesa) : (oldContent?.microfonoInalambricoMesa || false)
+      content.microfonoPresidencial = av?.microfonoPresidencial !== undefined ? Boolean(av.microfonoPresidencial) : (oldContent?.microfonoPresidencial || false)
+      content.microfonoDiadema = av?.microfonoDiadema !== undefined ? Boolean(av.microfonoDiadema) : (oldContent?.microfonoDiadema || false)
+      content.microfonoAlambrico = av?.microfonoAlambrico !== undefined ? Boolean(av.microfonoAlambrico) : (oldContent?.microfonoAlambrico || false)
+      content.proyeccionPresentacion = av?.proyeccionPresentacion !== undefined ? Boolean(av.proyeccionPresentacion) : (oldContent?.proyeccionPresentacion || false)
+      content.proyeccionVideo = av?.proyeccionVideo !== undefined ? Boolean(av.proyeccionVideo) : (oldContent?.proyeccionVideo || false)
+      content.videograbacion = av?.videograbacion !== undefined ? Boolean(av.videograbacion) : (oldContent?.videograbacion || false)
+      content.personalApoyo = av?.personalApoyo !== undefined ? Boolean(av.personalApoyo) : (oldContent?.personalApoyo || false)
+      content.apuntador = av?.apuntador !== undefined ? Boolean(av.apuntador) : (oldContent?.apuntador || false)
+      content.musicaFondo = av?.musicaFondo !== undefined ? Boolean(av.musicaFondo) : (oldContent?.musicaFondo || false)
+
+      const ro = data.requerimientosOtros
+      content.manteles = ro?.manteles !== undefined ? Boolean(ro.manteles) : (oldContent?.manteles || false)
+      content.banderas = ro?.banderas !== undefined ? Boolean(ro.banderas) : (oldContent?.banderas || false)
+      content.mesaCoffeeBreak = ro?.coffeeBreak !== undefined ? Boolean(ro.coffeeBreak) : (oldContent?.mesaCoffeeBreak || false)
+      content.estacionamiento = ro?.estacionamiento !== undefined ? Boolean(ro.estacionamiento) : (oldContent?.estacionamiento || false)
+      content.tomaFotografia = ro?.fotografia !== undefined ? Boolean(ro.fotografia) : (oldContent?.tomaFotografia || false)
+      content.podium = ro?.podium !== undefined ? Boolean(ro.podium) : (oldContent?.podium || false)
+      content.presidium = ro?.presidium !== undefined ? Boolean(ro.presidium) : (oldContent?.presidium || false)
+      content.edecanes = ro?.edecanes !== undefined ? Boolean(ro.edecanes) : (oldContent?.edecanes || false)
+      content.himnoUanl = ro?.himno !== undefined ? Boolean(ro.himno) : (oldContent?.himnoUanl || false)
+      content.separadorHimno = ro?.separadorHimno !== undefined ? Boolean(ro.separadorHimno) : (oldContent?.separadorHimno || false)
+
+      content.otrosObservaciones = data.otrosObservaciones !== undefined ? data.otrosObservaciones : (oldContent?.otrosObservaciones || null)
+      content.listaEstacionamiento = data.listaEstacionamiento !== undefined ? data.listaEstacionamiento : (oldContent?.listaEstacionamiento || null)
+      content.horaFotografia = data.horaFotografia !== undefined ? data.horaFotografia : (oldContent?.horaFotografia || null)
+      content.listaPresidium = data.listaPresidium !== undefined ? data.listaPresidium : (oldContent?.listaPresidium || null)
+
       content.useTransaction(transaction)
       await content.save()
 

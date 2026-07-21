@@ -24,6 +24,7 @@ export const createEventValidator = vine.compile(
 
     cantidadPersonas: vine.number().optional(),
     acomodoTipo: vine.string().optional(),
+    acomodo_tipo: vine.string().optional(),
 
     audiovisual: vine.any().optional(),
 
@@ -83,6 +84,8 @@ export const updateEventValidator = vine.compile(
     cantidadPersonas: vine.number().optional(),
 
     acomodoTipo: vine.string().optional(),
+
+    acomodo_tipo: vine.string().optional(),
 
     audiovisual: vine.any().optional(),
 

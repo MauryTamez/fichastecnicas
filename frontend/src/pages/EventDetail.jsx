@@ -354,6 +354,64 @@ const EventDetail = () => {
                             </div>
                         </div>
                     </div>
+
+                    {/* Equipamiento y Requerimientos */}
+                    <div className={`bg-white rounded-[2rem] p-8 border shadow-sm space-y-6 transition-colors ${!isCurrentVersion ? 'border-amber-100' : 'border-gray-100'}`}>
+                        <h2 className="text-lg font-display font-bold text-gray-900 mb-2 flex items-center gap-2 border-b border-gray-50 pb-4">
+                            <CheckCircle size={18} className="text-emerald-500" /> Requerimientos y Equipamiento
+                        </h2>
+
+                        <div className="space-y-6">
+                            <div>
+                                <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-3">Audiovisual</h3>
+                                {selectedVersion.audiovisual && Object.values(selectedVersion.audiovisual).some(Boolean) ? (
+                                    <div className="flex flex-wrap gap-2">
+                                        {selectedVersion.audiovisual.sonido && <span className="px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold border border-emerald-100">Sonido</span>}
+                                        {selectedVersion.audiovisual.microfonoInalambrico && <span className="px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold border border-emerald-100">Micrófono Inalámbrico de mano</span>}
+                                        {selectedVersion.audiovisual.microfonoMesa && <span className="px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold border border-emerald-100">Micrófono de Mesa</span>}
+                                        {selectedVersion.audiovisual.microfonoPresidencial && <span className="px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold border border-emerald-100">Micrófono Presidencial</span>}
+                                        {selectedVersion.audiovisual.microfonoDiadema && <span className="px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold border border-emerald-100">Micrófono de Diadema</span>}
+                                        {selectedVersion.audiovisual.microfonoAlambrico && <span className="px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold border border-emerald-100">Micrófono Alámbrico</span>}
+                                        {selectedVersion.audiovisual.proyeccionPresentacion && <span className="px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold border border-emerald-100">Proyección de Presentación</span>}
+                                        {selectedVersion.audiovisual.proyeccionVideo && <span className="px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold border border-emerald-100">Proyección de Video</span>}
+                                        {selectedVersion.audiovisual.videograbacion && <span className="px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold border border-emerald-100">Videograbación</span>}
+                                        {selectedVersion.audiovisual.personalApoyo && <span className="px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold border border-emerald-100">Personal de Apoyo</span>}
+                                        {selectedVersion.audiovisual.apuntador && <span className="px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold border border-emerald-100">Apuntador</span>}
+                                        {selectedVersion.audiovisual.musicaFondo && <span className="px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold border border-emerald-100">Música de fondo</span>}
+                                    </div>
+                                ) : (
+                                    <p className="text-xs text-gray-400 italic">No se requirió equipo audiovisual especial.</p>
+                                )}
+                            </div>
+
+                            <div>
+                                <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-3">Otros Requerimientos</h3>
+                                {selectedVersion.requerimientosOtros && Object.values(selectedVersion.requerimientosOtros).some(Boolean) ? (
+                                    <div className="flex flex-wrap gap-2">
+                                        {selectedVersion.requerimientosOtros.manteles && <span className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-xl text-xs font-bold border border-blue-100">Manteles</span>}
+                                        {selectedVersion.requerimientosOtros.banderas && <span className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-xl text-xs font-bold border border-blue-100">Banderas</span>}
+                                        {selectedVersion.requerimientosOtros.coffeeBreak && <span className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-xl text-xs font-bold border border-blue-100">Mesa Coffee Break</span>}
+                                        {selectedVersion.requerimientosOtros.estacionamiento && <span className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-xl text-xs font-bold border border-blue-100">Acceso Estacionamiento</span>}
+                                        {selectedVersion.requerimientosOtros.fotografia && <span className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-xl text-xs font-bold border border-blue-100">Toma de Fotografía {selectedVersion.horaFotografia ? `(${selectedVersion.horaFotografia})` : ''}</span>}
+                                        {selectedVersion.requerimientosOtros.podium && <span className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-xl text-xs font-bold border border-blue-100">Pódium</span>}
+                                        {selectedVersion.requerimientosOtros.presidium && <span className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-xl text-xs font-bold border border-blue-100">Presídium</span>}
+                                        {selectedVersion.requerimientosOtros.edecanes && <span className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-xl text-xs font-bold border border-blue-100">Edecanes</span>}
+                                        {selectedVersion.requerimientosOtros.himno && <span className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-xl text-xs font-bold border border-blue-100">Himno UANL</span>}
+                                        {selectedVersion.requerimientosOtros.separadorHimno && <span className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-xl text-xs font-bold border border-blue-100">Separador Himno</span>}
+                                    </div>
+                                ) : (
+                                    <p className="text-xs text-gray-400 italic">No se requirieron elementos adicionales.</p>
+                                )}
+                            </div>
+
+                            {selectedVersion.otrosObservaciones && (
+                                <div>
+                                    <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-1">Observaciones Adicionales</h3>
+                                    <p className="text-sm font-medium text-gray-700 bg-slate-50 p-4 rounded-2xl border border-slate-100">{selectedVersion.otrosObservaciones}</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
 
                 {/* Sidebar */}

@@ -126,10 +126,18 @@ const EventForm = () => {
     ];
 
     const audiovisualItems = [
-        'Sonido', 'Micrófono Inalámbrico de mano', 'Micrófono Inalámbrico de mano con base de mesa',
-        'Micrófono Presidencial', 'Micrófono de Diadema', 'Micrófono Alámbrico',
-        'Proyección de Presentación', 'Proyección de Video Institucional', 'Videograbación',
-        'Personal de Apoyo', 'Apuntador para pase de diapositivas', 'Música de fondo',
+        { key: 'sonido', label: 'Sonido' },
+        { key: 'microfonoInalambrico', label: 'Micrófono Inalámbrico de mano' },
+        { key: 'microfonoMesa', label: 'Micrófono Inalámbrico de mano con base de mesa' },
+        { key: 'microfonoPresidencial', label: 'Micrófono Presidencial' },
+        { key: 'microfonoDiadema', label: 'Micrófono de Diadema' },
+        { key: 'microfonoAlambrico', label: 'Micrófono Alámbrico' },
+        { key: 'proyeccionPresentacion', label: 'Proyección de Presentación' },
+        { key: 'proyeccionVideo', label: 'Proyección de Video Institucional' },
+        { key: 'videograbacion', label: 'Videograbación' },
+        { key: 'personalApoyo', label: 'Personal de Apoyo' },
+        { key: 'apuntador', label: 'Apuntador para pase de diapositivas' },
+        { key: 'musicaFondo', label: 'Música de fondo' },
     ];
 
     const handleVehicleChange = (e) => {
@@ -243,7 +251,7 @@ const EventForm = () => {
                         const currentEvent = eventDetailRes.data;
                         setDetailedEvent(currentEvent);
                         if (currentEvent) {
-                            const currentVersion = currentEvent.versions?.find(v => v.isCurrentVersion) || {};
+                            const currentVersion = currentEvent.versions?.find(v => v.isCurrentVersion) || currentEvent.versions?.[0] || {};
                             setFormData({
                                 name: currentVersion.name || currentEvent.titulo || currentEvent.name || '',
                                 objective: currentVersion.objective || currentEvent.objective || '',
@@ -253,20 +261,31 @@ const EventForm = () => {
                                 locationId: currentEvent.locationId || currentEvent.venue_id || '',
                                 organizationId: currentEvent.organizationId || '',
                                 eventTypeId: currentEvent.eventTypeId || '',
+                                cantidadPersonas: currentVersion.cantidadPersonas || currentEvent.cantidadPersonas || '',
                                 dressCode: currentVersion.dressCode || currentEvent.dressCode || '',
                                 programImpacted: currentVersion.programImpacted || currentEvent.programImpacted || '',
                                 guestSpecifications: currentVersion.guestSpecifications || currentEvent.asistentes || currentEvent.guestSpecifications || '',
-                                acomodo_tipo: currentEvent.acomodo_tipo || '',
+                                acomodo_tipo: currentVersion.acomodo_tipo || currentEvent.acomodo_tipo || '',
                                 presidiumDetail: currentVersion.presidiumDetail || currentEvent.presidiumDetail || '',
                                 directorAction: currentVersion.directorAction || currentEvent.directorAction || '',
-                                activities: currentVersion.activities || currentEvent.activities || []
+                                activities: currentVersion.activities || currentEvent.activities || [],
+                                otrosObservaciones: currentVersion.otrosObservaciones || currentEvent.otrosObservaciones || ''
                             });
-                            if (currentEvent.requerimientosOtros) {
-                                setOtros(currentEvent.requerimientosOtros);
-                                if (currentEvent.listaEstacionamiento) setParkingList(currentEvent.listaEstacionamiento);
-                                if (currentEvent.horaFotografia) setHoraFotografia(currentEvent.horaFotografia);
-                                if (currentEvent.listaPresidium) setPresidiumList(currentEvent.listaPresidium);
-                            }
+
+                            const targetAv = currentVersion.audiovisual || currentEvent.audiovisual;
+                            if (targetAv) setAudiovisual(prev => ({ ...prev, ...targetAv }));
+
+                            const targetOtros = currentVersion.requerimientosOtros || currentEvent.requerimientosOtros;
+                            if (targetOtros) setOtros(prev => ({ ...prev, ...targetOtros }));
+
+                            const parking = currentVersion.listaEstacionamiento || currentEvent.listaEstacionamiento;
+                            if (parking) setParkingList(parking);
+
+                            const photo = currentVersion.horaFotografia || currentEvent.horaFotografia;
+                            if (photo) setHoraFotografia(photo);
+
+                            const presidium = currentVersion.listaPresidium || currentEvent.listaPresidium;
+                            if (presidium) setPresidiumList(presidium);
                         }
                     } catch (e) {
                         const eventsRes = await api.get('/events');
@@ -288,14 +307,15 @@ const EventForm = () => {
                                 acomodo_tipo: currentEvent.acomodo_tipo || '',
                                 presidiumDetail: currentEvent.presidiumDetail || '',
                                 directorAction: currentEvent.directorAction || '',
-                                activities: currentEvent.activities || []
+                                activities: currentEvent.activities || [],
+                                otrosObservaciones: currentEvent.otrosObservaciones || ''
                             });
-                            if (currentEvent.requerimientosOtros) {
-                                setOtros(currentEvent.requerimientosOtros);
-                                if (currentEvent.listaEstacionamiento) setParkingList(currentEvent.listaEstacionamiento);
-                                if (currentEvent.horaFotografia) setHoraFotografia(currentEvent.horaFotografia);
-                                if (currentEvent.listaPresidium) setPresidiumList(currentEvent.listaPresidium);
-                            }
+
+                            if (currentEvent.audiovisual) setAudiovisual(prev => ({ ...prev, ...currentEvent.audiovisual }));
+                            if (currentEvent.requerimientosOtros) setOtros(prev => ({ ...prev, ...currentEvent.requerimientosOtros }));
+                            if (currentEvent.listaEstacionamiento) setParkingList(currentEvent.listaEstacionamiento);
+                            if (currentEvent.horaFotografia) setHoraFotografia(currentEvent.horaFotografia);
+                            if (currentEvent.listaPresidium) setPresidiumList(currentEvent.listaPresidium);
                         }
                     }
                 }
@@ -602,14 +622,15 @@ const toggleAudiovisual = (key) => {
                                         <h3 className="text-lg font-bold text-slate-800">Audiovisual</h3>
                                     </div>
                                     <div className="space-y-3">
-                                        {audiovisualItems.map((item) => (
-                                            <label key={item} className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3 transition-all duration-200 hover:scale-[1.01] hover:bg-slate-50 hover:border-emerald-200 shadow-sm">
+                                        {audiovisualItems.map(({ key, label }) => (
+                                            <label key={key} className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3 transition-all duration-200 hover:scale-[1.01] hover:bg-slate-50 hover:border-emerald-200 shadow-sm cursor-pointer">
                                                 <input
                                                     type="checkbox"
-                                                    defaultChecked={false}
-                                                    className="mt-0.5 h-4 w-4 rounded-full border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                                                    checked={!!audiovisual[key]}
+                                                    onChange={() => toggleAudiovisual(key)}
+                                                    className="mt-0.5 h-4 w-4 rounded-full border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
                                                 />
-                                                <span className="text-sm font-medium text-gray-700">{item}</span>
+                                                <span className="text-sm font-medium text-gray-700">{label}</span>
                                             </label>
                                         ))}
                                     </div>
