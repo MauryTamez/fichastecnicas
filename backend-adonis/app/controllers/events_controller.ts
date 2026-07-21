@@ -263,27 +263,43 @@ export default class EventsController {
       event.useTransaction(transaction)
       await event.save()
 
-      const content = new VersionContent()
-      content.versionNumber = 1
-      content.name = data.name
-      content.objective = data.objective || null
-      content.description = data.description || null
-      content.startsAt = startsAt
-      content.endsAt = endsAt
-      content.dressCode = data.dressCode || null
-      content.programImpacted = data.programImpacted || null
-      content.guestSpecifications = data.guestSpecifications || null
-      content.presidiumDetail = data.presidiumDetail || null
-      content.directorAction = data.directorAction || null
-      content.useTransaction(transaction)
-      await content.save()
+        const content = new VersionContent()
+        content.versionNumber = 1
+        content.name = data.name
+        content.objective = data.objective || null
+        content.description = data.description || null
+        content.startsAt = startsAt
+        content.endsAt = endsAt
+        content.dressCode = data.dressCode || null
+        content.programImpacted = data.programImpacted || null
+        content.guestSpecifications = data.guestSpecifications || null
+        content.presidiumDetail = data.presidiumDetail || null
+        content.directorAction = data.directorAction || null
+        content.cantidadPersonas = data.cantidadPersonas || null
+content.acomodoTipo = data.acomodoTipo || null
 
-      const version = new EventVersion()
-      version.isCurrentVersion = true
-      version.eventId = event.id
-      version.versionContentId = content.id
-      version.useTransaction(transaction)
-      await version.save()
+content.sonido = data.audiovisual?.sonido || false
+content.microfonoInalambricoMano = data.audiovisual?.microfonoInalambrico || false
+content.microfonoInalambricoMesa = data.audiovisual?.microfonoMesa || false
+content.microfonoPresidencial = data.audiovisual?.microfonoPresidencial || false
+content.microfonoDiadema = data.audiovisual?.microfonoDiadema || false
+content.microfonoAlambrico = data.audiovisual?.microfonoAlambrico || false
+content.proyeccionPresentacion = data.audiovisual?.proyeccionPresentacion || false
+content.proyeccionVideo = data.audiovisual?.proyeccionVideo || false
+content.videograbacion = data.audiovisual?.videograbacion || false
+content.personalApoyo = data.audiovisual?.personalApoyo || false
+content.apuntador = data.audiovisual?.apuntador || false
+content.musicaFondo = data.audiovisual?.musicaFondo || false
+        content.useTransaction(transaction)
+        await content.save()
+
+
+        const version = new EventVersion()
+        version.isCurrentVersion = true
+        version.eventId = event.id
+        version.versionContentId = content.id
+        version.useTransaction(transaction)
+        await version.save()
 
       if (data.activities && Array.isArray(data.activities)) {
         for (const act of data.activities) {

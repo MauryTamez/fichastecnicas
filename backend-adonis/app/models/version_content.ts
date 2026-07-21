@@ -71,6 +71,59 @@ export default class VersionContent extends BaseModel {
   @column()
   declare banderas: boolean
 
+  @column({ columnName: 'microfono_inalambrico_mesa' })
+declare microfonoInalambricoMesa: boolean
+
+@column({ columnName: 'microfono_presidencial' })
+declare microfonoPresidencial: boolean
+
+@column({ columnName: 'microfono_diadema' })
+declare microfonoDiadema: boolean
+
+@column({ columnName: 'microfono_alambrico' })
+declare microfonoAlambrico: boolean
+
+@column({ columnName: 'proyeccion_video' })
+declare proyeccionVideo: boolean
+
+@column()
+declare videograbacion: boolean
+
+@column()
+declare apuntador: boolean
+
+@column({ columnName: 'mesa_coffee_break' })
+declare mesaCoffeeBreak: boolean
+
+@column()
+declare estacionamiento: boolean
+
+@column()
+declare podium: boolean
+
+@column()
+declare presidium: boolean
+
+@column()
+declare edecanes: boolean
+
+@column({ columnName: 'himno_uanl' })
+declare himnoUanl: boolean
+
+@column({ columnName: 'separador_himno' })
+declare separadorHimno: boolean
+
+@column({ columnName: 'otros_observaciones' })
+declare otrosObservaciones: string | null
+
+@column()
+declare listaEstacionamiento: any
+
+@column()
+declare horaFotografia: string | null
+
+@column()
+declare listaPresidium: any
   @column({ columnName: 'toma_fotografia' })
   declare tomaFotografia: boolean
 
