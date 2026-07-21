@@ -146,8 +146,24 @@ export default class EventsController {
         content.guestSpecifications = data.guestSpecifications || null
         content.presidiumDetail = data.presidiumDetail || null
         content.directorAction = data.directorAction || null
+        content.cantidadPersonas = data.cantidadPersonas || null
+content.acomodoTipo = data.acomodoTipo || null
+
+content.sonido = data.audiovisual?.sonido || false
+content.microfonoInalambricoMano = data.audiovisual?.microfonoInalambrico || false
+content.microfonoInalambricoMesa = data.audiovisual?.microfonoMesa || false
+content.microfonoPresidencial = data.audiovisual?.microfonoPresidencial || false
+content.microfonoDiadema = data.audiovisual?.microfonoDiadema || false
+content.microfonoAlambrico = data.audiovisual?.microfonoAlambrico || false
+content.proyeccionPresentacion = data.audiovisual?.proyeccionPresentacion || false
+content.proyeccionVideo = data.audiovisual?.proyeccionVideo || false
+content.videograbacion = data.audiovisual?.videograbacion || false
+content.personalApoyo = data.audiovisual?.personalApoyo || false
+content.apuntador = data.audiovisual?.apuntador || false
+content.musicaFondo = data.audiovisual?.musicaFondo || false
         content.useTransaction(transaction)
         await content.save()
+
 
         const version = new EventVersion()
         version.isCurrentVersion = true

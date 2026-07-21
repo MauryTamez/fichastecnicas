@@ -16,8 +16,8 @@ const COLORES_COMUNES = [
     "Blanco", "Negro", "Gris", "Plata", "Rojo", 
     "Azul", "Verde", "Amarillo", "Naranja", "Café", "Otro / Otra"
 ];
-
 const EventForm = () => {
+
     const { id } = useParams();
     const isEditMode = !!id;
     const navigate = useNavigate();
@@ -27,25 +27,39 @@ const EventForm = () => {
     const [eventTypes, setEventTypes] = useState([]);
     const [step, setStep] = useState(1);
     
-    const [formData, setFormData] = useState({
-        name: '',
-        objective: '',
-        description: '',
-        startsAt: '',
-        endsAt: '',
-        locationId: '',
-        organizationId: '',
-        eventTypeId: '',
-        cantidadPersonas: '',
-        dressCode: '',
-        programImpacted: '',
-        guestSpecifications: '',
-        acomodo_tipo: '',
-        presidiumDetail: '',
-        directorAction: '',
-        activities: [],
-        otrosObservaciones: ''
-    });
+   const [formData, setFormData] = useState({
+    name: '',
+    objective: '',
+    description: '',
+    startsAt: '',
+    endsAt: '',
+    locationId: '',
+    organizationId: '',
+    eventTypeId: '',
+    cantidadPersonas: '',
+    dressCode: '',
+    programImpacted: '',
+    guestSpecifications: '',
+    acomodo_tipo: '',
+    presidiumDetail: '',
+    directorAction: '',
+    activities: [],
+    otrosObservaciones: ''
+});
+    const [audiovisual, setAudiovisual] = useState({
+    sonido: false,
+    microfonoInalambrico: false,
+    microfonoMesa: false,
+    microfonoPresidencial: false,
+    microfonoDiadema: false,
+    microfonoAlambrico: false,
+    proyeccionPresentacion: false,
+    proyeccionVideo: false,
+    videograbacion: false,
+    personalApoyo: false,
+    apuntador: false,
+    musicaFondo: false,
+});
 
     const [currentActivity, setCurrentActivity] = useState({
         name: '',
@@ -71,6 +85,9 @@ const EventForm = () => {
         himno: false,
         separadorHimno: false,
     });
+    const [showParkingModal, setShowParkingModal] = useState(false);
+    const [showPhotoModal, setShowPhotoModal] = useState(false);
+    const [showPresidiumModal, setShowPresidiumModal] = useState(false);
 
     // 🚗 ESTADOS PARA MÚLTIPLES CARROS
     const [parkingList, setParkingList] = useState([]);
@@ -88,10 +105,7 @@ const EventForm = () => {
     const [presidiumList, setPresidiumList] = useState([]);
     const [currentMember, setCurrentMember] = useState({ nombre: '', puesto: '' });
 
-    // 🪟 Estados para controlar la apertura de los modales individuales
-    const [showParkingModal, setShowParkingModal] = useState(false);
-    const [showPhotoModal, setShowPhotoModal] = useState(false);
-    const [showPresidiumModal, setShowPresidiumModal] = useState(false);
+    
 
     const otrosItems = [
         { key: 'manteles', label: 'Manteles' },
@@ -259,10 +273,15 @@ const EventForm = () => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
-
+const toggleAudiovisual = (key) => {
+     setAudiovisual((prev) => ({
+        ...prev,
+        [key]: !prev[key],
+     }));
+ };
     const [error, setError] = useState('');
     const handleSubmit = async (e) => {
-        e.preventDefault();
+      e.preventDefault();
         if (!formData.name.trim() || !formData.locationId || !formData.organizationId || !formData.eventTypeId) {
             setStep(1);
             setError('Por favor complete todos los campos obligatorios (Nombre, Organización, Tipo y Recinto).');
@@ -282,16 +301,19 @@ const EventForm = () => {
         setError('');
         setLoading(true);
         try {
-            const payload = {
-                ...formData,
-                locationId: Number(formData.locationId),
-                organizationId: Number(formData.organizationId),
-                eventTypeId: Number(formData.eventTypeId),
-                requerimientosOtros: otros,
-                listaEstacionamiento: otros.estacionamiento ? parkingList : null,
-                horaFotografia: otros.fotografia ? horaFotografia : null,
-                listaPresidium: otros.presidium ? presidiumList : null
-            };
+           const payload = {
+    ...formData,
+    locationId: Number(formData.locationId),
+    organizationId: Number(formData.organizationId),
+    eventTypeId: Number(formData.eventTypeId),
+
+    audiovisual,
+
+    requerimientosOtros: otros,
+    listaEstacionamiento: otros.estacionamiento ? parkingList : null,
+    horaFotografia: otros.fotografia ? horaFotografia : null,
+    listaPresidium: otros.presidium ? presidiumList : null
+};
             if (isEditMode) {
                 await api.put(`/events/${id}`, payload);
             } else {
