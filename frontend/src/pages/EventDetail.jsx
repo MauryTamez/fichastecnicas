@@ -6,13 +6,14 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
     ArrowLeft, Calendar, Clock, User, Users, Mic,
-    FileText, CheckCircle, XCircle, Check, MapPin, Edit, Download, History, Send
+    FileText, CheckCircle, XCircle, Check, MapPin, Edit, Download, History, Send, Share2, GitCompare
 } from 'lucide-react';
 import { getVenues } from '../api/venues';
 import { createFeedback, resolveFeedback } from '../api/feedbacks';
 import Swal from 'sweetalert2';
 
 import EventStateBadge from '../components/EventStateBadge';
+import VersionDiffModal from '../components/VersionDiffModal';
 
 const EventDetail = () => {
     const { id, versionId } = useParams();
@@ -27,6 +28,7 @@ const EventDetail = () => {
 
     const [feedbackComment, setFeedbackComment] = useState('');
     const [feedbackField, setFeedbackField] = useState('');
+    const [showDiffModal, setShowDiffModal] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -168,13 +170,29 @@ const EventDetail = () => {
     const selectedVersion = event.versions?.find(v => String(v.id) === String(versionId)) || {};
     const isCurrentVersion = selectedVersion.isCurrentVersion === true;
     
-    // El creador solo puede editar si está en draft o si tiene feedbacks
+    const isSubdirector = user?.role === 'encargado_departamento' || user?.role === 'subdirector' || user?.role === 'admin';
+    const isCreator = String(event.userId) === String(user?.id);
     const hasPendingFeedbacks = selectedVersion.feedbacks?.some(f => f.status === 'pending');
-    const canEdit = isCurrentVersion && (String(event.userId) === String(user?.id) || user?.role === 'admin' || user?.nivel_permiso === 1) && (event.currentState === 'draft' || hasPendingFeedbacks);
+    
+    // Creador puede editar si es borrador o si resolvió feedback; Subdirector/Admin puede hacer Edición Directa siempre en borrador, solicitado o revisión
+    const canEditCreator = isCurrentVersion && (isCreator || user?.role === 'admin' || user?.nivel_permiso === 1) && (event.currentState === 'draft' || hasPendingFeedbacks);
+    const canEditSubdirector = isCurrentVersion && isSubdirector && (event.currentState === 'requested' || event.currentState === 'in_review' || event.currentState === 'draft');
+    const canEdit = canEditCreator || canEditSubdirector;
     
     const isReviewer = user?.role === 'moderador' || user?.role === 'encargado_departamento' || user?.role === 'admin';
     const canAddFeedback = isReviewer && isCurrentVersion && (event.currentState === 'in_review' || event.currentState === 'requested');
-    const isCreator = String(event.userId) === String(user?.id);
+
+    const handleShareLink = () => {
+        const link = window.location.href;
+        navigator.clipboard.writeText(link);
+        Swal.fire({
+            icon: 'success',
+            title: '¡Enlace compartible copiado!',
+            text: 'Cualquier usuario autenticado podrá abrir esta versión específica directamente con este enlace.',
+            timer: 2500,
+            showConfirmButton: false
+        });
+    };
 
     return (
         <div className="max-w-4xl mx-auto pb-20 animate-fade-in font-sans">
@@ -263,6 +281,21 @@ const EventDetail = () => {
                                 </button>
                             </>
                         )}
+                        {event.versions?.length > 1 && (
+                            <button
+                                onClick={() => setShowDiffModal(true)}
+                                className="flex items-center gap-2 bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 px-4 py-2.5 rounded-2xl font-bold text-sm transition-all"
+                            >
+                                <GitCompare size={16} /> Comparar Cambios
+                            </button>
+                        )}
+                        <button
+                            onClick={handleShareLink}
+                            title="Copiar Enlace Compartible"
+                            className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2.5 rounded-2xl font-bold text-sm transition-all"
+                        >
+                            <Share2 size={16} /> Compartir Enlace
+                        </button>
                         <button
                             onClick={handleDownloadPdf}
                             disabled={actionLoading}
@@ -544,6 +577,15 @@ const EventDetail = () => {
                     )}
                 </div>
             )}
+
+            {/* Modal de Comparación de Versiones */}
+            <VersionDiffModal 
+                isOpen={showDiffModal}
+                onClose={() => setShowDiffModal(false)}
+                versions={event.versions}
+                defaultV2Id={selectedVersion.id}
+                venues={venues}
+            />
         </div>
     );
 };

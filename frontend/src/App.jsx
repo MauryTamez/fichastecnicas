@@ -15,6 +15,7 @@ import FeedbackReview from './pages/FeedbackReview';
 import PendingApprovals from './pages/PendingApprovals';
 import AuxiliarInbox from './pages/AuxiliarInbox';
 import MyEvents from './pages/MyEvents';
+import DepartmentEvents from './pages/DepartmentEvents';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user } = useAuth();
@@ -113,6 +114,13 @@ function App() {
             <ProtectedRoute allowedRoles={['admin', 'encargado_departamento']}>
               <Layout>
                 <PendingApprovals />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/encargado/eventos" element={
+            <ProtectedRoute allowedRoles={['admin', 'encargado_departamento']}>
+              <Layout>
+                <DepartmentEvents />
               </Layout>
             </ProtectedRoute>
           } />

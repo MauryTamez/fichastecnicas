@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ArrowLeft, Clock, History, CheckCircle2, ChevronRight, FileText, Calendar } from 'lucide-react';
+import { ArrowLeft, Clock, History, CheckCircle2, ChevronRight, FileText, Calendar, GitCompare } from 'lucide-react';
+import VersionDiffModal from '../components/VersionDiffModal';
 
 const EventVersionsList = () => {
     const { id } = useParams();
@@ -11,6 +12,7 @@ const EventVersionsList = () => {
     const [eventData, setEventData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [showDiffModal, setShowDiffModal] = useState(false);
 
     useEffect(() => {
         const fetchVersions = async () => {
@@ -58,10 +60,10 @@ const EventVersionsList = () => {
                     Volver
                 </button>
                 
-                <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm relative overflow-hidden">
+                <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-emerald-50 to-transparent rounded-full blur-3xl opacity-60 -mr-20 -mt-20"></div>
                     <div className="relative z-10 flex items-start gap-4">
-                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-inner">
+                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-inner shrink-0">
                             <History size={24} />
                         </div>
                         <div>
@@ -71,6 +73,15 @@ const EventVersionsList = () => {
                             <p className="text-gray-500 font-medium">Historial de versiones y modificaciones de la ficha técnica.</p>
                         </div>
                     </div>
+
+                    {versions.length > 1 && (
+                        <button
+                            onClick={() => setShowDiffModal(true)}
+                            className="relative z-10 flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-2xl font-bold text-sm shadow-lg shadow-emerald-100 transition-all shrink-0"
+                        >
+                            <GitCompare size={18} /> Comparar Cambios
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -135,6 +146,13 @@ const EventVersionsList = () => {
                     );
                 })}
             </div>
+
+            {/* Modal de Comparación de Cambios */}
+            <VersionDiffModal 
+                isOpen={showDiffModal}
+                onClose={() => setShowDiffModal(false)}
+                versions={versions}
+            />
         </div>
     );
 };

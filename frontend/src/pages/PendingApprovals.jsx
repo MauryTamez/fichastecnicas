@@ -77,6 +77,17 @@ const PendingApprovals = () => {
                                     <Calendar size={14} className="mr-2 text-gray-400" />
                                     {event.fecha_inicio ? format(new Date(event.fecha_inicio), "d 'de' MMMM, yyyy", { locale: es }) : 'Sin fecha'}
                                 </div>
+                                <div className="pt-2 flex gap-2">
+                                    <button 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            navigate(`/editar-evento/${event.id}`);
+                                        }}
+                                        className="flex-1 text-center py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold transition-colors border border-blue-200"
+                                    >
+                                        Editar Directo
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     ))}

@@ -108,6 +108,7 @@ router.group(() => {
             const DepartmentsController = () => import('#controllers/departments_controller')
             router.get('/organigram', [DepartmentsController, 'organigram'])
             router.get('/solicitudes', [EventsController, 'pendingApprovals'])
+            router.put('/events/:id', [EventsController, 'update'])
         }).prefix('/encargado').use(middleware.role(['admin', 'encargado_departamento']))
 
         // 4. Creador Group

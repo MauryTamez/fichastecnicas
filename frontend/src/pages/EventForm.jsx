@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import api from '../api/axios';
+import { useAuth } from '../context/AuthContext';
 import { getVenues } from '../api/venues';
 import { resolveFeedback } from '../api/feedbacks';
 import { format } from 'date-fns';
@@ -20,7 +21,7 @@ const COLORES_COMUNES = [
     "Azul", "Verde", "Amarillo", "Naranja", "Café", "Otro / Otra"
 ];
 const EventForm = () => {
-
+    const { user } = useAuth();
     const { id } = useParams();
     const isEditMode = !!id;
     const navigate = useNavigate();
@@ -373,7 +374,10 @@ const toggleAudiovisual = (key) => {
     listaPresidium: otros.presidium ? presidiumList : null
 };
             if (isEditMode) {
-                await api.put(`/creador/events/${id}`, payload);
+                const endpoint = (user?.role === 'encargado_departamento' || user?.role === 'subdirector') 
+                    ? `/encargado/events/${id}` 
+                    : `/creador/events/${id}`;
+                await api.put(endpoint, payload);
             } else {
                 await api.post('/creador/events', payload);
             }

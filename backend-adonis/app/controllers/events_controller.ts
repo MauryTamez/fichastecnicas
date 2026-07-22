@@ -396,12 +396,17 @@ export default class EventsController {
     const data = await request.validateUsing(updateEventValidator)
     const event = await Event.findOrFail(params.id)
 
-    // Authorization Check
-    if (auth.use('web').user?.role?.name !== 'admin' && event.userId !== auth.use('web').user?.id) {
+    const user = auth.use('web').user!
+    await user.load('role')
+    const roleName = user.role?.name?.toLowerCase() || ''
+    const isSubdirectorOrAdmin = ['admin', 'encargado_departamento', 'subdirector'].includes(roleName)
+
+    // Authorization Check: Admin, Subdirector (Encargado de Depto) o Creador del evento
+    if (!isSubdirectorOrAdmin && event.userId !== user.id) {
       return response.forbidden({ message: 'No tienes permiso para editar este evento' })
     }
 
-    const userEmail = auth.use('web').user?.email || ''
+    const userEmail = user.email || ''
 
     const oldVersion = await EventVersion.query()
       .where('eventId', event.id)
@@ -410,8 +415,8 @@ export default class EventsController {
       .first()
     const oldContent = oldVersion ? await VersionContent.find(oldVersion.versionContentId) : null
 
-    // Validar restricción de edición basada en estado y feedbacks
-    if (event.currentState !== EventState.DRAFT) {
+    // Validar restricción de edición basada en estado y feedbacks (solo para creador sin permisos de subdirector/admin)
+    if (event.currentState !== EventState.DRAFT && !isSubdirectorOrAdmin) {
       if (!oldVersion || !oldVersion.versionFeedbacks || oldVersion.versionFeedbacks.length === 0) {
         return response.forbidden({ message: 'No puedes editar el evento porque no tiene feedback asignado.' })
       }

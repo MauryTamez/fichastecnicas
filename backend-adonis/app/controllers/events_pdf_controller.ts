@@ -31,7 +31,6 @@ export default class EventsPdfController {
     const eventName = content?.name || ''
     const dateFormatted = content?.startsAt ? content.startsAt.toFormat('dd/MM/yyyy') : ''
     const timeFormatted = content?.startsAt ? content.startsAt.toFormat('HH:mm') : ''
-    const dayOfWeek = content?.startsAt ? content.startsAt.setLocale('es').toFormat('EEEE') : ''
     const locationName = event.location?.name || ''
     const aforo = content?.guestSpecifications || 'N/A'
     const programImpacted = content?.programImpacted || ''
