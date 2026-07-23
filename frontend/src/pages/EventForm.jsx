@@ -8,7 +8,6 @@ import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { getVenues } from '../api/venues';
 import { resolveFeedback } from '../api/feedbacks';
-import { getVenues } from '../api/venues';
 
 // Catálogos globales de opciones comunes con opción "Otro / Otra" integrada
 const MARCAS_POPULARES = [
