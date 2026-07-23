@@ -227,7 +227,7 @@ const EventForm = () => {
         }
     };
 
-    useEffect(() => {
+      useEffect(() => {
         const fetchInitialData = async () => {
             try {
                 const venuesRes = await getVenues();

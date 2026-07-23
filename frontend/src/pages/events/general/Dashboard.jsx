@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
-import api from '../../api/axios';
-import { useAuth } from '../../context/AuthContext';
+import api from '../../../api/axios';
+import { useAuth } from '../../../context/AuthContext';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, isSameMonth, isSameDay, addMonths, subMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, CheckCircle, XCircle, Clock, Info, Plus, Calendar as CalendarIcon, Users, Filter, MapPin, RefreshCw, ShieldAlert } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { getVenues } from '../../api/venues';
+import { getVenues } from '../../../api/venues';
 import Swal from 'sweetalert2';
-import EventStateBadge from '../../components/EventStateBadge';
+import EventStateBadge from '../../../components/EventStateBadge';
 
 const getStatusColorConfig = (estado) => {
     switch(estado) {

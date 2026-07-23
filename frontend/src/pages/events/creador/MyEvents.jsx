@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../../api/axios';
+import api from '../../../api/axios';
 import { Calendar, Filter, Search, PlusCircle, Clock, CheckCircle2, XCircle, ChevronRight, FileText, MapPin } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import EventStateBadge from '../../components/EventStateBadge';
+import EventStateBadge from '../../../components/EventStateBadge';
 
 const MyEvents = () => {
     const navigate = useNavigate();

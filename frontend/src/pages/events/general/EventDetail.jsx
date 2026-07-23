@@ -1,19 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import api from '../../api/axios';
-import { useAuth } from '../../context/AuthContext';
+import api from '../../../api/axios';
+import { useAuth } from '../../../context/AuthContext';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
     ArrowLeft, Calendar, Clock, User, Users, Mic,
     FileText, CheckCircle, XCircle, Check, MapPin, Edit, Download, History, Send, Share2, GitCompare
 } from 'lucide-react';
-import { getVenues } from '../../api/venues';
-import { createFeedback, resolveFeedback } from '../../api/feedbacks';
+import { getVenues } from '../../../api/venues';
+import { createFeedback, resolveFeedback } from '../../../api/feedbacks';
 import Swal from 'sweetalert2';
 
-import EventStateBadge from '../../components/EventStateBadge';
-import VersionDiffModal from '../../components/VersionDiffModal';
+import EventStateBadge from '../../../components/EventStateBadge';
+import VersionDiffModal from '../../../components/VersionDiffModal';
 
 const EventDetail = () => {
     const { id, versionId } = useParams();

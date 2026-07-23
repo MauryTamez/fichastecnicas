@@ -1,21 +1,21 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/auth/Login';
-import Dashboard from './pages/events/Dashboard';
+import Dashboard from './pages/events/general/Dashboard';
 import EventForm from './pages/events/form/EventForm';
-import EventDetail from './pages/events/EventDetail';
-import EventVersionsList from './pages/events/EventVersionsList';
+import EventDetail from './pages/events/general/EventDetail';
+import EventVersionsList from './pages/events/general/EventVersionsList';
 import Layout from './components/Layout';
 import CatalogAdmin from './pages/admin/CatalogAdmin';
 import UserAdmin from './pages/admin/UserAdmin';
 import VenueAdmin from './pages/admin/VenueAdmin';
 import EventTypeAdmin from './pages/admin/EventTypeAdmin';
 import Organigrama from './pages/admin/Organigrama';
-import FeedbackReview from './pages/events/FeedbackReview';
-import PendingApprovals from './pages/events/PendingApprovals';
-import AuxiliarInbox from './pages/events/AuxiliarInbox';
-import MyEvents from './pages/events/MyEvents';
-import DepartmentEvents from './pages/events/DepartmentEvents';
+import FeedbackReview from './pages/events/creador/FeedbackReview';
+import PendingApprovals from './pages/events/general/PendingApprovals';
+import AuxiliarInbox from './pages/events/auxiliar/AuxiliarInbox';
+import MyEvents from './pages/events/creador/MyEvents';
+import DepartmentEvents from './pages/events/encargado_departamento/DepartmentEvents';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user } = useAuth();

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../../api/axios';
+import api from '../../../api/axios';
 import { Calendar, Filter, Search, Clock, ChevronRight, FileText, User, Edit, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import EventStateBadge from '../../components/EventStateBadge';
+import EventStateBadge from '../../../components/EventStateBadge';
 
 const DepartmentEvents = () => {
     const navigate = useNavigate();

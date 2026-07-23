@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import api from '../../api/axios';
+import api from '../../../api/axios';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { ArrowLeft, Clock, History, CheckCircle2, ChevronRight, FileText, Calendar, GitCompare } from 'lucide-react';
-import VersionDiffModal from '../../components/VersionDiffModal';
+import VersionDiffModal from '../../../components/VersionDiffModal';
 
 const EventVersionsList = () => {
     const { id } = useParams();
