@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getVenues, createVenue, updateVenue, deleteVenue } from '../api/venues';
+import { getVenues, createVenue, updateVenue, deleteVenue } from '../../api/venues';
 import Swal from 'sweetalert2';
 import { MapPin, Plus, Trash2, Edit2, X, Check } from 'lucide-react';
 

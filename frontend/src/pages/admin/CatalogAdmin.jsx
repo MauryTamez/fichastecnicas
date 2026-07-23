@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import api from '../api/axios';
+import api from '../../api/axios';
 import { Mic, Lightbulb, Coffee, Tag, FileText, Plus, Trash2, Package } from 'lucide-react';
 
 const CATEGORIAS = [
