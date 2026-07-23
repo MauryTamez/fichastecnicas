@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../api/axios';
+import api from '../../../api/axios';
 import { Calendar, Filter, Search, PlusCircle, Clock, CheckCircle2, XCircle, ChevronRight, FileText, MapPin } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import EventStateBadge from '../../../components/EventStateBadge';
 
 const MyEvents = () => {
     const navigate = useNavigate();
@@ -28,23 +29,6 @@ const MyEvents = () => {
             console.error('Error fetching my events:', error);
         } finally {
             setLoading(false);
-        }
-    };
-
-    const getStatusBadge = (status) => {
-        switch (status) {
-            case 'scheduled':
-                return <span className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-bold border border-emerald-200"><CheckCircle2 size={14} /> Aceptado</span>;
-            case 'in_review':
-                return <span className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-700 rounded-full text-xs font-bold border border-amber-200"><Clock size={14} /> Pendiente</span>;
-            case 'requested':
-                return <span className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-bold border border-blue-200"><Clock size={14} /> Solicitado</span>;
-            case 'rejected':
-                return <span className="flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-700 rounded-full text-xs font-bold border border-red-200"><XCircle size={14} /> Rechazado</span>;
-            case 'draft':
-                return <span className="flex items-center gap-1.5 px-3 py-1 bg-gray-50 text-gray-700 rounded-full text-xs font-bold border border-gray-200"><FileText size={14} /> Borrador</span>;
-            default:
-                return <span className="flex items-center gap-1.5 px-3 py-1 bg-gray-50 text-gray-700 rounded-full text-xs font-bold border border-gray-200"><Filter size={14} /> {status}</span>;
         }
     };
 
@@ -153,11 +137,11 @@ const MyEvents = () => {
                         >
                             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-50 to-transparent rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none -mr-10 -mt-10"></div>
                             
-                            <div className="flex justify-between items-start mb-6 relative z-10">
+                            <div className="flex justify-between items-start mb-4">
+                                <EventStateBadge state={event.currentState} />
                                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white flex items-center justify-center shadow-lg shadow-emerald-200/50 group-hover:scale-110 transition-transform">
                                     <Calendar size={20} />
                                 </div>
-                                {getStatusBadge(event.currentState)}
                             </div>
 
                             <div className="flex-1 relative z-10">

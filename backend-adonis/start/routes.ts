@@ -16,6 +16,7 @@ const VenuesController = () => import('#controllers/venues_controller')
 const UsersController = () => import('#controllers/users_controller')
 const LoginControllerIntegration = () => import('#controllers/auth/login_controller')
 const EventTypesController = () => import('#controllers/event_types_controller')
+const FeedbacksController = () => import('#controllers/feedbacks_controller')
 // --- Rutas de IA y Chatbot (Protegidas) ---
 const RagController = () => import('#controllers/rag_controller')
 
@@ -57,6 +58,12 @@ router.group(() => {
         router.get('/events/:id', [EventsController, 'show'])
         router.patch('/events/:id/status', [EventsController, 'updateStatus'])
         router.post('/events/:id/request-review', [EventsController, 'requestReview'])
+        router.post('/events/:id/pass-to-review', [EventsController, 'passToReview'])
+
+        // Feedbacks
+        router.get('/events/:eventId/versions/:versionId/feedbacks', [FeedbacksController, 'index'])
+        router.post('/events/:eventId/versions/:versionId/feedbacks', [FeedbacksController, 'store'])
+        router.patch('/feedbacks/:id/resolve', [FeedbacksController, 'resolve'])
 
         const EventsPdfController = () => import('#controllers/events_pdf_controller')
         router.get('/events/:id/pdf', [EventsPdfController, 'generatePdf'])
@@ -101,6 +108,7 @@ router.group(() => {
             const DepartmentsController = () => import('#controllers/departments_controller')
             router.get('/organigram', [DepartmentsController, 'organigram'])
             router.get('/solicitudes', [EventsController, 'pendingApprovals'])
+            router.put('/events/:id', [EventsController, 'update'])
         }).prefix('/encargado').use(middleware.role(['admin', 'encargado_departamento']))
 
         // 4. Creador Group

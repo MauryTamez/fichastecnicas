@@ -5,6 +5,7 @@ import type { BelongsTo, HasMany, ManyToMany } from '@adonisjs/lucid/types/relat
 import VersionContent from './version_content.js'
 import VersionActivity from './version_activity.js'
 import VersionStaffing from './version_staffing.js'
+import VersionFeedback from './version_feedback.js'
 
 export default class EventVersion extends BaseModel {
   @column({ isPrimary: true })
@@ -38,4 +39,7 @@ export default class EventVersion extends BaseModel {
 
   @hasMany(() => VersionStaffing)
   declare versionStaffings: HasMany<typeof VersionStaffing>
+
+  @hasMany(() => VersionFeedback)
+  declare versionFeedbacks: HasMany<typeof VersionFeedback>
 }

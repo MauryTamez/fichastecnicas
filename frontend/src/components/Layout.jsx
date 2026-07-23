@@ -41,6 +41,7 @@ const Layout = ({ children }) => {
         { name: 'Nueva Ficha', path: '/nuevo-evento', icon: PlusCircle, roles: ['admin', 'moderador', 'creador'] },
         { name: 'Aprobaciones', path: '/moderador/fichas-pendientes', icon: ShieldCheck, roles: ['admin', 'moderador'] },
         { name: 'Solicitudes', path: '/encargado/solicitudes', icon: ShieldCheck, roles: ['encargado_departamento'] },
+        { name: 'Eventos Dpto', path: '/encargado/eventos', icon: Calendar, roles: ['encargado_departamento'] },
         { name: 'Organigrama', path: '/moderador/organigrama', icon: UserIcon, roles: ['admin', 'moderador'] },
         { name: 'Mis Eventos', path: '/creador/eventos', icon: Calendar, roles: ['creador'] },
         { name: 'Feedback', path: '/creador/feedback', icon: Mail, roles: ['creador'] },

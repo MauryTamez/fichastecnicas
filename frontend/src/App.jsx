@@ -1,20 +1,21 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import EventForm from './pages/EventForm';
-import EventDetail from './pages/EventDetail';
-import EventVersionsList from './pages/EventVersionsList';
+import Login from './pages/auth/Login';
+import Dashboard from './pages/events/general/Dashboard';
+import EventForm from './pages/events/form/EventForm';
+import EventDetail from './pages/events/general/EventDetail';
+import EventVersionsList from './pages/events/general/EventVersionsList';
 import Layout from './components/Layout';
-import CatalogAdmin from './pages/CatalogAdmin';
-import UserAdmin from './pages/UserAdmin';
-import VenueAdmin from './pages/VenueAdmin';
-import EventTypeAdmin from './pages/EventTypeAdmin';
-import Organigrama from './pages/Organigrama';
-import FeedbackReview from './pages/FeedbackReview';
-import PendingApprovals from './pages/PendingApprovals';
-import AuxiliarInbox from './pages/AuxiliarInbox';
-import MyEvents from './pages/MyEvents';
+import CatalogAdmin from './pages/admin/CatalogAdmin';
+import UserAdmin from './pages/admin/UserAdmin';
+import VenueAdmin from './pages/admin/VenueAdmin';
+import EventTypeAdmin from './pages/admin/EventTypeAdmin';
+import Organigrama from './pages/admin/Organigrama';
+import FeedbackReview from './pages/events/creador/FeedbackReview';
+import PendingApprovals from './pages/events/general/PendingApprovals';
+import AuxiliarInbox from './pages/events/auxiliar/AuxiliarInbox';
+import MyEvents from './pages/events/creador/MyEvents';
+import DepartmentEvents from './pages/events/encargado_departamento/DepartmentEvents';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user } = useAuth();
@@ -113,6 +114,13 @@ function App() {
             <ProtectedRoute allowedRoles={['admin', 'encargado_departamento']}>
               <Layout>
                 <PendingApprovals />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/encargado/eventos" element={
+            <ProtectedRoute allowedRoles={['admin', 'encargado_departamento']}>
+              <Layout>
+                <DepartmentEvents />
               </Layout>
             </ProtectedRoute>
           } />

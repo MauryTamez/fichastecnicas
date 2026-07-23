@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { getUsers, createUser, updateUser, deleteUser } from '../api/users';
-import { useAuth } from '../context/AuthContext';
+import { getUsers, createUser, updateUser, deleteUser } from '../../api/users';
+import { useAuth } from '../../context/AuthContext';
 import Swal from 'sweetalert2';
 import { UserPlus, Edit2, Trash2, Shield, ShieldCheck, ShieldAlert } from 'lucide-react';
 

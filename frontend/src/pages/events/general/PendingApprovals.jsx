@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
-import api from '../api/axios';
+import { useAuth } from '../../../context/AuthContext';
+import api from '../../../api/axios';
 import { Calendar, User, Clock, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { useNavigate } from 'react-router-dom';
+import EventStateBadge from '../../../components/EventStateBadge';
 
 const PendingApprovals = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -49,14 +52,16 @@ const PendingApprovals = () => {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {events.map((event) => (
-                        <div key={event.id} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-premium hover:border-emerald-100 transition-all group flex flex-col h-full cursor-pointer relative overflow-hidden">
+                        <div 
+                            key={event.id} 
+                            onClick={() => navigate(`/evento/${event.id}/version/${event.versionId}`)}
+                            className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-premium hover:border-emerald-100 transition-all group flex flex-col h-full cursor-pointer relative overflow-hidden"
+                        >
                             <div className="flex justify-between items-start mb-4 relative z-10">
                                 <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
                                     <Clock size={20} />
                                 </div>
-                                <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border border-blue-100">
-                                    Solicitado
-                                </span>
+                                <EventStateBadge state={event.currentState} />
                             </div>
                             
                             <h3 className="text-lg font-display font-bold text-gray-900 leading-tight mb-2 group-hover:text-emerald-700 transition-colors line-clamp-2">
@@ -71,6 +76,17 @@ const PendingApprovals = () => {
                                 <div className="flex items-center text-xs text-gray-500 bg-gray-50 px-2.5 py-1.5 rounded-lg border border-gray-100">
                                     <Calendar size={14} className="mr-2 text-gray-400" />
                                     {event.fecha_inicio ? format(new Date(event.fecha_inicio), "d 'de' MMMM, yyyy", { locale: es }) : 'Sin fecha'}
+                                </div>
+                                <div className="pt-2 flex gap-2">
+                                    <button 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            navigate(`/editar-evento/${event.id}`);
+                                        }}
+                                        className="flex-1 text-center py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold transition-colors border border-blue-200"
+                                    >
+                                        Editar Directo
+                                    </button>
                                 </div>
                             </div>
                         </div>
