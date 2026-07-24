@@ -13,7 +13,7 @@ export default class extends BaseSeeder {
     await User.updateOrCreateMany('email', [
       {
         name: 'Admin User',
-        email: 'admin@mail.com',
+        email: 'amdmin@mail.co',
         phone: '1234567890',
         password: 'password',
         isInternal: true,
@@ -23,7 +23,7 @@ export default class extends BaseSeeder {
       },
       {
         name: 'Moderador User',
-        email: 'moderador@mail.com',
+        email: 'enrique.salazarmrs@uanl.edu.mx',
         phone: '1234567891',
         password: 'password',
         isInternal: true,
@@ -33,7 +33,7 @@ export default class extends BaseSeeder {
       },
       {
         name: 'Subdirector User',
-        email: 'subdirector@mail.com',
+        email: 'salazar.mares.enrique.oliband@gmail.com',
         phone: '1234567892',
         password: 'password',
         isInternal: true,
@@ -43,7 +43,7 @@ export default class extends BaseSeeder {
       },
       {
         name: 'Creador User',
-        email: 'creador@mail.com',
+        email: 'liosauriopro11@gmail.com',
         phone: '1234567893',
         password: 'password',
         isInternal: true,

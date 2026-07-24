@@ -8,6 +8,7 @@ import db from '@adonisjs/lucid/services/db'
 import { EventState } from '../enums/event_state.js'
 import { RagService } from '#services/rag_service'
 import { EventStateService } from '#services/event_state_service'
+import { NotificationService } from '#services/notification_service'
 import { DateTime } from 'luxon'
 
 export default class EventsController {
@@ -576,6 +577,12 @@ export default class EventsController {
     event.currentState = newStatus
     await event.save()
 
+    if (newStatus === EventState.SCHEDULED) {
+      NotificationService.notifyEventApproved(event).catch(console.error)
+    } else if (newStatus === EventState.REJECTED) {
+      NotificationService.notifyEventRejected(event).catch(console.error)
+    }
+
     return response.ok({ message: 'Estado actualizado', event })
   }
 
@@ -615,6 +622,8 @@ export default class EventsController {
     event.currentState = EventState.IN_REVIEW
     await event.save()
 
+    NotificationService.notifyPassedToReview(event).catch(console.error)
+
     return response.ok({ message: 'El evento ha pasado a revisión', event })
   }
 
@@ -627,6 +636,9 @@ export default class EventsController {
 
     event.currentState = EventState.CANCELLED
     await event.save()
+
+    NotificationService.notifyEventCancelled(event).catch(console.error)
+
     return response.ok({ message: 'Evento cancelado' })
   }
 }
