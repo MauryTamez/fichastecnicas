@@ -116,14 +116,32 @@ declare separadorHimno: boolean
 @column({ columnName: 'otros_observaciones' })
 declare otrosObservaciones: string | null
 
-@column()
-declare listaEstacionamiento: any
+  @column({
+    prepare: (value: any) => (value ? (typeof value === 'string' ? value : JSON.stringify(value)) : null),
+    consume: (value: any) => {
+      if (!value) return null
+      if (typeof value === 'string') {
+        try { return JSON.parse(value) } catch { return value }
+      }
+      return value
+    },
+  })
+  declare listaEstacionamiento: any
 
-@column()
-declare horaFotografia: string | null
+  @column()
+  declare horaFotografia: string | null
 
-@column()
-declare listaPresidium: any
+  @column({
+    prepare: (value: any) => (value ? (typeof value === 'string' ? value : JSON.stringify(value)) : null),
+    consume: (value: any) => {
+      if (!value) return null
+      if (typeof value === 'string') {
+        try { return JSON.parse(value) } catch { return value }
+      }
+      return value
+    },
+  })
+  declare listaPresidium: any
   @column({ columnName: 'toma_fotografia' })
   declare tomaFotografia: boolean
 
