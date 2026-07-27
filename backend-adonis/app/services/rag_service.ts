@@ -1,6 +1,9 @@
 import env from '#start/env'
 import db from '@adonisjs/lucid/services/db'
 import EventVersionEmbedding from '#models/event_version_embedding'
+import Location from '#models/location'
+import Organization from '#models/organization'
+import EventType from '#models/event_type'
 
 export class RagService {
   private openRouterKey: string
@@ -132,6 +135,23 @@ ${contextText}
     const relevantDocs = await this.findRelevantContext(userPrompt, 5)
     const contextText = relevantDocs.map((doc: any) => doc.content_chunk).join('\n\n---\n\n')
 
+    let locationsInfo = ''
+    let orgsInfo = ''
+    let typesInfo = ''
+
+    try {
+      const locations = await Location.all()
+      locationsInfo = locations.map(l => `- ID: ${l.id}, Nombre: "${l.name}", Capacidad: ${l.capacity || 'no especificada'}`).join('\n')
+
+      const orgs = await Organization.all()
+      orgsInfo = orgs.map(o => `- ID: ${o.id}, Nombre: "${o.name}"`).join('\n')
+
+      const types = await EventType.all()
+      typesInfo = types.map(t => `- ID: ${t.id}, Nombre: "${t.name}"`).join('\n')
+    } catch (e) {
+      console.warn('No se pudieron cargar catálogos completos para RAG autoFill:', e)
+    }
+
     const systemPrompt = `Eres un asistente experto en redactar Fichas Técnicas para eventos del Centro de Apoyo Multidisciplinario (CAM).
 Tu objetivo es ayudar al usuario a rellenar un formulario de evento basándote en la información que proporcione.
 También puedes usar como referencia las descripciones y formatos de eventos pasados proporcionados en el contexto, pero adáptalos al nuevo evento.
@@ -140,28 +160,98 @@ También puedes usar como referencia las descripciones y formatos de eventos pas
 ${contextText}
 </contexto>
 
+CATÁLOGOS DISPONIBLES EN EL SISTEMA:
+--- LOCACIONES / RECINTOS ---
+${locationsInfo || 'Sin locaciones'}
+
+--- ORGANIZACIONES ---
+${orgsInfo || 'Sin organizaciones'}
+
+--- TIPOS DE EVENTO ---
+${typesInfo || 'Sin tipos de evento'}
+
+OPCIONES PERMITIDAS PARA CAMPOS CON DESPLEGABLE / ENUM:
+- dressCode: Debe ser uno de: "Formal", "Business Casual", "Casual", "Etiqueta", "Gala".
+- programImpacted: Debe ser uno de: "Ingeniería en Sistemas", "Ingeniería Mecatrónica", "Ingeniería Mecánica", "Ingeniería Industrial", "Ingeniería Electrónica", "Ingeniería Administrativa", "Ingeniería Aeronáutica".
+- acomodo_tipo: Debe ser uno de: "En \\"U\\" con mesas y sillas", "Solo sillas tipo Auditorio", "Mesas y sillas en filas", "Otro".
+
+REGLAS DE FORMATO Y ESTRUCTURA DE DATOS:
+1. "startsAt" y "endsAt": Deben ser fechas en formato ISO "YYYY-MM-DDTHH:mm" (ej: "2026-08-15T09:00"). Si la solicitud del usuario no especifica fecha exacta, infiere una fecha futura lógica (ej: dentro de 1 a 2 semanas) con un horario coherente.
+2. "cantidadPersonas": Debe ser un número entero (ej: 150). Intenta seleccionar una locación (locationId) cuya capacidad sea mayor o igual a cantidadPersonas.
+3. "locationId", "organizationId", "eventTypeId": Deben ser números enteros correspondientes a los ID de los catálogos anteriores.
+4. "activities": Debe ser una lista (array) de objetos con la agenda minuto a minuto. Cada objeto debe tener:
+   - "name": string (nombre de la actividad)
+   - "startsAt": string en formato 24 horas "HH:mm" (ej: "09:00")
+   - "endsAt": string en formato 24 horas "HH:mm" (ej: "09:30")
+   - "description": string (descripción de la actividad)
+   Las horas de las actividades deben ser secuenciales y estar dentro del rango general del evento.
+5. "audiovisual": Objeto con los 12 siguientes valores booleanos (true/false):
+   "sonido", "microfonoInalambrico", "microfonoMesa", "microfonoPresidencial", "microfonoDiadema", "microfonoAlambrico", "proyeccionPresentacion", "proyeccionVideo", "videograbacion", "personalApoyo", "apuntador", "musicaFondo".
+6. "otros": Objeto con los 10 siguientes valores booleanos (true/false):
+   "manteles", "banderas", "coffeeBreak", "estacionamiento", "fotografia", "podium", "presidium", "edecanes", "himno", "separadorHimno".
+7. Listas opcionales vinculadas a "otros":
+   - "parkingList": Si "estacionamiento" en otros es true, genera un array con objetos: [{"nombreResponsable": string, "marcaVehiculo": string, "placaVehiculo": string, "colorVehiculo": string}]. Si es false, devuelve [].
+   - "horaFotografia": Si "fotografia" en otros es true, indica la hora en formato "HH:mm" (ej: "10:30"). Si es false, "".
+   - "presidiumList": Si "presidium" en otros es true, genera un array con objetos: [{"nombre": string, "puesto": string}]. Si es false, devuelve [].
+
 IMPORTANTE: DEBES RESPONDER ÚNICA Y EXCLUSIVAMENTE CON UN OBJETO JSON VÁLIDO. No agregues texto adicional, saludos ni explicaciones.
-El objeto JSON debe tener la siguiente estructura exacta (puedes dejar los campos vacíos si no hay suficiente información, pero intenta inferirlos):
+
+Estructura JSON requerida:
 {
-  "name": "Nombre del evento",
+  "name": "Nombre descriptivo del evento",
   "objective": "Objetivo principal",
   "description": "Descripción general",
-  "dressCode": "Código de vestimenta sugerido",
-  "programImpacted": "Programa impactado o beneficiado",
+  "startsAt": "YYYY-MM-DDTHH:mm",
+  "endsAt": "YYYY-MM-DDTHH:mm",
+  "cantidadPersonas": 150,
+  "locationId": 1,
+  "organizationId": 1,
+  "eventTypeId": 1,
+  "dressCode": "Business Casual",
+  "programImpacted": "Ingeniería en Sistemas",
   "guestSpecifications": "Especificaciones de invitados o perfil",
-  "presidiumDetail": "Detalles del presidium si los hay",
-  "directorAction": "Acciones o rol del director",
+  "acomodo_tipo": "Solo sillas tipo Auditorio",
+  "presidiumDetail": "Detalles del presidium si aplica",
+  "directorAction": "Acciones o rol del director si aplica",
+  "otrosObservaciones": "Observaciones adicionales",
   "activities": [
     {
-      "name": "Nombre de la actividad",
-      "startsAt": "HH:MM",
-      "endsAt": "HH:MM",
-      "description": "Descripción de la actividad"
+      "name": "Bienvenida y Registro",
+      "startsAt": "09:00",
+      "endsAt": "09:30",
+      "description": "Recepción de participantes y entrega de gafetes"
     }
-  ]
-}
-
-Ten en cuenta que "startsAt" y "endsAt" en las actividades deben ser en formato 24 horas (ej: "14:00"). Genera tiempos lógicos y secuenciales si no se especifican claramente.`
+  ],
+  "audiovisual": {
+    "sonido": true,
+    "microfonoInalambrico": true,
+    "microfonoMesa": false,
+    "microfonoPresidencial": false,
+    "microfonoDiadema": false,
+    "microfonoAlambrico": false,
+    "proyeccionPresentacion": true,
+    "proyeccionVideo": false,
+    "videograbacion": false,
+    "personalApoyo": true,
+    "apuntador": false,
+    "musicaFondo": false
+  },
+  "otros": {
+    "manteles": false,
+    "banderas": false,
+    "coffeeBreak": true,
+    "estacionamiento": false,
+    "fotografia": false,
+    "podium": true,
+    "presidium": false,
+    "edecanes": false,
+    "himno": false,
+    "separadorHimno": false
+  },
+  "parkingList": [],
+  "horaFotografia": "",
+  "presidiumList": []
+}`
 
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
@@ -186,13 +276,34 @@ Ten en cuenta que "startsAt" y "endsAt" en las actividades deben ser en formato 
       throw new Error(`Error en OpenRouter AutoFill: ${response.statusText} - ${errorText}`)
     }
 
-    const data = await response.json() as any
+    const data = (await response.json()) as any
     const content = data.choices[0].message.content
     try {
-      return JSON.parse(content)
+      const parsed = JSON.parse(content)
+
+      const sanitizeList = (list: any) => {
+        if (!list) return []
+        let items = list
+        if (typeof items === 'string') {
+          try { items = JSON.parse(items) } catch { return [] }
+        }
+        if (!Array.isArray(items)) return []
+        return items.map((item: any) => {
+          if (typeof item === 'string') {
+            try { return JSON.parse(item) } catch { return { nombre: item } }
+          }
+          return item
+        }).filter((item: any) => item && typeof item === 'object')
+      }
+
+      if (parsed.parkingList) parsed.parkingList = sanitizeList(parsed.parkingList)
+      if (parsed.presidiumList) parsed.presidiumList = sanitizeList(parsed.presidiumList)
+
+      return parsed
     } catch (e) {
-      console.error("Failed to parse JSON from AI", content)
+      console.error('Failed to parse JSON from AI', content)
       return {}
     }
   }
 }
+

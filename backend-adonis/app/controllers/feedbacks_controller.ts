@@ -4,6 +4,7 @@ import EventVersion from '#models/event_version'
 import Event from '#models/event'
 import vine from '@vinejs/vine'
 import { EventState } from '../enums/event_state.js'
+import { NotificationService } from '#services/notification_service'
 
 const createFeedbackValidator = vine.compile(
   vine.object({
@@ -55,6 +56,9 @@ export default class FeedbacksController {
 
     await feedback.save()
     await feedback.load('reviewer')
+
+    // Disparar notificación por correo al creador
+    NotificationService.notifyNewFeedback(event, feedback, user).catch(console.error)
 
     return response.created({ message: 'Feedback añadido', data: feedback })
   }

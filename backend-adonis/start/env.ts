@@ -36,4 +36,12 @@ export default await Env.create(new URL('../', import.meta.url), {
   DB_PASSWORD: Env.schema.string.optional(),
   DB_DATABASE: Env.schema.string(),
   OPENROUTER_API_KEY: Env.schema.string.optional(),
+
+  /*
+  |----------------------------------------------------------
+  | Variables for configuring the mail package
+  |----------------------------------------------------------
+  */
+  BREVO_API_KEY: Env.schema.string.optional(),
+  MAIL_FROM_ADDRESS: Env.schema.string.optional()
 })

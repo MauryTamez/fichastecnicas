@@ -2,6 +2,7 @@ import Event from '#models/event'
 import User from '#models/user'
 import { EventState } from '../enums/event_state.js'
 import { Exception } from '@adonisjs/core/exceptions'
+import { NotificationService } from '#services/notification_service'
 
 export class EventStateService {
   /**
@@ -20,12 +21,15 @@ export class EventStateService {
     event.currentState = EventState.REQUESTED
     await event.save()
     
+    // Disparar notificaciones
+    NotificationService.notifyReviewRequested(event).catch(console.error)
+
     return event
   }
 
   /**
    * Transición: requested -> in_review
-   * Solo permitido si el usuario tiene el rol de "Subdirector".
+   * Permite si el usuario tiene el rol de "Subdirector" o "Encargado_departamento".
    */
   public async acceptRequest(event: Event, user: User): Promise<Event> {
     if (event.currentState !== EventState.REQUESTED) {
@@ -33,13 +37,17 @@ export class EventStateService {
     }
 
     await user.load('role')
+    const roleName = user.role?.name.toLowerCase()
     
-    if (user.role?.name.toLowerCase() !== 'subdirector') {
+    if (roleName !== 'subdirector' && roleName !== 'encargado_departamento' && roleName !== 'admin') {
       throw new Exception('No tienes los permisos de Subdirector para aceptar la solicitud', { status: 403 })
     }
 
     event.currentState = EventState.IN_REVIEW
     await event.save()
+
+    // Disparar notificaciones
+    NotificationService.notifyPassedToReview(event).catch(console.error)
 
     return event
   }
@@ -55,12 +63,15 @@ export class EventStateService {
 
     await user.load('role')
 
-    if (user.role?.name.toLowerCase() !== 'moderador') {
+    if (user.role?.name.toLowerCase() !== 'moderador' && user.role?.name.toLowerCase() !== 'admin') {
       throw new Exception('No tienes los permisos de Moderador para aprobar este evento', { status: 403 })
     }
 
     event.currentState = EventState.SCHEDULED
     await event.save()
+
+    // Disparar notificaciones
+    NotificationService.notifyEventApproved(event).catch(console.error)
 
     return event
   }
@@ -69,19 +80,22 @@ export class EventStateService {
    * Transición: in_review -> rejected
    * Solo permitido si el usuario tiene el rol de "Moderador".
    */
-  public async rejectEvent(event: Event, user: User): Promise<Event> {
+  public async rejectEvent(event: Event, user: User, reason?: string): Promise<Event> {
     if (event.currentState !== EventState.IN_REVIEW) {
       throw new Exception('El evento debe estar en revisión para poder ser rechazado', { status: 400 })
     }
 
     await user.load('role')
 
-    if (user.role?.name.toLowerCase() !== 'moderador') {
+    if (user.role?.name.toLowerCase() !== 'moderador' && user.role?.name.toLowerCase() !== 'admin') {
       throw new Exception('No tienes los permisos de Moderador para rechazar este evento', { status: 403 })
     }
 
     event.currentState = EventState.REJECTED
     await event.save()
+
+    // Disparar notificaciones
+    NotificationService.notifyEventRejected(event, reason).catch(console.error)
 
     return event
   }

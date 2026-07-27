@@ -168,7 +168,7 @@ const EventFormDetalles = ({
             </div>
 
             <div className="mt-12 pt-8 border-t border-gray-50 flex justify-between">
-                <button type="button" onClick={() => setStep(2)} className="px-8 py-3.5 rounded-2xl font-bold text-slate-500 hover:text-slate-700 transition-all">Atrás</button>
+                <button type="button" onClick={() => setStep(3)} className="px-8 py-3.5 rounded-2xl font-bold text-slate-500 hover:text-slate-700 transition-all">Atrás</button>
                 <button
                     type="submit"
                     disabled={loading}

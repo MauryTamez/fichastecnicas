@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowLeft, Briefcase, Clock, ChevronRight, FileText, X } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Briefcase, Clock, ChevronRight, FileText, Layers, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
@@ -9,7 +9,8 @@ import { resolveFeedback } from '../../../api/feedbacks';
 
 // Componentes del formulario
 import EventFormGeneral from './EventFormGeneral';
-import EventFormHorario from './EventFormHorario';
+import EventFormOrdenDia from './EventFormOrdenDia';
+import EventFormRequerimientos from './EventFormRequerimientos';
 import EventFormDetalles from './EventFormDetalles';
 import EventFormSidebar from './EventFormSidebar';
 import EventFormFeedbacks from './EventFormFeedbacks';
@@ -208,19 +209,49 @@ const EventForm = () => {
             setFormData(prev => ({
                 ...prev,
                 name: data.name || prev.name,
-                objective: data.objective || prev.objective,
-                description: data.description || prev.description,
-                dressCode: data.dressCode || prev.dressCode,
-                programImpacted: data.programImpacted || prev.programImpacted,
-                guestSpecifications: data.guestSpecifications || prev.guestSpecifications,
-                presidiumDetail: data.presidiumDetail || prev.presidiumDetail,
-                directorAction: data.directorAction || prev.directorAction,
-                activities: data.activities?.length ? data.activities : prev.activities
+                objective: data.objective ?? prev.objective,
+                description: data.description ?? prev.description,
+                startsAt: data.startsAt || prev.startsAt,
+                endsAt: data.endsAt || prev.endsAt,
+                locationId: data.locationId ?? prev.locationId,
+                organizationId: data.organizationId ?? prev.organizationId,
+                eventTypeId: data.eventTypeId ?? prev.eventTypeId,
+                cantidadPersonas: data.cantidadPersonas ?? prev.cantidadPersonas,
+                dressCode: data.dressCode ?? prev.dressCode,
+                programImpacted: data.programImpacted ?? prev.programImpacted,
+                guestSpecifications: data.guestSpecifications ?? prev.guestSpecifications,
+                acomodo_tipo: data.acomodo_tipo ?? prev.acomodo_tipo,
+                presidiumDetail: data.presidiumDetail ?? prev.presidiumDetail,
+                directorAction: data.directorAction ?? prev.directorAction,
+                activities: Array.isArray(data.activities) && data.activities.length ? data.activities : prev.activities,
+                otrosObservaciones: data.otrosObservaciones ?? prev.otrosObservaciones
             }));
+
+            if (data.audiovisual && typeof data.audiovisual === 'object') {
+                setAudiovisual(prev => ({ ...prev, ...data.audiovisual }));
+            }
+
+            if (data.otros && typeof data.otros === 'object') {
+                setOtros(prev => ({ ...prev, ...data.otros }));
+            }
+
+            if (Array.isArray(data.parkingList) && data.parkingList.length > 0) {
+                setParkingList(data.parkingList);
+            }
+
+            if (data.horaFotografia) {
+                setHoraFotografia(data.horaFotografia);
+            }
+
+            if (Array.isArray(data.presidiumList) && data.presidiumList.length > 0) {
+                setPresidiumList(data.presidiumList);
+            }
+
             setAiWarning(true);
             setShowAIModal(false);
             setAIPrompt('');
         } catch (error) {
+            console.error('Error al autorellenar:', error);
             Swal.fire('Error', 'Hubo un error al autorellenar la ficha. Intenta de nuevo.', 'error');
         } finally {
             setIsAILoading(false);
@@ -345,12 +376,12 @@ const EventForm = () => {
         }
 
         if (!formData.startsAt || !formData.endsAt) {
-            setStep(2);
+            setStep(1);
             setError('Por favor seleccione las fechas del evento.');
             return;
         }
         if (new Date(formData.endsAt) <= new Date(formData.startsAt)) {
-            setStep(2);
+            setStep(1);
             setError('La fecha de finalización debe ser posterior a la de inicio.');
             return;
         }
@@ -403,8 +434,9 @@ const EventForm = () => {
 
     const steps = [
         { id: 1, name: 'General', icon: FileText },
-        { id: 2, name: 'Horario', icon: Clock },
-        { id: 3, name: 'Detalles Específicos', icon: Briefcase },
+        { id: 2, name: 'Orden del Día', icon: Clock },
+        { id: 3, name: 'Requerimientos', icon: Layers },
+        { id: 4, name: 'Detalles Específicos', icon: Briefcase },
     ];
 
     const filteredVenues = useMemo(() => {
@@ -485,10 +517,20 @@ const EventForm = () => {
                     )}
 
                     {step === 2 && (
-                        <EventFormHorario
+                        <EventFormOrdenDia
                             formData={formData}
                             handleChange={handleChange}
                             setFormData={setFormData}
+                            currentActivity={currentActivity}
+                            setCurrentActivity={setCurrentActivity}
+                            setStep={setStep}
+                        />
+                    )}
+
+                    {step === 3 && (
+                        <EventFormRequerimientos
+                            formData={formData}
+                            handleChange={handleChange}
                             audiovisual={audiovisual}
                             audiovisualItems={audiovisualItems}
                             toggleAudiovisual={toggleAudiovisual}
@@ -498,13 +540,11 @@ const EventForm = () => {
                             setShowParkingModal={setShowParkingModal}
                             setShowPhotoModal={setShowPhotoModal}
                             setShowPresidiumModal={setShowPresidiumModal}
-                            currentActivity={currentActivity}
-                            setCurrentActivity={setCurrentActivity}
                             setStep={setStep}
                         />
                     )}
 
-                    {step === 3 && (
+                    {step === 4 && (
                         <EventFormDetalles
                             formData={formData}
                             handleChange={handleChange}
