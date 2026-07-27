@@ -1,30 +1,29 @@
-import { AlertTriangle, ArrowLeft, Briefcase, ChevronRight, Clock, FileText, X } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Briefcase, Clock, ChevronRight, FileText, Layers, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import api from '../../../api/axios';
-import { resolveFeedback } from '../../../api/feedbacks';
-import { getVenues } from '../../../api/venues';
 import { useAuth } from '../../../context/AuthContext';
+import { getVenues } from '../../../api/venues';
+import { resolveFeedback } from '../../../api/feedbacks';
 
 // Componentes del formulario
-import AIAutofillModal from './AIAutofillModal';
-import EventFormDetalles from './EventFormDetalles';
-import EventFormFeedbacks from './EventFormFeedbacks';
 import EventFormGeneral from './EventFormGeneral';
-import EventFormHorario from './EventFormHorario';
+import EventFormOrdenDia from './EventFormOrdenDia';
+import EventFormRequerimientos from './EventFormRequerimientos';
+import EventFormDetalles from './EventFormDetalles';
 import EventFormSidebar from './EventFormSidebar';
+import EventFormFeedbacks from './EventFormFeedbacks';
+import AIAutofillModal from './AIAutofillModal';
 import ParkingModal from './ParkingModal';
 import PhotoModal from './PhotoModal';
 import PresidiumModal from './PresidiumModal';
-
 
 const EventForm = () => {
     const { user } = useAuth();
     const { id } = useParams();
     const isEditMode = !!id;
     const navigate = useNavigate();
-    const [showMicrophonesModal, setShowMicrophonesModal] = useState(false);
     const [loading, setLoading] = useState(false);
     const [venues, setVenues] = useState([]);
     const [organizations, setOrganizations] = useState([]);
@@ -98,25 +97,19 @@ const EventForm = () => {
 
     // ESTADOS PARA MÚLTIPLES CARROS
     const [parkingList, setParkingList] = useState([]);
-   const [currentVehicle, setCurrentVehicle] = useState({
-    nombreResponsable: '',
-    marcaVehiculo: '',
-    placaVehiculo: '',
-    colorVehiculo: '',
-    reservarCajon: false,
-    numeroCajon: ''
-});
+    const [currentVehicle, setCurrentVehicle] = useState({
+        nombreResponsable: '',
+        marcaVehiculo: '',
+        placaVehiculo: '',
+        colorVehiculo: ''
+    });
 
     // Horario fotográfico
     const [horaFotografia, setHoraFotografia] = useState('');
 
     // Lista de presídium
     const [presidiumList, setPresidiumList] = useState([]);
-    const [currentMember, setCurrentMember] = useState({ 
-    lugarAsignado: '',
-    nombre: '', 
-    puesto: '' 
-});
+    const [currentMember, setCurrentMember] = useState({ nombre: '', puesto: '' });
 
     const otrosItems = [
         { key: 'manteles', label: 'Manteles' },
@@ -146,108 +139,37 @@ const EventForm = () => {
         { key: 'musicaFondo', label: 'Música de fondo' },
     ];
 
-   const handleVehicleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const handleVehicleChange = (e) => {
+        const { name, value } = e.target;
+        if (name === 'nombreResponsable') {
+            const formattedName = value.replace(/(^\w|\s\w)/g, (match) => match.toUpperCase());
+            setCurrentVehicle(prev => ({ ...prev, [name]: formattedName }));
+        } else if (name === 'placaVehiculo') {
+            setCurrentVehicle(prev => ({ ...prev, [name]: value.toUpperCase() }));
+        } else {
+            setCurrentVehicle(prev => ({ ...prev, [name]: value }));
+        }
+    };
 
-    if (name === 'nombreResponsable') {
-        const formattedName = value.replace(
-            /(^\w|\s\w)/g,
-            (match) => match.toUpperCase()
-        );
+    const handleAddVehicle = (e) => {
+        if (e) e.preventDefault();
+        if (!currentVehicle.nombreResponsable.trim() || !currentVehicle.placaVehiculo.trim() || !currentVehicle.marcaVehiculo.trim()) {
+            Swal.fire('Campos incompletos', 'Nombre, Placas y Marca son obligatorios para el acceso vehicular.', 'warning');
+            return;
+        }
+        setParkingList(prev => [...prev, { ...currentVehicle }]);
+        setCurrentVehicle({ nombreResponsable: '', marcaVehiculo: '', placaVehiculo: '', colorVehiculo: '' });
+    };
 
-        setCurrentVehicle(prev => ({
-            ...prev,
-            [name]: formattedName
-        }));
-
-    } else if (name === 'placaVehiculo') {
-
-        setCurrentVehicle(prev => ({
-            ...prev,
-            [name]: value.toUpperCase()
-        }));
-
-    } else if (type === 'checkbox') {
-
-        setCurrentVehicle(prev => ({
-            ...prev,
-            [name]: checked
-        }));
-
-    } else {
-
-        setCurrentVehicle(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    }
-};
-
-  const handleAddVehicle = (e) => {
-    if (e) e.preventDefault();
-
-    if (
-        !currentVehicle.nombreResponsable.trim() ||
-        !currentVehicle.placaVehiculo.trim() ||
-        !currentVehicle.marcaVehiculo.trim()
-    ) {
-        Swal.fire(
-            'Campos incompletos',
-            'Nombre, Placas y Marca son obligatorios para el acceso vehicular.',
-            'warning'
-        );
-        return;
-    }
-
-    // Validar cajón solo si se activó la reserva
-    if (currentVehicle.reservarCajon && !currentVehicle.numeroCajon) {
-        Swal.fire(
-            'Cajón requerido',
-            'Debe ingresar el número de cajón reservado.',
-            'warning'
-        );
-        return;
-    }
-
-    setParkingList(prev => [...prev, { ...currentVehicle }]);
-
-    setCurrentVehicle({
-        nombreResponsable: '',
-        marcaVehiculo: '',
-        placaVehiculo: '',
-        colorVehiculo: '',
-        reservarCajon: false,
-        numeroCajon: ''
-    });
-};
-
-   const handleAddMember = (e) => {
-    if (e) e.preventDefault();
-
-    if (
-        !currentMember.lugarAsignado ||
-        !currentMember.nombre.trim() ||
-        !currentMember.puesto.trim()
-    ) {
-        Swal.fire(
-            'Campos incompletos',
-            'Lugar asignado, Nombre y Puesto son requeridos para el integrante del presídium.',
-            'warning'
-        );
-        return;
-    }
-
-    setPresidiumList(prev => [
-        ...prev,
-        { ...currentMember }
-    ]);
-
-    setCurrentMember({
-        lugarAsignado: '',
-        nombre: '',
-        puesto: ''
-    });
-};
+    const handleAddMember = (e) => {
+        if (e) e.preventDefault();
+        if (!currentMember.nombre.trim() || !currentMember.puesto.trim()) {
+            Swal.fire('Campos incompletos', 'Nombre y Puesto son requeridos para el integrante del presídium.', 'warning');
+            return;
+        }
+        setPresidiumList(prev => [...prev, { ...currentMember }]);
+        setCurrentMember({ nombre: '', puesto: '' });
+    };
 
     const toggleOtro = (key) => {
         setOtros(prev => {
@@ -287,19 +209,49 @@ const EventForm = () => {
             setFormData(prev => ({
                 ...prev,
                 name: data.name || prev.name,
-                objective: data.objective || prev.objective,
-                description: data.description || prev.description,
-                dressCode: data.dressCode || prev.dressCode,
-                programImpacted: data.programImpacted || prev.programImpacted,
-                guestSpecifications: data.guestSpecifications || prev.guestSpecifications,
-                presidiumDetail: data.presidiumDetail || prev.presidiumDetail,
-                directorAction: data.directorAction || prev.directorAction,
-                activities: data.activities?.length ? data.activities : prev.activities
+                objective: data.objective ?? prev.objective,
+                description: data.description ?? prev.description,
+                startsAt: data.startsAt || prev.startsAt,
+                endsAt: data.endsAt || prev.endsAt,
+                locationId: data.locationId ?? prev.locationId,
+                organizationId: data.organizationId ?? prev.organizationId,
+                eventTypeId: data.eventTypeId ?? prev.eventTypeId,
+                cantidadPersonas: data.cantidadPersonas ?? prev.cantidadPersonas,
+                dressCode: data.dressCode ?? prev.dressCode,
+                programImpacted: data.programImpacted ?? prev.programImpacted,
+                guestSpecifications: data.guestSpecifications ?? prev.guestSpecifications,
+                acomodo_tipo: data.acomodo_tipo ?? prev.acomodo_tipo,
+                presidiumDetail: data.presidiumDetail ?? prev.presidiumDetail,
+                directorAction: data.directorAction ?? prev.directorAction,
+                activities: Array.isArray(data.activities) && data.activities.length ? data.activities : prev.activities,
+                otrosObservaciones: data.otrosObservaciones ?? prev.otrosObservaciones
             }));
+
+            if (data.audiovisual && typeof data.audiovisual === 'object') {
+                setAudiovisual(prev => ({ ...prev, ...data.audiovisual }));
+            }
+
+            if (data.otros && typeof data.otros === 'object') {
+                setOtros(prev => ({ ...prev, ...data.otros }));
+            }
+
+            if (Array.isArray(data.parkingList) && data.parkingList.length > 0) {
+                setParkingList(data.parkingList);
+            }
+
+            if (data.horaFotografia) {
+                setHoraFotografia(data.horaFotografia);
+            }
+
+            if (Array.isArray(data.presidiumList) && data.presidiumList.length > 0) {
+                setPresidiumList(data.presidiumList);
+            }
+
             setAiWarning(true);
             setShowAIModal(false);
             setAIPrompt('');
         } catch (error) {
+            console.error('Error al autorellenar:', error);
             Swal.fire('Error', 'Hubo un error al autorellenar la ficha. Intenta de nuevo.', 'error');
         } finally {
             setIsAILoading(false);
@@ -424,12 +376,12 @@ const EventForm = () => {
         }
 
         if (!formData.startsAt || !formData.endsAt) {
-            setStep(2);
+            setStep(1);
             setError('Por favor seleccione las fechas del evento.');
             return;
         }
         if (new Date(formData.endsAt) <= new Date(formData.startsAt)) {
-            setStep(2);
+            setStep(1);
             setError('La fecha de finalización debe ser posterior a la de inicio.');
             return;
         }
@@ -441,7 +393,7 @@ const EventForm = () => {
                 locationId: Number(formData.locationId),
                 organizationId: Number(formData.organizationId),
                 eventTypeId: Number(formData.eventTypeId),
-    
+
                 audiovisual,
 
                 requerimientosOtros: otros,
@@ -482,8 +434,9 @@ const EventForm = () => {
 
     const steps = [
         { id: 1, name: 'General', icon: FileText },
-        { id: 2, name: 'Horario', icon: Clock },
-        { id: 3, name: 'Detalles Específicos', icon: Briefcase },
+        { id: 2, name: 'Orden del Día', icon: Clock },
+        { id: 3, name: 'Requerimientos', icon: Layers },
+        { id: 4, name: 'Detalles Específicos', icon: Briefcase },
     ];
 
     const filteredVenues = useMemo(() => {
@@ -564,10 +517,20 @@ const EventForm = () => {
                     )}
 
                     {step === 2 && (
-                        <EventFormHorario
+                        <EventFormOrdenDia
                             formData={formData}
                             handleChange={handleChange}
                             setFormData={setFormData}
+                            currentActivity={currentActivity}
+                            setCurrentActivity={setCurrentActivity}
+                            setStep={setStep}
+                        />
+                    )}
+
+                    {step === 3 && (
+                        <EventFormRequerimientos
+                            formData={formData}
+                            handleChange={handleChange}
                             audiovisual={audiovisual}
                             audiovisualItems={audiovisualItems}
                             toggleAudiovisual={toggleAudiovisual}
@@ -577,13 +540,11 @@ const EventForm = () => {
                             setShowParkingModal={setShowParkingModal}
                             setShowPhotoModal={setShowPhotoModal}
                             setShowPresidiumModal={setShowPresidiumModal}
-                            currentActivity={currentActivity}
-                            setCurrentActivity={setCurrentActivity}
                             setStep={setStep}
                         />
                     )}
 
-                    {step === 3 && (
+                    {step === 4 && (
                         <EventFormDetalles
                             formData={formData}
                             handleChange={handleChange}

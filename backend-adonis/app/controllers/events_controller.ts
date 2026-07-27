@@ -14,6 +14,32 @@ import { EventState } from '../enums/event_state.js'
 export default class EventsController {
   private ragService = new RagService()
 
+  private sanitizeJsonList(list: any): any[] | null {
+    if (!list) return null
+    let arr = list
+    if (typeof arr === 'string') {
+      try {
+        arr = JSON.parse(arr)
+      } catch {
+        return null
+      }
+    }
+    if (!Array.isArray(arr)) return null
+    const cleaned = arr
+      .map((item) => {
+        if (typeof item === 'string') {
+          try {
+            return JSON.parse(item)
+          } catch {
+            return { nombre: item }
+          }
+        }
+        return item
+      })
+      .filter((item) => item && typeof item === 'object')
+    return cleaned.length > 0 ? cleaned : null
+  }
+
   private async checkOverlaps(startsAt: DateTime, endsAt: DateTime, locationId: number, currentEventId: number | null = null) {
     if (!startsAt.isValid || !endsAt.isValid) return []
 
@@ -336,9 +362,9 @@ export default class EventsController {
         content.separadorHimno = Boolean(data.requerimientosOtros?.separadorHimno)
 
         content.otrosObservaciones = data.otrosObservaciones || null
-        content.listaEstacionamiento = data.listaEstacionamiento || null
+        content.listaEstacionamiento = this.sanitizeJsonList(data.listaEstacionamiento)
         content.horaFotografia = data.horaFotografia || null
-        content.listaPresidium = data.listaPresidium || null
+        content.listaPresidium = this.sanitizeJsonList(data.listaPresidium)
 
         content.useTransaction(transaction)
         await content.save()
@@ -498,9 +524,9 @@ export default class EventsController {
       content.separadorHimno = ro?.separadorHimno !== undefined ? Boolean(ro.separadorHimno) : (oldContent?.separadorHimno || false)
 
       content.otrosObservaciones = data.otrosObservaciones !== undefined ? data.otrosObservaciones : (oldContent?.otrosObservaciones || null)
-      content.listaEstacionamiento = data.listaEstacionamiento !== undefined ? data.listaEstacionamiento : (oldContent?.listaEstacionamiento || null)
+      content.listaEstacionamiento = data.listaEstacionamiento !== undefined ? this.sanitizeJsonList(data.listaEstacionamiento) : (oldContent?.listaEstacionamiento || null)
       content.horaFotografia = data.horaFotografia !== undefined ? data.horaFotografia : (oldContent?.horaFotografia || null)
-      content.listaPresidium = data.listaPresidium !== undefined ? data.listaPresidium : (oldContent?.listaPresidium || null)
+      content.listaPresidium = data.listaPresidium !== undefined ? this.sanitizeJsonList(data.listaPresidium) : (oldContent?.listaPresidium || null)
 
       content.useTransaction(transaction)
       await content.save()

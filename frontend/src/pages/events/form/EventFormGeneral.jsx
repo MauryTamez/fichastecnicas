@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, FileText, MapPin, Sparkles } from 'lucide-react';
+import { ArrowRight, Calendar, FileText, MapPin, Sparkles, Users } from 'lucide-react';
 
 const EventFormGeneral = ({
     formData,
@@ -18,7 +18,10 @@ const EventFormGeneral = ({
                     <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center ring-1 ring-emerald-100 shadow-sm">
                         <FileText size={24} />
                     </div>
-                    <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">Información Básica</h2>
+                    <div>
+                        <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">Información Básica</h2>
+                        <p className="text-sm font-medium text-slate-400">Ingrese los datos generales y el horario de su evento</p>
+                    </div>
                 </div>
                 {!isEditMode && (
                     <button
@@ -33,7 +36,7 @@ const EventFormGeneral = ({
 
             <div className="space-y-6">
                 <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-2 ml-1 uppercase tracking-tight">Nombre del Evento</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-2 ml-1 uppercase tracking-wider">Nombre del Evento</label>
                     <input
                         type="text"
                         required
@@ -45,10 +48,51 @@ const EventFormGeneral = ({
                     />
                 </div>
 
-                <div className="space-y-4">
-                    <div className="rounded-[1.75rem] border border-slate-100 bg-white p-6 shadow-[0_12px_35px_-15px_rgba(15,23,42,0.12)]">
-                        <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight flex items-center gap-2">
-                            <MapPin size={16} className="text-emerald-500" />
+                {/* Programación del Evento */}
+                <div>
+                    <div className="flex items-center gap-2 mb-3 ml-1">
+                        <Calendar size={16} className="text-emerald-600" />
+                        <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Programación del Evento</span>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-[11px] font-bold text-slate-600 mb-2 ml-1 flex items-center gap-2 uppercase tracking-wide">
+                                <div className="w-2 h-2 rounded-full bg-emerald-500"></div> INICIO DEL EVENTO
+                            </label>
+                            <div className="p-1 px-3 border border-emerald-200 rounded-xl bg-emerald-50/30 focus-within:ring-2 focus-within:ring-emerald-500/20 focus-within:border-emerald-500 transition-all shadow-sm">
+                                <input
+                                    type="datetime-local"
+                                    required
+                                    name="startsAt"
+                                    className="block w-full py-2 bg-transparent outline-none text-emerald-900 font-bold uppercase text-xs cursor-pointer"
+                                    value={formData.startsAt}
+                                    onChange={handleChange}
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-[11px] font-bold text-slate-600 mb-2 ml-1 flex items-center gap-2 uppercase tracking-wide">
+                                <div className="w-2 h-2 rounded-full bg-red-500"></div> FINALIZACIÓN
+                            </label>
+                            <div className="p-1 px-3 border border-red-200 rounded-xl bg-red-50/30 focus-within:ring-2 focus-within:ring-red-500/20 focus-within:border-red-500 transition-all shadow-sm">
+                                <input
+                                    type="datetime-local"
+                                    required
+                                    name="endsAt"
+                                    className="block w-full py-2 bg-transparent outline-none text-red-900 font-bold uppercase text-xs cursor-pointer"
+                                    value={formData.endsAt}
+                                    onChange={handleChange}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Recinto y Aforo */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-2 ml-1 uppercase tracking-wider flex items-center gap-2">
+                            <Users size={16} className="text-emerald-600" />
                             Cantidad de Personas
                         </label>
                         <input
@@ -63,14 +107,14 @@ const EventFormGeneral = ({
                     </div>
 
                     <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight flex items-center gap-2">
-                            <MapPin size={16} className="text-emerald-500" />
+                        <label className="block text-xs font-bold text-slate-700 mb-2 ml-1 uppercase tracking-wider flex items-center gap-2">
+                            <MapPin size={16} className="text-emerald-600" />
                             Recinto / Locación
                         </label>
                         <select
                             required
                             name="locationId"
-                            className="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium text-gray-700 appearance-none"
+                            className="block w-full px-4 py-3.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none font-medium text-slate-700 appearance-none shadow-sm cursor-pointer"
                             value={formData.locationId}
                             onChange={handleChange}
                         >
@@ -84,13 +128,14 @@ const EventFormGeneral = ({
                     </div>
                 </div>
 
+                {/* Organización y Tipo */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight">Organización</label>
+                        <label className="block text-xs font-bold text-slate-700 mb-2 ml-1 uppercase tracking-wider">Organización</label>
                         <select
                             required
                             name="organizationId"
-                            className="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium text-gray-700 appearance-none"
+                            className="block w-full px-4 py-3.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none font-medium text-slate-700 appearance-none shadow-sm cursor-pointer"
                             value={formData.organizationId}
                             onChange={handleChange}
                         >
@@ -102,11 +147,11 @@ const EventFormGeneral = ({
                     </div>
 
                     <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight">Tipo de Evento</label>
+                        <label className="block text-xs font-bold text-slate-700 mb-2 ml-1 uppercase tracking-wider">Tipo de Evento</label>
                         <select
                             required
                             name="eventTypeId"
-                            className="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium text-gray-700 appearance-none"
+                            className="block w-full px-4 py-3.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none font-medium text-slate-700 appearance-none shadow-sm cursor-pointer"
                             value={formData.eventTypeId}
                             onChange={handleChange}
                         >
@@ -119,11 +164,11 @@ const EventFormGeneral = ({
                 </div>
 
                 <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight">Objetivo</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-2 ml-1 uppercase tracking-wider">Objetivo</label>
                     <input
                         type="text"
                         name="objective"
-                        className="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium placeholder:text-gray-300"
+                        className="block w-full px-4 py-3.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none font-medium text-slate-700 placeholder:text-slate-400 shadow-sm"
                         placeholder="Objetivo principal del evento..."
                         value={formData.objective}
                         onChange={handleChange}
