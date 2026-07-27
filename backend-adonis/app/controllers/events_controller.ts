@@ -2,14 +2,14 @@ import Event from '#models/event'
 import EventVersion from '#models/event_version'
 import VersionActivity from '#models/version_activity'
 import VersionContent from '#models/version_content'
+import { EventStateService } from '#services/event_state_service'
+import { NotificationService } from '#services/notification_service'
+import { RagService } from '#services/rag_service'
 import { createEventValidator, updateEventValidator } from '#validators/event'
 import type { HttpContext } from '@adonisjs/core/http'
 import db from '@adonisjs/lucid/services/db'
-import { EventState } from '../enums/event_state.js'
-import { RagService } from '#services/rag_service'
-import { EventStateService } from '#services/event_state_service'
-import { NotificationService } from '#services/notification_service'
 import { DateTime } from 'luxon'
+import { EventState } from '../enums/event_state.js'
 
 export default class EventsController {
   private ragService = new RagService()
@@ -597,12 +597,16 @@ export default class EventsController {
       const eventStateService = new EventStateService()
       await eventStateService.requestReview(event, user)
       return response.ok({ message: 'Revisión solicitada exitosamente', event })
-    } catch (error) {
-      if (error.status) {
-        return response.status(error.status).json({ message: error.message })
-      }
-      return response.internalServerError({ message: 'Error interno del servidor', error: error.message })
+    } catch (error: any) {
+    if (error.status) {
+      return response.status(error.status).json({ message: error.message })
     }
+
+    return response.internalServerError({
+      message: 'Error interno del servidor',
+      error: error.message
+    })
+  }
   }
 
   async passToReview({ params, response, auth }: HttpContext) {

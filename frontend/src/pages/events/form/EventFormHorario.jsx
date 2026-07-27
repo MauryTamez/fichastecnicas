@@ -1,4 +1,3 @@
-import React from 'react';
 import { Briefcase, Calendar, ChevronRight, Clock, Info, Plus, Sparkles, X } from 'lucide-react';
 import Swal from 'sweetalert2';
 
@@ -9,6 +8,8 @@ const EventFormHorario = ({
     audiovisual,
     audiovisualItems,
     toggleAudiovisual,
+    showMicrophonesModal,
+setShowMicrophonesModal,
     otros,
     otrosItems,
     toggleOtro,
@@ -17,6 +18,7 @@ const EventFormHorario = ({
     setShowPresidiumModal,
     currentActivity,
     setCurrentActivity,
+    
     setStep
 }) => {
     return (

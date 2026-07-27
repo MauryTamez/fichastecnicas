@@ -1,4 +1,3 @@
-import React from 'react';
 import { Briefcase, Save } from 'lucide-react';
 
 const EventFormDetalles = ({
@@ -36,43 +35,72 @@ const EventFormDetalles = ({
                     </select>
                 </div>
 
-                <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight">
-                        Programa Impactado
-                    </label>
-                    <select
-                        name="programImpacted"
-                        className="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium"
-                        value={formData.programImpacted}
-                        onChange={handleChange}
-                    >
-                        <option value="">
-                            Selecciona un programa académico
-                        </option>
-                        <option value="Ingeniería en Sistemas">
-                            Ingeniería en Sistemas
-                        </option>
-                        <option value="Ingeniería Mecatrónica">
-                            Ingeniería Mecatrónica
-                        </option>
-                        <option value="Ingeniería Mecánica">
-                            Ingeniería Mecánica
-                        </option>
-                        <option value="Ingeniería Industrial">
-                            Ingeniería Industrial
-                        </option>
-                        <option value="Ingeniería Electrónica">
-                            Ingeniería Electrónica
-                        </option>
-                        <option value="Ingeniería Administrativa">
-                            Ingeniería Administrativa
-                        </option>
-                        <option value="Ingeniería Aeronáutica">
-                            Ingeniería Aeronáutica
-                        </option>
-                    </select>
-                </div>
+                <select
+    name="programImpacted"
+    className="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium"
+    value={formData.programImpacted}
+    onChange={handleChange}
+>
+    <option value="">
+        Selecciona un programa académico
+    </option>
 
+    <option value="Ingeniería Aeronáutica">
+        Ingeniería Aeronáutica
+    </option>
+
+    <option value="Ingeniería Administrativa">
+        Ingeniería Administrativa
+    </option>
+
+    <option value="Ingeniería Electrónica y Comunicaciones">
+        Ingeniería Electrónica y Comunicaciones
+    </option>
+
+    <option value="Ingeniería en Manufactura">
+        Ingeniería en Manufactura
+    </option>
+
+    <option value="Ingeniería en Materiales">
+        Ingeniería en Materiales
+    </option>
+
+    <option value="Ingeniería en Mecatrónica">
+        Ingeniería en Mecatrónica
+    </option>
+
+    <option value="Ingeniería en Sistemas">
+        Ingeniería en Sistemas
+    </option>
+
+    <option value="Ingeniería Industrial">
+        Ingeniería Industrial
+    </option>
+
+    <option value="Ingeniería Mecánica">
+        Ingeniería Mecánica
+    </option>
+
+    <option value="Ingeniería Química">
+        Ingeniería Química
+    </option>
+
+    <option value="Ingeniería en Tecnología de Software">
+        Ingeniería en Tecnología de Software
+    </option>
+
+    <option value="Ingeniería Petrolera">
+        Ingeniería Petrolera
+    </option>
+
+    <option value="Ingeniería Eléctrica">
+        Ingeniería Eléctrica
+    </option>
+
+    <option value="Posgrado">
+        Posgrado
+    </option>
+</select>
                 <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight">Especificaciones de Invitados</label>
                     <textarea

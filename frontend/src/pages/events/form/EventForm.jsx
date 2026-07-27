@@ -1,28 +1,30 @@
-import { AlertTriangle, ArrowLeft, Briefcase, Clock, ChevronRight, FileText, X } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Briefcase, ChevronRight, Clock, FileText, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import api from '../../../api/axios';
-import { useAuth } from '../../../context/AuthContext';
-import { getVenues } from '../../../api/venues';
 import { resolveFeedback } from '../../../api/feedbacks';
+import { getVenues } from '../../../api/venues';
+import { useAuth } from '../../../context/AuthContext';
 
 // Componentes del formulario
+import AIAutofillModal from './AIAutofillModal';
+import EventFormDetalles from './EventFormDetalles';
+import EventFormFeedbacks from './EventFormFeedbacks';
 import EventFormGeneral from './EventFormGeneral';
 import EventFormHorario from './EventFormHorario';
-import EventFormDetalles from './EventFormDetalles';
 import EventFormSidebar from './EventFormSidebar';
-import EventFormFeedbacks from './EventFormFeedbacks';
-import AIAutofillModal from './AIAutofillModal';
 import ParkingModal from './ParkingModal';
 import PhotoModal from './PhotoModal';
 import PresidiumModal from './PresidiumModal';
+
 
 const EventForm = () => {
     const { user } = useAuth();
     const { id } = useParams();
     const isEditMode = !!id;
     const navigate = useNavigate();
+    const [showMicrophonesModal, setShowMicrophonesModal] = useState(false);
     const [loading, setLoading] = useState(false);
     const [venues, setVenues] = useState([]);
     const [organizations, setOrganizations] = useState([]);
@@ -96,19 +98,25 @@ const EventForm = () => {
 
     // ESTADOS PARA MÚLTIPLES CARROS
     const [parkingList, setParkingList] = useState([]);
-    const [currentVehicle, setCurrentVehicle] = useState({
-        nombreResponsable: '',
-        marcaVehiculo: '',
-        placaVehiculo: '',
-        colorVehiculo: ''
-    });
+   const [currentVehicle, setCurrentVehicle] = useState({
+    nombreResponsable: '',
+    marcaVehiculo: '',
+    placaVehiculo: '',
+    colorVehiculo: '',
+    reservarCajon: false,
+    numeroCajon: ''
+});
 
     // Horario fotográfico
     const [horaFotografia, setHoraFotografia] = useState('');
 
     // Lista de presídium
     const [presidiumList, setPresidiumList] = useState([]);
-    const [currentMember, setCurrentMember] = useState({ nombre: '', puesto: '' });
+    const [currentMember, setCurrentMember] = useState({ 
+    lugarAsignado: '',
+    nombre: '', 
+    puesto: '' 
+});
 
     const otrosItems = [
         { key: 'manteles', label: 'Manteles' },
@@ -138,37 +146,108 @@ const EventForm = () => {
         { key: 'musicaFondo', label: 'Música de fondo' },
     ];
 
-    const handleVehicleChange = (e) => {
-        const { name, value } = e.target;
-        if (name === 'nombreResponsable') {
-            const formattedName = value.replace(/(^\w|\s\w)/g, (match) => match.toUpperCase());
-            setCurrentVehicle(prev => ({ ...prev, [name]: formattedName }));
-        } else if (name === 'placaVehiculo') {
-            setCurrentVehicle(prev => ({ ...prev, [name]: value.toUpperCase() }));
-        } else {
-            setCurrentVehicle(prev => ({ ...prev, [name]: value }));
-        }
-    };
+   const handleVehicleChange = (e) => {
+    const { name, value, type, checked } = e.target;
 
-    const handleAddVehicle = (e) => {
-        if (e) e.preventDefault();
-        if (!currentVehicle.nombreResponsable.trim() || !currentVehicle.placaVehiculo.trim() || !currentVehicle.marcaVehiculo.trim()) {
-            Swal.fire('Campos incompletos', 'Nombre, Placas y Marca son obligatorios para el acceso vehicular.', 'warning');
-            return;
-        }
-        setParkingList(prev => [...prev, { ...currentVehicle }]);
-        setCurrentVehicle({ nombreResponsable: '', marcaVehiculo: '', placaVehiculo: '', colorVehiculo: '' });
-    };
+    if (name === 'nombreResponsable') {
+        const formattedName = value.replace(
+            /(^\w|\s\w)/g,
+            (match) => match.toUpperCase()
+        );
 
-    const handleAddMember = (e) => {
-        if (e) e.preventDefault();
-        if (!currentMember.nombre.trim() || !currentMember.puesto.trim()) {
-            Swal.fire('Campos incompletos', 'Nombre y Puesto son requeridos para el integrante del presídium.', 'warning');
-            return;
-        }
-        setPresidiumList(prev => [...prev, { ...currentMember }]);
-        setCurrentMember({ nombre: '', puesto: '' });
-    };
+        setCurrentVehicle(prev => ({
+            ...prev,
+            [name]: formattedName
+        }));
+
+    } else if (name === 'placaVehiculo') {
+
+        setCurrentVehicle(prev => ({
+            ...prev,
+            [name]: value.toUpperCase()
+        }));
+
+    } else if (type === 'checkbox') {
+
+        setCurrentVehicle(prev => ({
+            ...prev,
+            [name]: checked
+        }));
+
+    } else {
+
+        setCurrentVehicle(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    }
+};
+
+  const handleAddVehicle = (e) => {
+    if (e) e.preventDefault();
+
+    if (
+        !currentVehicle.nombreResponsable.trim() ||
+        !currentVehicle.placaVehiculo.trim() ||
+        !currentVehicle.marcaVehiculo.trim()
+    ) {
+        Swal.fire(
+            'Campos incompletos',
+            'Nombre, Placas y Marca son obligatorios para el acceso vehicular.',
+            'warning'
+        );
+        return;
+    }
+
+    // Validar cajón solo si se activó la reserva
+    if (currentVehicle.reservarCajon && !currentVehicle.numeroCajon) {
+        Swal.fire(
+            'Cajón requerido',
+            'Debe ingresar el número de cajón reservado.',
+            'warning'
+        );
+        return;
+    }
+
+    setParkingList(prev => [...prev, { ...currentVehicle }]);
+
+    setCurrentVehicle({
+        nombreResponsable: '',
+        marcaVehiculo: '',
+        placaVehiculo: '',
+        colorVehiculo: '',
+        reservarCajon: false,
+        numeroCajon: ''
+    });
+};
+
+   const handleAddMember = (e) => {
+    if (e) e.preventDefault();
+
+    if (
+        !currentMember.lugarAsignado ||
+        !currentMember.nombre.trim() ||
+        !currentMember.puesto.trim()
+    ) {
+        Swal.fire(
+            'Campos incompletos',
+            'Lugar asignado, Nombre y Puesto son requeridos para el integrante del presídium.',
+            'warning'
+        );
+        return;
+    }
+
+    setPresidiumList(prev => [
+        ...prev,
+        { ...currentMember }
+    ]);
+
+    setCurrentMember({
+        lugarAsignado: '',
+        nombre: '',
+        puesto: ''
+    });
+};
 
     const toggleOtro = (key) => {
         setOtros(prev => {
@@ -362,7 +441,7 @@ const EventForm = () => {
                 locationId: Number(formData.locationId),
                 organizationId: Number(formData.organizationId),
                 eventTypeId: Number(formData.eventTypeId),
-
+    
                 audiovisual,
 
                 requerimientosOtros: otros,
