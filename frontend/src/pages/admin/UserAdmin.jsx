@@ -1,30 +1,24 @@
 import { useState, useEffect } from 'react';
-import { getUsers, createUser, updateUser, deleteUser } from '../../api/users';
+import { getUsers, createUser, updateUser, deleteUser, getRoles } from '../../api/users';
 import { useAuth } from '../../context/AuthContext';
 import Swal from 'sweetalert2';
-import { UserPlus, Edit2, Trash2, Shield, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { UserPlus, Edit2, Trash2, Shield, ShieldCheck, ShieldAlert, X, Users, ChevronDown } from 'lucide-react';
 
-const roleNames = {
-    1: 'Verde (Admin)',
-    2: 'Blanco (Editor)',
-    3: 'Gris (Lector)'
+// ── Mapeo visual de roles ─────────────────────────────────────
+const ROLE_STYLES = {
+    admin:                   { label: 'Administrador',       color: 'bg-emerald-100 text-emerald-700 border-emerald-200', icon: ShieldCheck, dot: 'bg-emerald-500' },
+    moderador:               { label: 'Moderador',           color: 'bg-blue-100 text-blue-700 border-blue-200',       icon: Shield,      dot: 'bg-blue-500' },
+    encargado_departamento:  { label: 'Encargado Dpto.',     color: 'bg-violet-100 text-violet-700 border-violet-200', icon: Shield,      dot: 'bg-violet-500' },
+    creador:                 { label: 'Creador',             color: 'bg-amber-100 text-amber-700 border-amber-200',   icon: ShieldAlert, dot: 'bg-amber-500' },
+    auxiliar:                { label: 'Auxiliar',             color: 'bg-gray-100 text-gray-600 border-gray-200',      icon: ShieldAlert, dot: 'bg-gray-400' },
 };
 
-const roleColors = {
-    1: 'bg-green-100 text-green-800',
-    2: 'bg-gray-100 text-gray-800',
-    3: 'bg-slate-200 text-slate-800'
-};
-
-const roleIcons = {
-    1: <ShieldCheck className="w-4 h-4 mr-1 text-green-600" />,
-    2: <Shield className="w-4 h-4 mr-1 text-gray-600" />,
-    3: <ShieldAlert className="w-4 h-4 mr-1 text-slate-500" />
-};
+const getRoleStyle = (roleName) => ROLE_STYLES[roleName] || ROLE_STYLES.auxiliar;
 
 export default function UserAdmin() {
-    const { user } = useAuth();
+    const { user: currentUser } = useAuth();
     const [users, setUsers] = useState([]);
+    const [roles, setRoles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -34,32 +28,40 @@ export default function UserAdmin() {
         nombre: '',
         email: '',
         password: '',
-        nivel_permiso: 3
+        roleId: '',
     });
 
     useEffect(() => {
-        loadUsers();
+        loadData();
     }, []);
 
-    const loadUsers = async () => {
+    const loadData = async () => {
         try {
-            const data = await getUsers();
-            setUsers(data);
+            const [usersData, rolesData] = await Promise.all([getUsers(), getRoles()]);
+            setUsers(usersData);
+            setRoles(rolesData);
+            // Set default roleId for new user form
+            if (rolesData.length > 0) {
+                const defaultRole = rolesData.find(r => r.name === 'creador') || rolesData[0];
+                setFormData(prev => ({ ...prev, roleId: defaultRole.id }));
+            }
         } catch (err) {
-            setError('Error al cargar usuarios');
+            setError('Error al cargar datos');
         } finally {
             setLoading(false);
         }
     };
 
-    const handleOpenForm = (user = null) => {
-        setEditingUser(user);
-        if (user) {
-            setFormData({ nombre: user.nombre, email: user.email, password: '', nivel_permiso: user.nivel_permiso });
+    const handleOpenForm = (u = null) => {
+        setEditingUser(u);
+        if (u) {
+            setFormData({ nombre: u.nombre, email: u.email, password: '', roleId: u.roleId });
         } else {
-            setFormData({ nombre: '', email: '', password: '', nivel_permiso: 3 });
+            const defaultRole = roles.find(r => r.name === 'creador') || roles[0];
+            setFormData({ nombre: '', email: '', password: '', roleId: defaultRole?.id || '' });
         }
         setIsFormOpen(true);
+        setError('');
     };
 
     const handleCloseForm = () => {
@@ -74,17 +76,19 @@ export default function UserAdmin() {
         try {
             if (editingUser) {
                 const dataToSend = { ...formData };
-                if (!dataToSend.password) delete dataToSend.password; // Don't update if blank
-                await updateUser(editingUser.id, dataToSend);
+                if (!dataToSend.password) delete dataToSend.password;
+                const updated = await updateUser(editingUser.id, dataToSend);
+                setUsers(prev => prev.map(u => u.id === editingUser.id ? updated : u));
             } else {
                 if (!formData.password) {
                     setError('La contraseña es obligatoria para nuevos usuarios');
                     return;
                 }
                 await createUser(formData);
+                await loadData();
             }
-            await loadUsers();
             handleCloseForm();
+            Swal.fire({ icon: 'success', title: 'Listo', text: editingUser ? 'Usuario actualizado.' : 'Usuario creado.', timer: 2000, showConfirmButton: false });
         } catch (err) {
             setError(err.response?.data?.message || 'Error al guardar usuario');
         }
@@ -96,177 +100,235 @@ export default function UserAdmin() {
             text: "No podrás revertir esto. El usuario será eliminado.",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#0f766e',
+            confirmButtonColor: '#10b981',
             cancelButtonColor: '#ef4444',
             confirmButtonText: 'Sí, eliminar',
             cancelButtonText: 'Cancelar'
         });
-
         if (!result.isConfirmed) return;
-
         try {
             await deleteUser(id);
-            await loadUsers();
-            Swal.fire('¡Eliminado!', 'El usuario ha sido eliminado.', 'success');
+            setUsers(prev => prev.filter(u => u.id !== id));
+            Swal.fire({ icon: 'success', title: '¡Eliminado!', text: 'El usuario ha sido eliminado.', timer: 2000, showConfirmButton: false });
         } catch (err) {
             Swal.fire('Error', err.response?.data?.message || 'Error al eliminar usuario', 'error');
         }
     };
 
-    if (user?.nivel_permiso !== 1) {
-        return (
-            <div className="flex flex-col items-center justify-center h-64">
-                <ShieldAlert className="w-16 h-16 text-slate-400 mb-4" />
-                <h2 className="text-xl font-semibold text-slate-700">Acceso Denegado</h2>
-                <p className="text-slate-500">No tienes permisos para ver esta página.</p>
-            </div>
-        );
-    }
+    // ── Loading ───────────────────────────────────────────────
+    if (loading) return (
+        <div className="flex flex-col items-center justify-center h-[50vh] gap-4">
+            <div className="w-12 h-12 border-4 border-emerald-100 border-t-emerald-600 rounded-full animate-spin"></div>
+            <p className="text-gray-400 font-bold text-sm tracking-widest uppercase">Cargando Usuarios</p>
+        </div>
+    );
 
-    if (loading) return <div className="p-8 text-center text-slate-500">Cargando usuarios...</div>;
-
+    // ── Render ────────────────────────────────────────────────
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-slate-900">Administración de Usuarios</h1>
-                    <p className="text-slate-500">Gestiona los accesos y permisos del sistema.</p>
+        <div className="max-w-5xl mx-auto pb-20 animate-fade-in font-sans">
+            {/* Header */}
+            <div className="mb-10">
+                <div className="flex items-center gap-3 text-emerald-600 font-bold text-sm uppercase tracking-wider mb-3">
+                    <Users size={16} /> Configuración
                 </div>
-                <button
-                    onClick={() => handleOpenForm()}
-                    className="flex items-center px-4 py-2 text-sm font-medium text-white transition-colors bg-teal-600 rounded-lg hover:bg-teal-700"
-                >
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    Nuevo Usuario
-                </button>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h1 className="text-4xl font-display font-bold text-gray-900 mb-2">Gestión de Usuarios</h1>
+                        <p className="text-gray-500">Administre los usuarios del sistema y asigne sus roles.</p>
+                    </div>
+                    <button
+                        onClick={() => handleOpenForm()}
+                        className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-2xl font-bold text-sm shadow-lg shadow-emerald-100 transition-all whitespace-nowrap"
+                    >
+                        <UserPlus size={18} /> Nuevo Usuario
+                    </button>
+                </div>
             </div>
 
             {error && !isFormOpen && (
-                <div className="p-4 text-red-700 bg-red-100 rounded-lg">{error}</div>
+                <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-2xl text-sm mb-6 flex items-center gap-3">
+                    <span className="flex-shrink-0 w-5 h-5 bg-red-100 rounded-full flex items-center justify-center font-bold text-xs">!</span>
+                    {error}
+                </div>
             )}
 
-            <div className="overflow-hidden bg-white border rounded-xl border-slate-200">
-                <table className="w-full text-sm text-left">
-                    <thead className="bg-slate-50 border-b border-slate-200 text-slate-500">
-                        <tr>
-                            <th className="px-6 py-4 font-medium">Nombre</th>
-                            <th className="px-6 py-4 font-medium">Email</th>
-                            <th className="px-6 py-4 font-medium">Nivel de Permiso</th>
-                            <th className="px-6 py-4 font-medium text-right">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                        {users.map((u) => (
-                            <tr key={u.id} className="hover:bg-slate-50/50">
-                                <td className="px-6 py-4 font-medium text-slate-900">{u.nombre}</td>
-                                <td className="px-6 py-4 text-slate-500">{u.email}</td>
-                                <td className="px-6 py-4">
-                                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${roleColors[u.nivel_permiso]}`}>
-                                        {roleIcons[u.nivel_permiso]}
-                                        {roleNames[u.nivel_permiso]}
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4 text-right">
-                                    <div className="flex items-center justify-end gap-2">
+            {/* Users List */}
+            <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
+                {/* Table Header */}
+                <div className="grid grid-cols-12 gap-4 px-8 py-5 bg-gray-50/80 border-b border-gray-100">
+                    <div className="col-span-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Usuario</div>
+                    <div className="col-span-3 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Email</div>
+                    <div className="col-span-3 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Rol</div>
+                    <div className="col-span-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] text-right">Acciones</div>
+                </div>
+
+                {users.length === 0 ? (
+                    <div className="px-8 py-16 text-center">
+                        <Users size={40} className="mx-auto text-gray-200 mb-4" />
+                        <p className="text-sm text-gray-300 italic">No hay usuarios registrados.</p>
+                    </div>
+                ) : (
+                    <div className="divide-y divide-gray-50">
+                        {users.map(u => {
+                            const roleStyle = getRoleStyle(u.role);
+                            const isSelf = String(u.id) === String(currentUser?.id);
+                            const RoleIcon = roleStyle.icon;
+
+                            return (
+                                <div key={u.id} className="grid grid-cols-12 gap-4 items-center px-8 py-5 group hover:bg-emerald-50/30 transition-colors">
+                                    {/* User Info */}
+                                    <div className="col-span-4 flex items-center gap-4">
+                                        <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 font-display font-bold text-lg flex-shrink-0">
+                                            {u.nombre?.charAt(0)?.toUpperCase()}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-bold text-gray-900 truncate">{u.nombre}</p>
+                                            {isSelf && (
+                                                <span className="text-[10px] font-black text-emerald-500 uppercase tracking-wider">Tú</span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Email */}
+                                    <div className="col-span-3 min-w-0">
+                                        <p className="text-sm text-gray-500 truncate">{u.email}</p>
+                                    </div>
+
+                                    {/* Role Badge */}
+                                    <div className="col-span-3">
+                                        <div
+                                            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${roleStyle.color}`}
+                                        >
+                                            <RoleIcon size={14} />
+                                            {roleStyle.label}
+                                        </div>
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div className="col-span-2 flex items-center justify-end gap-1">
                                         <button
                                             onClick={() => handleOpenForm(u)}
-                                            disabled={String(u.id) === String(user?.id)}
-                                            className={`p-2 transition-colors rounded-lg ${String(u.id) === String(user?.id)
-                                                    ? 'text-slate-300 cursor-not-allowed'
-                                                    : 'text-slate-400 hover:text-teal-600 hover:bg-teal-50'
-                                                }`}
-                                            title={String(u.id) === String(user?.id) ? "No puedes editarte a ti mismo" : "Editar usuario"}
+                                            disabled={isSelf}
+                                            className={`p-2.5 rounded-xl transition-all ${isSelf
+                                                ? 'text-gray-200 cursor-not-allowed'
+                                                : 'text-gray-300 hover:text-emerald-600 hover:bg-emerald-50 opacity-0 group-hover:opacity-100'
+                                            }`}
+                                            title={isSelf ? 'No puedes editarte a ti mismo' : 'Editar usuario'}
                                         >
-                                            <Edit2 className="w-4 h-4" />
+                                            <Edit2 size={16} />
                                         </button>
                                         <button
                                             onClick={() => handleDelete(u.id)}
-                                            disabled={String(u.id) === String(user?.id)}
-                                            className={`p-2 transition-colors rounded-lg ${String(u.id) === String(user?.id)
-                                                    ? 'text-slate-300 cursor-not-allowed'
-                                                    : 'text-slate-400 hover:text-red-600 hover:bg-red-50'
-                                                }`}
-                                            title={String(u.id) === String(user?.id) ? "No puedes eliminarte a ti mismo" : "Eliminar usuario"}
+                                            disabled={isSelf}
+                                            className={`p-2.5 rounded-xl transition-all ${isSelf
+                                                ? 'text-gray-200 cursor-not-allowed'
+                                                : 'text-gray-300 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100'
+                                            }`}
+                                            title={isSelf ? 'No puedes eliminarte a ti mismo' : 'Eliminar usuario'}
                                         >
-                                            <Trash2 className="w-4 h-4" />
+                                            <Trash2 size={16} />
                                         </button>
                                     </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
 
-            {/* Modal de Formulario */}
+            {/* ═══ Modal de Formulario ═══ */}
             {isFormOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
-                    <div className="w-full max-w-md p-6 bg-white shadow-xl rounded-2xl">
-                        <h2 className="text-xl font-bold text-slate-900 mb-6">
-                            {editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}
-                        </h2>
-
-                        {error && (
-                            <div className="mb-4 p-3 text-sm text-red-700 bg-red-50 rounded-lg">{error}</div>
-                        )}
-
-                        <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" onClick={handleCloseForm}>
+                    <div className="w-full max-w-md bg-white rounded-[2rem] shadow-2xl border border-gray-100 overflow-hidden animate-fade-in" onClick={e => e.stopPropagation()}>
+                        {/* Modal Header */}
+                        <div className="flex items-center justify-between px-8 py-6 border-b border-gray-100 bg-gradient-to-br from-emerald-50 to-white">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Nombre</label>
+                                <h2 className="text-xl font-display font-bold text-gray-900">
+                                    {editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}
+                                </h2>
+                                <p className="text-xs text-gray-400 mt-1">
+                                    {editingUser ? 'Modifica los datos del usuario' : 'Crea una nueva cuenta en el sistema'}
+                                </p>
+                            </div>
+                            <button onClick={handleCloseForm} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all">
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {/* Modal Body */}
+                        <form onSubmit={handleSubmit} className="p-8 space-y-5">
+                            {error && (
+                                <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-2xl text-sm flex items-center gap-3">
+                                    <span className="flex-shrink-0 w-5 h-5 bg-red-100 rounded-full flex items-center justify-center font-bold text-xs">!</span>
+                                    {error}
+                                </div>
+                            )}
+
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Nombre</label>
                                 <input
                                     type="text"
                                     required
-                                    className="w-full px-3 py-2 border rounded-lg border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                                    placeholder="Nombre completo"
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl font-medium text-sm outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all placeholder:text-gray-300"
                                     value={formData.nombre}
                                     onChange={e => setFormData({ ...formData, nombre: e.target.value })}
                                 />
                             </div>
+
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Email</label>
                                 <input
                                     type="email"
                                     required
-                                    className="w-full px-3 py-2 border rounded-lg border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                                    placeholder="correo@ejemplo.com"
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl font-medium text-sm outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all placeholder:text-gray-300"
                                     value={formData.email}
                                     onChange={e => setFormData({ ...formData, email: e.target.value })}
                                 />
                             </div>
+
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">
-                                    Contraseña {editingUser && <span className="text-slate-400 font-normal">(Dejar en blanco para no cambiar)</span>}
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                                    Contraseña {editingUser && <span className="text-gray-300 font-normal normal-case">(Dejar vacío para no cambiar)</span>}
                                 </label>
                                 <input
                                     type="password"
                                     required={!editingUser}
-                                    className="w-full px-3 py-2 border rounded-lg border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                                    placeholder={editingUser ? '••••••••' : 'Mínimo 6 caracteres'}
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl font-medium text-sm outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all placeholder:text-gray-300"
                                     value={formData.password}
                                     onChange={e => setFormData({ ...formData, password: e.target.value })}
                                 />
                             </div>
+
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Nivel de Permiso</label>
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Rol</label>
                                 <select
-                                    className="w-full px-3 py-2 border rounded-lg border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
-                                    value={formData.nivel_permiso}
-                                    onChange={e => setFormData({ ...formData, nivel_permiso: Number(e.target.value) })}
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl font-semibold text-sm outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
+                                    value={formData.roleId}
+                                    onChange={e => setFormData({ ...formData, roleId: Number(e.target.value) })}
                                 >
-                                    <option value={1}>Verde (Administrador - Acceso total)</option>
-                                    <option value={2}>Blanco (Editor - Puede gestionar fichas)</option>
-                                    <option value={3}>Gris (Espectador - Solo lectura)</option>
+                                    {roles.map(r => (
+                                        <option key={r.id} value={r.id}>
+                                            {ROLE_STYLES[r.name]?.label || r.name} — {r.description}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
 
-                            <div className="flex gap-3 pt-4 mt-6 border-t border-slate-100">
+                            {/* Modal Footer */}
+                            <div className="flex gap-3 pt-4 border-t border-gray-100">
                                 <button
                                     type="button"
                                     onClick={handleCloseForm}
-                                    className="flex-1 px-4 py-2 text-sm font-medium text-slate-700 transition-colors bg-white border border-slate-300 rounded-lg hover:bg-slate-50"
+                                    className="flex-1 px-4 py-3 text-sm font-bold text-gray-500 bg-white border border-gray-200 rounded-2xl hover:bg-gray-50 transition-all"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 px-4 py-2 text-sm font-medium text-white transition-colors bg-teal-600 rounded-lg hover:bg-teal-700"
+                                    className="flex-1 px-4 py-3 text-sm font-bold text-white bg-emerald-600 rounded-2xl hover:bg-emerald-700 shadow-lg shadow-emerald-100 transition-all"
                                 >
                                     {editingUser ? 'Guardar Cambios' : 'Crear Usuario'}
                                 </button>

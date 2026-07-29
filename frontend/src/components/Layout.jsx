@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, Calendar, PlusCircle, User as UserIcon, Search, LayoutDashboard, Tag, MapPin, ChevronDown, Shield, Mail, ShieldCheck, ShieldAlert, Menu, X } from 'lucide-react';
+import { LogOut, Calendar, User as UserIcon, Search, LayoutDashboard, Tag, MapPin, ChevronDown, Shield, ShieldCheck, ShieldAlert, Menu, X, Settings, Mail } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import ChatBot from './ChatBot';
 
@@ -36,22 +36,38 @@ const Layout = ({ children }) => {
         }
     };
 
+    // Items principales de navegación
     const menuItems = [
         { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-        { name: 'Nueva Ficha', path: '/nuevo-evento', icon: PlusCircle, roles: ['admin', 'moderador', 'creador'] },
-        { name: 'Aprobaciones', path: '/moderador/fichas-pendientes', icon: ShieldCheck, roles: ['admin', 'moderador'] },
-        { name: 'Solicitudes', path: '/encargado/solicitudes', icon: ShieldCheck, roles: ['encargado_departamento'] },
-        { name: 'Eventos Dpto', path: '/encargado/eventos', icon: Calendar, roles: ['encargado_departamento'] },
-        { name: 'Organigrama', path: '/moderador/organigrama', icon: UserIcon, roles: ['admin', 'moderador'] },
-        { name: 'Mis Eventos', path: '/creador/eventos', icon: Calendar, roles: ['creador'] },
-        { name: 'Feedback', path: '/creador/feedback', icon: Mail, roles: ['creador'] },
-        { name: 'Notificaciones', path: '/auxiliar/notificaciones', icon: Mail, roles: ['auxiliares', 'auxiliar'] },
-        { name: 'Mis Eventos', path: '/auxiliar/eventos', icon: Calendar, roles: ['auxiliares', 'auxiliar'] },
-        { name: 'Recintos', path: '/admin/recintos', icon: MapPin, roles: ['admin'] },
-        { name: 'Catálogo', path: '/admin/catalogo', icon: Tag, roles: ['admin'] },
-        { name: 'Tipos de Evento', path: '/admin/tipos-evento', icon: Calendar, roles: ['admin'] },
-        { name: 'Usuarios', path: '/admin/usuarios', icon: UserIcon, roles: ['admin', 'encargado_departamento'] },
     ];
+
+    // Items de configuración del admin (agrupados)
+    const configItems = [
+        { name: 'Usuarios', path: '/admin/usuarios', icon: UserIcon, roles: ['admin', 'encargado_departamento'] },
+        { name: 'Locaciones', path: '/admin/recintos', icon: MapPin, roles: ['admin'] },
+        { name: 'Eventos y Catálogo', path: '/admin/tipos-evento', icon: Tag, roles: ['admin'] },
+    ];
+
+    const renderNavItem = (item) => {
+        if (item.roles && !item.roles.includes(user?.role)) return null;
+        return (
+            <Link
+                key={item.path}
+                to={item.path}
+                onClick={() => setIsSidebarOpen(false)}
+                className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition-all group ${location.pathname === item.path
+                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-100 translate-x-1'
+                    : 'text-gray-500 hover:bg-emerald-50 hover:text-emerald-600'
+                    }`}
+            >
+                <item.icon size={20} className={location.pathname === item.path ? '' : 'text-gray-300 group-hover:text-emerald-500'} />
+                {item.name}
+            </Link>
+        );
+    };
+
+    // Determinar si se muestra la sección de configuración
+    const showConfigSection = configItems.some(item => !item.roles || item.roles.includes(user?.role));
 
     return (
         <div className="min-h-screen bg-[#fafdfc] font-sans selection:bg-emerald-100 selection:text-emerald-900">
@@ -74,34 +90,24 @@ const Layout = ({ children }) => {
                     </Link>
                 </div>
 
-                <nav className="flex-1 px-4 space-y-2">
+                <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
                     <p className="px-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Menú Principal</p>
-                    {menuItems.map((item) => (
-                        (!item.roles || item.roles.includes(user?.role)) && (
-                            <Link
-                                key={item.path}
-                                to={item.path}
-                                onClick={() => setIsSidebarOpen(false)}
-                                className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition-all group ${location.pathname === item.path
-                                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-100 translate-x-1'
-                                    : 'text-gray-500 hover:bg-emerald-50 hover:text-emerald-600'
-                                    }`}
-                            >
-                                <item.icon size={20} className={location.pathname === item.path ? '' : 'text-gray-300 group-hover:text-emerald-500'} />
-                                {item.name}
-                            </Link>
-                        )
-                    ))}
-                </nav>
+                    {menuItems.map(renderNavItem)}
 
-                <div className="p-6">
-                    <div className="bg-emerald-900 rounded-3xl p-6 text-white relative overflow-hidden shadow-2xl">
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-800 rounded-full blur-2xl opacity-40 -mr-12 -mt-12"></div>
-                        <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-2 relative z-10">Estado del Sistema</p>
-                        <p className="text-xs font-medium text-emerald-100 leading-relaxed mb-4 relative z-10">Todos los servicios técnicos operativos.</p>
-                        <button className="w-full bg-emerald-800 hover:bg-emerald-700 py-2 rounded-xl text-[10px] font-bold uppercase transition-colors relative z-10">Ver Reportes</button>
-                    </div>
-                </div>
+                    {showConfigSection && (
+                        <>
+                            <div className="pt-6 pb-2">
+                                <div className="flex items-center gap-2 px-4">
+                                    <div className="h-px flex-1 bg-gray-100"></div>
+                                    <Settings size={12} className="text-gray-300" />
+                                    <div className="h-px flex-1 bg-gray-100"></div>
+                                </div>
+                                <p className="px-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mt-3">Configuración</p>
+                            </div>
+                            {configItems.map(renderNavItem)}
+                        </>
+                    )}
+                </nav>
             </aside>
 
             {/* Main Content Area */}

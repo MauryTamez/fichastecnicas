@@ -3,16 +3,27 @@ import User from '#models/user'
 import Role from '#models/role'
 
 export default class UsersController {
+  /**
+   * List all available roles (for dropdowns)
+   */
+  async roles({ response }: HttpContext) {
+    const roles = await Role.all()
+    return response.json(roles.map(r => ({ id: r.id, name: r.name, description: r.description })))
+  }
+
   async index({ response }: HttpContext) {
     const users = await User.query().preload('role')
     
-    // Map to frontend legacy format
     const mapped = users.map(u => ({
       id: u.id,
       nombre: u.name,
       email: u.email,
+      phone: u.phone,
+      isInternal: u.isInternal,
+      roleId: u.roleId,
       role: u.role?.name,
-      nivel_permiso: u.roleId
+      roleDescription: u.role?.description,
+      nivel_permiso: u.roleId, // Legacy compat
     }))
     
     return response.json(mapped)
@@ -25,7 +36,7 @@ export default class UsersController {
     user.email = data.email
     user.password = data.password
     
-    // map role explicitly if passed or fallback to legacy numeric mapping
+    // Accept roleId directly or map from roleName
     let roleId = data.roleId || data.nivel_permiso
     if (data.roleName) {
       const role = await Role.findBy('name', data.roleName)
@@ -47,9 +58,14 @@ export default class UsersController {
     if (data.nombre) user.name = data.nombre
     if (data.email) user.email = data.email
     if (data.password) user.password = data.password
-    if (data.roleId || data.nivel_permiso) {
-      user.roleId = data.roleId || data.nivel_permiso
+
+    // Role update - accept roleId directly
+    if (data.roleId) {
+      user.roleId = Number(data.roleId)
+    } else if (data.nivel_permiso) {
+      user.roleId = Number(data.nivel_permiso)
     }
+
     if (data.roleName) {
       const role = await Role.findBy('name', data.roleName)
       if (role) user.roleId = role.id
@@ -62,8 +78,12 @@ export default class UsersController {
       id: user.id,
       nombre: user.name,
       email: user.email,
+      phone: user.phone,
+      isInternal: user.isInternal,
+      roleId: user.roleId,
       role: user.role?.name,
-      nivel_permiso: user.roleId
+      roleDescription: user.role?.description,
+      nivel_permiso: user.roleId,
     })
   }
 
@@ -73,3 +93,4 @@ export default class UsersController {
     return response.json({ message: 'User deleted successfully' })
   }
 }
+

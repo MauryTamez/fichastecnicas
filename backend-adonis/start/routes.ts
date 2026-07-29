@@ -13,6 +13,7 @@ import LoginController from '#controllers/auth/login_controller'
 import DashboardController from '#controllers/dashboard_controller'
 const EventsController = () => import('#controllers/events_controller')
 const VenuesController = () => import('#controllers/venues_controller')
+const LocationTypesController = () => import('#controllers/location_types_controller')
 const UsersController = () => import('#controllers/users_controller')
 const LoginControllerIntegration = () => import('#controllers/auth/login_controller')
 const EventTypesController = () => import('#controllers/event_types_controller')
@@ -75,12 +76,18 @@ router.group(() => {
         const CatalogsController = () => import('#controllers/catalogs_controller')
         router.get('/organizations', [CatalogsController, 'getOrganizations'])
         router.get('/catalog', [CatalogsController, 'index'])
+        router.get('/roles', [UsersController, 'roles'])
 
         // 1. Admin Group
         router.group(() => {
             router.post('/venues', [VenuesController, 'store'])
             router.put('/venues/:id', [VenuesController, 'update'])
             router.delete('/venues/:id', [VenuesController, 'destroy'])
+
+            router.get('/location-types', [LocationTypesController, 'index'])
+            router.post('/location-types', [LocationTypesController, 'store'])
+            router.put('/location-types/:id', [LocationTypesController, 'update'])
+            router.delete('/location-types/:id', [LocationTypesController, 'destroy'])
 
             router.get('/users', [UsersController, 'index'])
             router.post('/users', [UsersController, 'store'])

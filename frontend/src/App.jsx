@@ -6,10 +6,9 @@ import EventForm from './pages/events/form/EventForm';
 import EventDetail from './pages/events/general/EventDetail';
 import EventVersionsList from './pages/events/general/EventVersionsList';
 import Layout from './components/Layout';
-import CatalogAdmin from './pages/admin/CatalogAdmin';
 import UserAdmin from './pages/admin/UserAdmin';
 import VenueAdmin from './pages/admin/VenueAdmin';
-import EventTypeAdmin from './pages/admin/EventTypeAdmin';
+import EventTypeAndCatalogAdmin from './pages/admin/EventTypeAndCatalogAdmin';
 import Organigrama from './pages/admin/Organigrama';
 import FeedbackReview from './pages/events/creador/FeedbackReview';
 import PendingApprovals from './pages/events/general/PendingApprovals';
@@ -65,13 +64,6 @@ function App() {
               </Layout>
             </ProtectedRoute>
           } />
-          <Route path="/admin/catalogo" element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <Layout>
-                <CatalogAdmin />
-              </Layout>
-            </ProtectedRoute>
-          } />
           <Route path="/admin/recintos" element={
             <ProtectedRoute allowedRoles={['admin']}>
               <Layout>
@@ -89,7 +81,7 @@ function App() {
           <Route path="/admin/tipos-evento" element={
             <ProtectedRoute allowedRoles={['admin']}>
               <Layout>
-                <EventTypeAdmin />
+                <EventTypeAndCatalogAdmin />
               </Layout>
             </ProtectedRoute>
           } />
