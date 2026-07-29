@@ -1,23 +1,31 @@
-import { AlertTriangle, ArrowLeft, Briefcase, Clock, ChevronRight, FileText, Layers, X } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Briefcase, ChevronRight, Clock, FileText, Layers, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import api from '../../../api/axios';
-import { useAuth } from '../../../context/AuthContext';
-import { getVenues } from '../../../api/venues';
 import { resolveFeedback } from '../../../api/feedbacks';
+import { getVenues } from '../../../api/venues';
+import { useAuth } from '../../../context/AuthContext';
 
 // Componentes del formulario
+import AIAutofillModal from './AIAutofillModal';
+import AudioModal from './AudioModal';
+import EventFormDetalles from './EventFormDetalles';
+import EventFormFeedbacks from './EventFormFeedbacks';
 import EventFormGeneral from './EventFormGeneral';
 import EventFormOrdenDia from './EventFormOrdenDia';
 import EventFormRequerimientos from './EventFormRequerimientos';
-import EventFormDetalles from './EventFormDetalles';
 import EventFormSidebar from './EventFormSidebar';
-import EventFormFeedbacks from './EventFormFeedbacks';
-import AIAutofillModal from './AIAutofillModal';
+import LogisticaModal from './LogisticaModal';
+import MicrophonesModal from './MicrophonesModal';
+
 import ParkingModal from './ParkingModal';
 import PhotoModal from './PhotoModal';
 import PresidiumModal from './PresidiumModal';
+
+import PodiumModal from './PodiumModal';
+import ProtocoloModal from './ProtocoloModal';
+
 
 const EventForm = () => {
     const { user } = useAuth();
@@ -31,7 +39,21 @@ const EventForm = () => {
     const [step, setStep] = useState(1);
     const [detailedEvent, setDetailedEvent] = useState(null);
     const [actionLoading, setActionLoading] = useState(false);
-    
+const [showMicrophonesModal, setShowMicrophonesModal] = useState(false);
+
+const [showAudioModal, setShowAudioModal] = useState(false);
+
+
+    const requerimientosGrupos = [
+    { key: 'audiovisual', label: 'Audiovisual' },
+    { key: 'microfonos', label: 'Micrófonos' },
+    { key: 'estacionamiento', label: 'Estacionamiento' },
+    { key: 'fotografia', label: 'Fotografía' },
+    { key: 'protocolo', label: 'Protocolo y Banderas' },
+    { key: 'logistica', label: 'Logística y Mobiliario' },
+    { key: 'podium', label: 'Pódium' },
+    { key: 'presidium', label: 'Presídium' },
+];
     const [formData, setFormData] = useState({
         name: '',
         objective: '',
@@ -52,20 +74,26 @@ const EventForm = () => {
         otrosObservaciones: ''
     });
 
-    const [audiovisual, setAudiovisual] = useState({
-        sonido: false,
-        microfonoInalambrico: false,
-        microfonoMesa: false,
-        microfonoPresidencial: false,
-        microfonoDiadema: false,
-        microfonoAlambrico: false,
-        proyeccionPresentacion: false,
-        proyeccionVideo: false,
-        videograbacion: false,
-        personalApoyo: false,
-        apuntador: false,
-        musicaFondo: false,
-    });
+    const [sonido, setSonido] = useState({
+    sonido: false,
+    musicaFondo: false,
+    personalApoyo: false,
+    apuntador: false
+});
+
+const [proyeccion, setProyeccion] = useState({
+    proyeccionPresentacion: false,
+    proyeccionVideo: false,
+    videograbacion: false
+});
+
+const [microfonos, setMicrofonos] = useState({
+    microfonoInalambrico: false,
+    microfonoMesa: false,
+    microfonoPresidencial: false,
+    microfonoDiadema: false,
+    microfonoAlambrico: false
+});
 
     const [currentActivity, setCurrentActivity] = useState({
         name: '',
@@ -94,6 +122,11 @@ const EventForm = () => {
     const [showParkingModal, setShowParkingModal] = useState(false);
     const [showPhotoModal, setShowPhotoModal] = useState(false);
     const [showPresidiumModal, setShowPresidiumModal] = useState(false);
+    const [showPodiumModal, setShowPodiumModal] = useState(false);
+const [showProtocoloModal, setShowProtocoloModal] = useState(false);
+const [showLogisticaModal, setShowLogisticaModal] = useState(false);
+  
+    
 
     // ESTADOS PARA MÚLTIPLES CARROS
     const [parkingList, setParkingList] = useState([]);
@@ -227,9 +260,17 @@ const EventForm = () => {
                 otrosObservaciones: data.otrosObservaciones ?? prev.otrosObservaciones
             }));
 
-            if (data.audiovisual && typeof data.audiovisual === 'object') {
-                setAudiovisual(prev => ({ ...prev, ...data.audiovisual }));
-            }
+           if (data.sonido && typeof data.sonido === 'object') {
+    setSonido(prev => ({ ...prev, ...data.sonido }));
+}
+
+if (data.proyeccion && typeof data.proyeccion === 'object') {
+    setProyeccion(prev => ({ ...prev, ...data.proyeccion }));
+}
+
+if (data.microfonos && typeof data.microfonos === 'object') {
+    setMicrofonos(prev => ({ ...prev, ...data.microfonos }));
+}
 
             if (data.otros && typeof data.otros === 'object') {
                 setOtros(prev => ({ ...prev, ...data.otros }));
@@ -298,8 +339,14 @@ const EventForm = () => {
                                 otrosObservaciones: currentVersion.otrosObservaciones || currentEvent.otrosObservaciones || ''
                             });
 
-                            const targetAv = currentVersion.audiovisual || currentEvent.audiovisual;
-                            if (targetAv) setAudiovisual(prev => ({ ...prev, ...targetAv }));
+                           const targetSonido = currentVersion.sonido || currentEvent.sonido;
+if (targetSonido) setSonido(prev => ({ ...prev, ...targetSonido }));
+
+const targetProyeccion = currentVersion.proyeccion || currentEvent.proyeccion;
+if (targetProyeccion) setProyeccion(prev => ({ ...prev, ...targetProyeccion }));
+
+const targetMicrofonos = currentVersion.microfonos || currentEvent.microfonos;
+if (targetMicrofonos) setMicrofonos(prev => ({ ...prev, ...targetMicrofonos }));
 
                             const targetOtros = currentVersion.requerimientosOtros || currentEvent.requerimientosOtros;
                             if (targetOtros) setOtros(prev => ({ ...prev, ...targetOtros }));
@@ -336,8 +383,14 @@ const EventForm = () => {
                                 activities: currentEvent.activities || [],
                                 otrosObservaciones: currentEvent.otrosObservaciones || ''
                             });
+if (currentEvent.sonido)
+    setSonido(prev => ({ ...prev, ...currentEvent.sonido }));
 
-                            if (currentEvent.audiovisual) setAudiovisual(prev => ({ ...prev, ...currentEvent.audiovisual }));
+if (currentEvent.proyeccion)
+    setProyeccion(prev => ({ ...prev, ...currentEvent.proyeccion }));
+
+if (currentEvent.microfonos)
+    setMicrofonos(prev => ({ ...prev, ...currentEvent.microfonos }));
                             if (currentEvent.requerimientosOtros) setOtros(prev => ({ ...prev, ...currentEvent.requerimientosOtros }));
                             if (currentEvent.listaEstacionamiento) setParkingList(currentEvent.listaEstacionamiento);
                             if (currentEvent.horaFotografia) setHoraFotografia(currentEvent.horaFotografia);
@@ -358,14 +411,55 @@ const EventForm = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const toggleAudiovisual = (key) => {
-        setAudiovisual((prev) => ({
-            ...prev,
-            [key]: !prev[key],
-        }));
-    };
-
+   
     const [error, setError] = useState('');
+    // CONTADORES DE REQUERIMIENTOS
+
+const audiovisualCount =
+    Object.values(sonido).filter(Boolean).length +
+    Object.values(proyeccion).filter(Boolean).length +
+    Object.values(microfonos).filter(Boolean).length;
+const sonidoCount =
+    Object.values(sonido).filter(Boolean).length;
+
+const proyeccionCount =
+    Object.values(proyeccion).filter(Boolean).length;
+
+const microfonosCount =
+    Object.values(microfonos).filter(Boolean).length;
+
+
+
+const protocoloCount =
+    [
+        otros.banderas,
+        otros.himno,
+        otros.separadorHimno
+    ]
+    .filter(Boolean)
+    .length;
+
+
+const logisticaCount =
+    [
+        otros.manteles,
+        otros.coffeeBreak,
+        otros.edecanes
+    ]
+    .filter(Boolean)
+    .length;
+
+
+const podiumSelected = otros.podium;
+
+
+const presidiumCount = presidiumList.length;
+
+
+const estacionamientoCount = parkingList.length;
+
+
+const fotografiaSelected = horaFotografia !== '';
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -394,7 +488,9 @@ const EventForm = () => {
                 organizationId: Number(formData.organizationId),
                 eventTypeId: Number(formData.eventTypeId),
 
-                audiovisual,
+               sonido,
+proyeccion,
+microfonos,
 
                 requerimientosOtros: otros,
                 listaEstacionamiento: otros.estacionamiento ? parkingList : null,
@@ -528,20 +624,48 @@ const EventForm = () => {
                     )}
 
                     {step === 3 && (
-                        <EventFormRequerimientos
-                            formData={formData}
-                            handleChange={handleChange}
-                            audiovisual={audiovisual}
-                            audiovisualItems={audiovisualItems}
-                            toggleAudiovisual={toggleAudiovisual}
-                            otros={otros}
-                            otrosItems={otrosItems}
-                            toggleOtro={toggleOtro}
-                            setShowParkingModal={setShowParkingModal}
-                            setShowPhotoModal={setShowPhotoModal}
-                            setShowPresidiumModal={setShowPresidiumModal}
-                            setStep={setStep}
-                        />
+                       
+    <EventFormRequerimientos
+    formData={formData}
+    handleChange={handleChange}
+
+    sonido={sonido}
+    setSonido={setSonido}
+
+    proyeccion={proyeccion}
+    setProyeccion={setProyeccion}
+
+    microfonos={microfonos}
+    setMicrofonos={setMicrofonos}
+
+    otros={otros}
+    otrosItems={otrosItems}
+    toggleOtro={toggleOtro}
+
+    setShowParkingModal={setShowParkingModal}
+    setShowPhotoModal={setShowPhotoModal}
+    setShowPresidiumModal={setShowPresidiumModal}
+
+    setShowAudioModal={setShowAudioModal}
+    setShowMicrophonesModal={setShowMicrophonesModal}
+
+    setShowPodiumModal={setShowPodiumModal}
+    setShowProtocoloModal={setShowProtocoloModal}
+    setShowLogisticaModal={setShowLogisticaModal}
+
+    sonidoCount={sonidoCount}
+    proyeccionCount={proyeccionCount}
+    microfonosCount={microfonosCount}
+
+    protocoloCount={protocoloCount}
+    logisticaCount={logisticaCount}
+    podiumSelected={podiumSelected}
+    presidiumCount={presidiumCount}
+    estacionamientoCount={estacionamientoCount}
+    fotografiaSelected={fotografiaSelected}
+
+    setStep={setStep}
+/>
                     )}
 
                     {step === 4 && (
@@ -578,6 +702,7 @@ const EventForm = () => {
                 handleAutoFill={handleAutoFill}
                 isAILoading={isAILoading}
             />
+            
 
             <ParkingModal
                 showParkingModal={showParkingModal}
@@ -605,6 +730,45 @@ const EventForm = () => {
                 presidiumList={presidiumList}
                 setPresidiumList={setPresidiumList}
             />
+            <AudioModal
+     showAudioModal={showAudioModal}
+    setShowAudioModal={setShowAudioModal}
+
+    sonido={sonido}
+    setSonido={setSonido}
+
+    proyeccion={proyeccion}
+    setProyeccion={setProyeccion}
+/>
+            <MicrophonesModal
+    showMicrophonesModal={showMicrophonesModal}
+    setShowMicrophonesModal={setShowMicrophonesModal}
+    microfonos={microfonos}
+    setMicrofonos={setMicrofonos}
+/>
+
+<PodiumModal
+    showPodiumModal={showPodiumModal}
+    setShowPodiumModal={setShowPodiumModal}
+    otros={otros}
+    setOtros={setOtros}
+/>
+
+
+<ProtocoloModal
+    showProtocoloModal={showProtocoloModal}
+    setShowProtocoloModal={setShowProtocoloModal}
+    otros={otros}
+    setOtros={setOtros}
+/>
+
+
+<LogisticaModal
+    showLogisticaModal={showLogisticaModal}
+    setShowLogisticaModal={setShowLogisticaModal}
+    otros={otros}
+    setOtros={setOtros}
+/>
         </div>
     );
 };
