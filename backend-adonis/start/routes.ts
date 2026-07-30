@@ -101,6 +101,14 @@ router.group(() => {
             router.get('/event-types/:id', [EventTypesController, 'show'])
             router.put('/event-types/:id', [EventTypesController, 'update'])
             router.delete('/event-types/:id', [EventTypesController, 'destroy'])
+
+            // Departments
+            const DepartmentsController = () => import('#controllers/departments_controller')
+            router.get('/departments', [DepartmentsController, 'index'])
+            router.post('/departments', [DepartmentsController, 'store'])
+            router.get('/departments/:id', [DepartmentsController, 'show'])
+            router.put('/departments/:id', [DepartmentsController, 'update'])
+            router.delete('/departments/:id', [DepartmentsController, 'destroy'])
         }).prefix('/admin').use(middleware.role(['admin']))
 
         // 2. Moderador Group

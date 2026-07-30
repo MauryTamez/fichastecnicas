@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, Calendar, User as UserIcon, Search, LayoutDashboard, Tag, MapPin, ChevronDown, Shield, ShieldCheck, ShieldAlert, Menu, X, Settings, Mail } from 'lucide-react';
+import { LogOut, Calendar, User as UserIcon, Search, LayoutDashboard, Tag, MapPin, ChevronDown, Shield, ShieldCheck, ShieldAlert, Menu, X, Settings, Mail, Building2 } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import ChatBot from './ChatBot';
 
@@ -44,6 +44,7 @@ const Layout = ({ children }) => {
     // Items de configuración del admin (agrupados)
     const configItems = [
         { name: 'Usuarios', path: '/admin/usuarios', icon: UserIcon, roles: ['admin', 'encargado_departamento'] },
+        { name: 'Departamentos', path: '/admin/departamentos', icon: Building2, roles: ['admin'] },
         { name: 'Locaciones', path: '/admin/recintos', icon: MapPin, roles: ['admin'] },
         { name: 'Eventos y Catálogo', path: '/admin/tipos-evento', icon: Tag, roles: ['admin'] },
     ];

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getUsers, createUser, updateUser, deleteUser, getRoles } from '../../api/users';
+import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 import Swal from 'sweetalert2';
 import { UserPlus, Edit2, Trash2, Shield, ShieldCheck, ShieldAlert, X, Users, ChevronDown } from 'lucide-react';
@@ -19,6 +20,7 @@ export default function UserAdmin() {
     const { user: currentUser } = useAuth();
     const [users, setUsers] = useState([]);
     const [roles, setRoles] = useState([]);
+    const [departments, setDepartments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -29,6 +31,7 @@ export default function UserAdmin() {
         email: '',
         password: '',
         roleId: '',
+        departmentId: '',
     });
 
     useEffect(() => {
@@ -37,9 +40,14 @@ export default function UserAdmin() {
 
     const loadData = async () => {
         try {
-            const [usersData, rolesData] = await Promise.all([getUsers(), getRoles()]);
+            const [usersData, rolesData, deptRes] = await Promise.all([
+                getUsers(), 
+                getRoles(),
+                api.get('/admin/departments')
+            ]);
             setUsers(usersData);
             setRoles(rolesData);
+            setDepartments(deptRes.data);
             // Set default roleId for new user form
             if (rolesData.length > 0) {
                 const defaultRole = rolesData.find(r => r.name === 'creador') || rolesData[0];
@@ -55,10 +63,10 @@ export default function UserAdmin() {
     const handleOpenForm = (u = null) => {
         setEditingUser(u);
         if (u) {
-            setFormData({ nombre: u.nombre, email: u.email, password: '', roleId: u.roleId });
+            setFormData({ nombre: u.nombre, email: u.email, password: '', roleId: u.roleId, departmentId: u.departmentId || '' });
         } else {
             const defaultRole = roles.find(r => r.name === 'creador') || roles[0];
-            setFormData({ nombre: '', email: '', password: '', roleId: defaultRole?.id || '' });
+            setFormData({ nombre: '', email: '', password: '', roleId: defaultRole?.id || '', departmentId: '' });
         }
         setIsFormOpen(true);
         setError('');
@@ -156,9 +164,10 @@ export default function UserAdmin() {
             <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
                 {/* Table Header */}
                 <div className="grid grid-cols-12 gap-4 px-8 py-5 bg-gray-50/80 border-b border-gray-100">
-                    <div className="col-span-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Usuario</div>
+                    <div className="col-span-3 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Usuario</div>
                     <div className="col-span-3 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Email</div>
-                    <div className="col-span-3 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Rol</div>
+                    <div className="col-span-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Rol</div>
+                    <div className="col-span-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Departamento</div>
                     <div className="col-span-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] text-right">Acciones</div>
                 </div>
 
@@ -177,7 +186,7 @@ export default function UserAdmin() {
                             return (
                                 <div key={u.id} className="grid grid-cols-12 gap-4 items-center px-8 py-5 group hover:bg-emerald-50/30 transition-colors">
                                     {/* User Info */}
-                                    <div className="col-span-4 flex items-center gap-4">
+                                    <div className="col-span-3 flex items-center gap-4">
                                         <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 font-display font-bold text-lg flex-shrink-0">
                                             {u.nombre?.charAt(0)?.toUpperCase()}
                                         </div>
@@ -195,13 +204,20 @@ export default function UserAdmin() {
                                     </div>
 
                                     {/* Role Badge */}
-                                    <div className="col-span-3">
+                                    <div className="col-span-2">
                                         <div
                                             className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${roleStyle.color}`}
                                         >
                                             <RoleIcon size={14} />
                                             {roleStyle.label}
                                         </div>
+                                    </div>
+
+                                    {/* Department */}
+                                    <div className="col-span-2">
+                                        <p className="text-sm text-gray-500 truncate">
+                                            {u.department || 'Sin asignar'}
+                                        </p>
                                     </div>
 
                                     {/* Actions */}
@@ -312,6 +328,22 @@ export default function UserAdmin() {
                                     {roles.map(r => (
                                         <option key={r.id} value={r.id}>
                                             {ROLE_STYLES[r.name]?.label || r.name} — {r.description}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Departamento</label>
+                                <select
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl font-semibold text-sm outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
+                                    value={formData.departmentId}
+                                    onChange={e => setFormData({ ...formData, departmentId: e.target.value ? Number(e.target.value) : '' })}
+                                >
+                                    <option value="">Sin asignar</option>
+                                    {departments.map(d => (
+                                        <option key={d.id} value={d.id}>
+                                            {d.name}
                                         </option>
                                     ))}
                                 </select>

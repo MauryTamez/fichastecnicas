@@ -9,6 +9,7 @@ import Layout from './components/Layout';
 import UserAdmin from './pages/admin/UserAdmin';
 import VenueAdmin from './pages/admin/VenueAdmin';
 import EventTypeAndCatalogAdmin from './pages/admin/EventTypeAndCatalogAdmin';
+import DepartmentAdmin from './pages/admin/DepartmentAdmin';
 import Organigrama from './pages/admin/Organigrama';
 import FeedbackReview from './pages/events/creador/FeedbackReview';
 import PendingApprovals from './pages/events/general/PendingApprovals';
@@ -82,6 +83,13 @@ function App() {
             <ProtectedRoute allowedRoles={['admin']}>
               <Layout>
                 <EventTypeAndCatalogAdmin />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/departamentos" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <Layout>
+                <DepartmentAdmin />
               </Layout>
             </ProtectedRoute>
           } />

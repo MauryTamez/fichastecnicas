@@ -12,7 +12,7 @@ export default class UsersController {
   }
 
   async index({ response }: HttpContext) {
-    const users = await User.query().preload('role')
+    const users = await User.query().preload('role').preload('department')
     
     const mapped = users.map(u => ({
       id: u.id,
@@ -24,6 +24,8 @@ export default class UsersController {
       role: u.role?.name,
       roleDescription: u.role?.description,
       nivel_permiso: u.roleId, // Legacy compat
+      departmentId: u.departmentId,
+      department: u.department?.name,
     }))
     
     return response.json(mapped)
@@ -46,6 +48,9 @@ export default class UsersController {
 
     user.organizationId = 1
     user.isInternal = true
+    if (data.departmentId) {
+      user.departmentId = Number(data.departmentId)
+    }
     await user.save()
 
     return response.created({ message: 'User created successfully', userId: user.id })
@@ -70,9 +75,14 @@ export default class UsersController {
       const role = await Role.findBy('name', data.roleName)
       if (role) user.roleId = role.id
     }
+
+    if (data.departmentId !== undefined) {
+      user.departmentId = data.departmentId ? Number(data.departmentId) : null
+    }
     
     await user.save()
     await user.load('role')
+    await user.load('department')
     
     return response.json({
       id: user.id,
@@ -84,6 +94,8 @@ export default class UsersController {
       role: user.role?.name,
       roleDescription: user.role?.description,
       nivel_permiso: user.roleId,
+      departmentId: user.departmentId,
+      department: user.department?.name,
     })
   }
 
