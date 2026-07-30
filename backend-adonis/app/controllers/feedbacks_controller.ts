@@ -80,4 +80,24 @@ export default class FeedbacksController {
 
     return response.ok({ message: 'Feedback resuelto', data: feedback })
   }
+
+  async pendingUserFeedbacks({ response, auth }: HttpContext) {
+    const user = auth.use('web').user!
+
+    const feedbacks = await VersionFeedback.query()
+      .where('status', 'pending')
+      .whereHas('eventVersion', (versionQuery) => {
+        versionQuery.whereHas('event', (eventQuery) => {
+          eventQuery.where('userId', user.id)
+        })
+      })
+      .preload('eventVersion', (versionQuery) => {
+        versionQuery.preload('event')
+        versionQuery.preload('versionContent')
+      })
+      .preload('reviewer')
+      .orderBy('createdAt', 'desc')
+
+    return response.ok({ data: feedbacks })
+  }
 }

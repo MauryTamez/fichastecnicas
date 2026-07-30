@@ -43,11 +43,20 @@ export default class DepartmentsController {
     return response.ok({ message: 'Departamento eliminado correctamente' })
   }
 
-  async organigram({ response }: HttpContext) {
-    // Placeholder para la lógica del organigrama
-    return response.json({
-      message: 'Organigrama data will be loaded here.',
-      data: []
-    })
+  async organigram({ auth, response }: HttpContext) {
+    const user = auth.use('web').user!
+    
+    if (!user.departmentId) {
+      return response.badRequest({ message: 'El usuario no tiene un departamento asignado.' })
+    }
+
+    const department = await Department.query()
+      .where('id', user.departmentId)
+      .preload('users', (usersQuery) => {
+        usersQuery.preload('role')
+      })
+      .firstOrFail()
+
+    return response.json(department)
   }
 }

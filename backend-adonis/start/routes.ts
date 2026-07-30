@@ -62,6 +62,7 @@ router.group(() => {
         router.post('/events/:id/pass-to-review', [EventsController, 'passToReview'])
 
         // Feedbacks
+        router.get('/feedbacks/pending', [FeedbacksController, 'pendingUserFeedbacks'])
         router.get('/events/:eventId/versions/:versionId/feedbacks', [FeedbacksController, 'index'])
         router.post('/events/:eventId/versions/:versionId/feedbacks', [FeedbacksController, 'store'])
         router.patch('/feedbacks/:id/resolve', [FeedbacksController, 'resolve'])

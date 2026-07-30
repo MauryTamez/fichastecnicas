@@ -75,18 +75,20 @@ const DepartmentEvents = () => {
                             onChange={(e) => setStatusFilter(e.target.value)}
                         >
                             <option value="all">Todos los estados</option>
+                            <option value="draft">Borradores</option>
                             <option value="requested">Solicitados</option>
                             <option value="in_review">En Revisión</option>
                             <option value="scheduled">Aceptados</option>
                             <option value="rejected">Rechazados</option>
-                            <option value="draft">Borradores</option>
+                            <option value="cancelled">Cancelados</option>
+                            <option value="historical">Históricos</option>
                         </select>
                     </div>
 
                     <div className="flex items-center gap-2">
                         <Calendar size={16} className="text-gray-400" />
                         <input 
-                            type="date" 
+                            type="month" 
                             className="bg-gray-50 border border-gray-100 text-gray-700 text-sm font-medium rounded-xl px-4 py-2.5 outline-none focus:ring-4 focus:ring-emerald-500/10 cursor-pointer"
                             value={dateFilter}
                             onChange={(e) => setDateFilter(e.target.value)}
@@ -157,17 +159,19 @@ const DepartmentEvents = () => {
                                     </div>
                                     <ChevronRight size={14} className="text-gray-400 group-hover:text-emerald-600 transition-colors" />
                                 </div>
-                                <div className="pt-2 flex gap-2">
-                                    <button 
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            navigate(`/editar-evento/${event.id}`);
-                                        }}
-                                        className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold transition-colors border border-blue-200"
-                                    >
-                                        <Edit size={14} /> Edición Directa
-                                    </button>
-                                </div>
+                                {(event.currentState !== 'historical' && event.estado !== 'historical') && (
+                                    <div className="pt-2 flex gap-2">
+                                        <button 
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                navigate(`/editar-evento/${event.id}`);
+                                            }}
+                                            className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold transition-colors border border-blue-200"
+                                        >
+                                            <Edit size={14} /> Edición Directa
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     ))}
