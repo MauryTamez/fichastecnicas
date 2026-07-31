@@ -35,7 +35,7 @@ export default class extends BaseSeeder {
     
     const ensureUser = async (id: number) => {
       const role = await Role.firstOrCreate({ name: 'creadores' }, { name: 'creadores', description: 'Creador' })
-      const dept = await Department.firstOrCreate({ id: 1 }, { name: 'Departamento 1', organization_id: 1 })
+      const dept = await Department.firstOrCreate({ id: 1 }, { name: 'Departamento 1', organizationId: 1 })
       return await User.firstOrCreate(
         { id },
         {
