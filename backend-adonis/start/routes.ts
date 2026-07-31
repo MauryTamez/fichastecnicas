@@ -73,6 +73,8 @@ router.group(() => {
         // Data for dropdowns (accessible to all authenticated roles)
         router.get('/event-types', [EventTypesController, 'index'])
         router.get('/venues', [VenuesController, 'index'])
+        const DepartmentsController = () => import('#controllers/departments_controller')
+        router.get('/departments', [DepartmentsController, 'index'])
 
         const CatalogsController = () => import('#controllers/catalogs_controller')
         router.get('/organizations', [CatalogsController, 'getOrganizations'])

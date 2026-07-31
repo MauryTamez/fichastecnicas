@@ -39,7 +39,7 @@ function App() {
             </ProtectedRoute>
           } />
           <Route path="/nuevo-evento" element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['admin', 'encargado_departamento', 'creador']}>
               <Layout>
                 <EventForm />
               </Layout>

@@ -39,7 +39,7 @@ const Layout = ({ children }) => {
     // Items principales de navegación
     const menuItems = [
         { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-        { name: 'Nueva Ficha', path: '/nuevo-evento', icon: PlusCircle, roles: ['admin', 'moderador', 'encargado_departamento', 'creador'] },
+        { name: 'Nueva Ficha', path: '/nuevo-evento', icon: PlusCircle, roles: ['admin', 'encargado_departamento', 'creador'] },
         { name: 'Solicitudes', path: '/encargado/solicitudes', icon: CheckCircle, roles: ['admin', 'encargado_departamento'] },
         { name: 'Fichas Pendientes', path: '/moderador/fichas-pendientes', icon: CheckCircle, roles: ['admin', 'moderador'] },
         { name: 'Mis Eventos', path: '/creador/eventos', icon: Calendar, roles: ['admin', 'creador'] },

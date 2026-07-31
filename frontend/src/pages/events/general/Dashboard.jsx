@@ -29,18 +29,50 @@ const Dashboard = () => {
     const [selectedDay, setSelectedDay] = useState(new Date());
     const [loading, setLoading] = useState(true);
     const [view, setView] = useState('calendar'); // 'calendar' or 'list'
+    const [page, setPage] = useState(1);
+    const [meta, setMeta] = useState(null);
+    const [departments, setDepartments] = useState([]);
+    const [selectedDepartment, setSelectedDepartment] = useState('');
+    const [eventTypes, setEventTypes] = useState([]);
+    const [selectedEventType, setSelectedEventType] = useState('');
+    const [selectedState, setSelectedState] = useState('');
+
+    useEffect(() => {
+        api.get('/event-types').then(res => setEventTypes(res.data)).catch(console.error);
+        if (user?.role === 'admin' || user?.role === 'moderador') {
+            api.get('/departments').then(res => setDepartments(res.data)).catch(console.error);
+        }
+    }, [user]);
 
     useEffect(() => {
         fetchEvents();
-    }, []);
+    }, [view, page, selectedDepartment, selectedEventType, selectedState]);
 
     const fetchEvents = async () => {
         try {
+            setLoading(true);
+            const query = new URLSearchParams();
+            if (view === 'calendar') {
+                query.append('limit', '500');
+            } else {
+                query.append('page', page);
+                if (selectedDepartment) {
+                    query.append('departmentId', selectedDepartment);
+                }
+                if (selectedEventType) {
+                    query.append('eventTypeId', selectedEventType);
+                }
+                if (selectedState) {
+                    query.append('currentState', selectedState);
+                }
+            }
+
             const [eventsRes, venuesRes] = await Promise.all([
-                api.get('/events'),
+                api.get(`/events?${query.toString()}`),
                 getVenues()
             ]);
             setEvents(eventsRes.data.data);
+            setMeta(eventsRes.data.meta);
             setVenues(venuesRes);
         } catch (error) {
             console.error('Error fetching events:', error);
@@ -101,7 +133,7 @@ const Dashboard = () => {
                     </button>
                 </div>
 
-                {(user?.nivel_permiso === 1 || user?.nivel_permiso === 2) && (
+                {(user?.nivel_permiso === 1) && (
                     <Link to="/nuevo-evento" className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-emerald-200 hover:shadow-emerald-300 transform hover:-translate-y-0.5 active:translate-y-0">
                         <Plus size={20} />
                         Crear Solicitud
@@ -332,20 +364,87 @@ const Dashboard = () => {
 
         return (
             <div className="space-y-6">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-col xl:flex-row xl:items-center justify-between mb-4 gap-4">
                     <h3 className="text-2xl font-display font-bold text-gray-900">Todas las Solicitudes</h3>
-                    <div className="flex gap-2">
-                        <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-100 rounded-xl text-xs font-bold text-gray-500 hover:bg-gray-50 shadow-sm transition-all">
-                            <Filter size={14} /> Filtros
-                        </button>
-                        <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-100 rounded-xl text-xs font-bold text-gray-500 hover:bg-gray-50 shadow-sm transition-all">
-                            <Users size={14} /> Mis Eventos
-                        </button>
+                    <div className="flex flex-wrap gap-2">
+                        {(user?.role === 'admin' || user?.role === 'moderador') && (
+                            <div className="relative flex items-center">
+                                <Filter size={14} className="absolute left-3 text-gray-400" />
+                                <select
+                                    value={selectedDepartment}
+                                    onChange={(e) => { setPage(1); setSelectedDepartment(e.target.value); }}
+                                    className="pl-9 pr-4 py-2 bg-white border border-gray-100 rounded-xl text-xs font-bold text-gray-500 shadow-sm transition-all outline-none focus:border-emerald-500 appearance-none"
+                                >
+                                    <option value="">Todos los departamentos</option>
+                                    {departments.map(dept => (
+                                        <option key={dept.id} value={dept.id}>{dept.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+                        <div className="relative flex items-center">
+                            <Filter size={14} className="absolute left-3 text-gray-400" />
+                            <select
+                                value={selectedEventType}
+                                onChange={(e) => { setPage(1); setSelectedEventType(e.target.value); }}
+                                className="pl-9 pr-4 py-2 bg-white border border-gray-100 rounded-xl text-xs font-bold text-gray-500 shadow-sm transition-all outline-none focus:border-emerald-500 appearance-none"
+                            >
+                                <option value="">Todos los tipos</option>
+                                {eventTypes.map(type => (
+                                    <option key={type.id} value={type.id}>{type.name || type.nombre}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="relative flex items-center">
+                            <Filter size={14} className="absolute left-3 text-gray-400" />
+                            <select
+                                value={selectedState}
+                                onChange={(e) => { setPage(1); setSelectedState(e.target.value); }}
+                                className="pl-9 pr-4 py-2 bg-white border border-gray-100 rounded-xl text-xs font-bold text-gray-500 shadow-sm transition-all outline-none focus:border-emerald-500 appearance-none"
+                            >
+                                <option value="">Todos los estados</option>
+                                <option value="draft">Borrador</option>
+                                <option value="requested">Solicitado</option>
+                                <option value="in_review">En Revisión</option>
+                                <option value="scheduled">Aceptado (Agendado)</option>
+                                <option value="rejected">Rechazado</option>
+                                <option value="cancelled">Cancelado</option>
+                                <option value="historical">Histórico</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
                     {dashboardEvents.map(event => <EventCard key={event.id} event={event} />)}
+                    {dashboardEvents.length === 0 && (
+                        <div className="col-span-full py-12 text-center bg-gray-50 rounded-2xl border border-gray-100 border-dashed">
+                            <p className="text-gray-500 font-medium">No se encontraron solicitudes.</p>
+                        </div>
+                    )}
                 </div>
+
+                {/* Paginación */}
+                {meta && meta.lastPage > 1 && (
+                    <div className="flex items-center justify-center gap-2 mt-8">
+                        <button
+                            disabled={page === 1}
+                            onClick={() => setPage(page - 1)}
+                            className="p-2 bg-white border border-gray-100 rounded-xl text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
+                        >
+                            <ChevronLeft size={20} />
+                        </button>
+                        <span className="text-sm font-bold text-gray-700 bg-white px-4 py-2 rounded-xl border border-gray-100 shadow-sm">
+                            Página {page} de {meta.lastPage}
+                        </span>
+                        <button
+                            disabled={page === meta.lastPage}
+                            onClick={() => setPage(page + 1)}
+                            className="p-2 bg-white border border-gray-100 rounded-xl text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
+                        >
+                            <ChevronRight size={20} />
+                        </button>
+                    </div>
+                )}
             </div>
         );
     };

@@ -62,7 +62,10 @@ export default class EventsController {
 
   async index({ request, response, auth }: HttpContext) {
     const page = request.input('page', 1)
-    const limit = 20
+    const limit = request.input('limit', 20)
+    const departmentId = request.input('departmentId')
+    const eventTypeId = request.input('eventTypeId')
+    const currentState = request.input('currentState')
 
     const user = auth.use('web').user
     await user?.load('role')
@@ -77,6 +80,18 @@ export default class EventsController {
       .preload('organization')
       .preload('user')
       .orderBy('createdAt', 'desc')
+
+    if (departmentId) {
+      eventsQuery.whereHas('user', (q) => q.where('departmentId', departmentId))
+    }
+    
+    if (eventTypeId) {
+      eventsQuery.where('eventTypeId', eventTypeId)
+    }
+    
+    if (currentState) {
+      eventsQuery.where('currentState', currentState)
+    }
 
     if (user && roleName !== 'admin' && roleName !== 'moderador') {
       if (roleName === 'encargado_departamento') {
@@ -287,7 +302,14 @@ export default class EventsController {
 
   async store({ request, response, auth }: HttpContext) {
     const data = await request.validateUsing(createEventValidator)
-    const userEmail = auth.use('web').user?.email || ''
+    
+    const user = auth.use('web').user!
+    await user.load('role')
+    if (user.role?.name === 'moderador') {
+      return response.forbidden({ message: 'Los moderadores no tienen permiso para crear fichas técnicas' })
+    }
+    
+    const userEmail = user.email || ''
 
     const locationId = data.locationId
     const startsAt = DateTime.fromISO(data.startsAt)
