@@ -205,31 +205,27 @@ const EventDetail = () => {
                     <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
                     Volver a Versiones
                 </button>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                        <div className="flex items-center gap-3 mb-2">
-                            <h1 className="text-3xl font-display font-bold text-gray-900 leading-tight">
-                                {selectedVersion.name || 'Sin Título'}
-                            </h1>
-                            {!isCurrentVersion && (
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-100 text-amber-800 rounded-lg text-xs font-black uppercase tracking-wider border border-amber-200">
-                                    <History size={14} /> Histórico (Modo Lectura)
-                                </span>
-                            )}
-                            {isCurrentVersion && isReviewer && (
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-xs font-black uppercase tracking-wider border border-blue-200">
-                                    <FileText size={14} /> Modo Revisión
-                                </span>
-                            )}
-                        </div>
-                        <div className="flex gap-2">
-                            <EventStateBadge state={event.currentState} />
-                            <span className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs font-bold border border-gray-200">
-                                Versión {selectedVersion.versionNumber}
+                <div className="flex flex-col gap-5">
+                    <div className="flex flex-wrap items-center gap-3">
+                        <h1 className="text-3xl font-display font-bold text-gray-900 leading-tight mr-2">
+                            {selectedVersion.name || 'Sin Título'}
+                        </h1>
+                        {!isCurrentVersion && (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-100 text-amber-800 rounded-lg text-xs font-black uppercase tracking-wider border border-amber-200">
+                                <History size={14} /> Histórico (Modo Lectura)
                             </span>
-                        </div>
+                        )}
+                        {isCurrentVersion && isReviewer && (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-xs font-black uppercase tracking-wider border border-blue-200">
+                                <FileText size={14} /> Modo Revisión
+                            </span>
+                        )}
+                        <EventStateBadge state={event.currentState} />
+                        <span className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs font-bold border border-gray-200">
+                            Versión {selectedVersion.versionNumber}
+                        </span>
                     </div>
-                    <div className="flex gap-3">
+                    <div className="flex flex-wrap gap-3">
                         {(user?.nivel_permiso === 1 || user?.role === 'moderador') && event.currentState === 'in_review' && isCurrentVersion && (
                             <>
                                 <button
