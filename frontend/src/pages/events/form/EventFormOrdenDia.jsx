@@ -1,5 +1,4 @@
-import React from 'react';
-import { ChevronRight, Clock, Info, Plus, X } from 'lucide-react';
+import { Clock, Info, Plus, Save, X } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 const EventFormOrdenDia = ({
@@ -7,7 +6,8 @@ const EventFormOrdenDia = ({
     setFormData,
     currentActivity,
     setCurrentActivity,
-    setStep
+    setStep,
+    loading
 }) => {
     const eventStartTime = formData.startsAt && formData.startsAt.includes('T')
         ? formData.startsAt.split('T')[1].slice(0, 5)
@@ -219,9 +219,25 @@ const EventFormOrdenDia = ({
             </div>
 
             <div className="mt-12 pt-8 border-t border-gray-50 flex justify-between">
-                <button type="button" onClick={() => setStep(1)} className="px-8 py-3.5 rounded-2xl font-bold text-slate-500 hover:text-slate-700 transition-all">Atrás</button>
-                <button type="button" onClick={() => setStep(3)} className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-8 py-3.5 rounded-2xl font-bold shadow-lg shadow-emerald-200/70 hover:shadow-xl hover:shadow-emerald-200/80 transition-all">Continuar <ChevronRight size={18} /></button>
-            </div>
+
+    <button
+        type="button"
+        onClick={() => setStep(3)}
+        className="px-8 py-3.5 rounded-2xl font-bold text-slate-500 hover:text-slate-700 transition-all"
+    >
+        Atrás
+    </button>
+
+
+    <button
+        type="submit"
+        className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-8 py-3.5 rounded-2xl font-bold shadow-lg shadow-emerald-200/70 hover:shadow-xl transition-all"
+    >
+        <Save size={20}/>
+        Guardar Ficha Técnica
+    </button>
+
+</div>
         </div>
     );
 };

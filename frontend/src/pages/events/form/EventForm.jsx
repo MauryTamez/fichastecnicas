@@ -6,6 +6,7 @@ import api from '../../../api/axios';
 import { resolveFeedback } from '../../../api/feedbacks';
 import { getVenues } from '../../../api/venues';
 import { useAuth } from '../../../context/AuthContext';
+import EventFormOpciones from './EventFormOpciones';
 
 // Componentes del formulario
 import AIAutofillModal from './AIAutofillModal';
@@ -74,17 +75,19 @@ const [showAudioModal, setShowAudioModal] = useState(false);
         otrosObservaciones: ''
     });
 
-    const [sonido, setSonido] = useState({
-    sonido: false,
-    musicaFondo: false,
-    personalApoyo: false,
-    apuntador: false
-});
-
-const [proyeccion, setProyeccion] = useState({
-    proyeccionPresentacion: false,
-    proyeccionVideo: false,
-    videograbacion: false
+const [audiovisual, setAudiovisual] = useState({
+    sonido:false,
+    microfonoInalambrico:false,
+    microfonoMesa:false,
+    microfonoPresidencial:false,
+    microfonoDiadema:false,
+    microfonoAlambrico:false,
+    proyeccionPresentacion:false,
+    proyeccionVideo:false,
+    videograbacion:false,
+    personalApoyo:false,
+    apuntador:false,
+    musicaFondo:false
 });
 
 const [microfonos, setMicrofonos] = useState({
@@ -157,20 +160,7 @@ const [showLogisticaModal, setShowLogisticaModal] = useState(false);
         { key: 'separadorHimno', label: 'Separador con himno' },
     ];
 
-    const audiovisualItems = [
-        { key: 'sonido', label: 'Sonido' },
-        { key: 'microfonoInalambrico', label: 'Micrófono Inalámbrico de mano' },
-        { key: 'microfonoMesa', label: 'Micrófono Inalámbrico de mano con base de mesa' },
-        { key: 'microfonoPresidencial', label: 'Micrófono Presidencial' },
-        { key: 'microfonoDiadema', label: 'Micrófono de Diadema' },
-        { key: 'microfonoAlambrico', label: 'Micrófono Alámbrico' },
-        { key: 'proyeccionPresentacion', label: 'Proyección de Presentación' },
-        { key: 'proyeccionVideo', label: 'Proyección de Video Institucional' },
-        { key: 'videograbacion', label: 'Videograbación' },
-        { key: 'personalApoyo', label: 'Personal de Apoyo' },
-        { key: 'apuntador', label: 'Apuntador para pase de diapositivas' },
-        { key: 'musicaFondo', label: 'Música de fondo' },
-    ];
+   
 
     const handleVehicleChange = (e) => {
         const { name, value } = e.target;
@@ -339,11 +329,16 @@ if (data.microfonos && typeof data.microfonos === 'object') {
                                 otrosObservaciones: currentVersion.otrosObservaciones || currentEvent.otrosObservaciones || ''
                             });
 
-                           const targetSonido = currentVersion.sonido || currentEvent.sonido;
-if (targetSonido) setSonido(prev => ({ ...prev, ...targetSonido }));
+const targetAudiovisual =
+    currentVersion.audiovisual ||
+    currentEvent.audiovisual;
 
-const targetProyeccion = currentVersion.proyeccion || currentEvent.proyeccion;
-if (targetProyeccion) setProyeccion(prev => ({ ...prev, ...targetProyeccion }));
+if (targetAudiovisual) {
+    setAudiovisual(prev => ({
+        ...prev,
+        ...targetAudiovisual
+    }));
+}
 
 const targetMicrofonos = currentVersion.microfonos || currentEvent.microfonos;
 if (targetMicrofonos) setMicrofonos(prev => ({ ...prev, ...targetMicrofonos }));
@@ -416,17 +411,9 @@ if (currentEvent.microfonos)
     // CONTADORES DE REQUERIMIENTOS
 
 const audiovisualCount =
-    Object.values(sonido).filter(Boolean).length +
-    Object.values(proyeccion).filter(Boolean).length +
-    Object.values(microfonos).filter(Boolean).length;
-const sonidoCount =
-    Object.values(sonido).filter(Boolean).length;
+    Object.values(audiovisual).filter(Boolean).length;
 
-const proyeccionCount =
-    Object.values(proyeccion).filter(Boolean).length;
-
-const microfonosCount =
-    Object.values(microfonos).filter(Boolean).length;
+const microfonosCount = Object.values(microfonos).filter(Boolean).length;
 
 
 
@@ -488,8 +475,7 @@ const fotografiaSelected = horaFotografia !== '';
                 organizationId: Number(formData.organizationId),
                 eventTypeId: Number(formData.eventTypeId),
 
-               sonido,
-proyeccion,
+             audiovisual,
 microfonos,
 
                 requerimientosOtros: otros,
@@ -528,13 +514,12 @@ microfonos,
         }
     };
 
-    const steps = [
-        { id: 1, name: 'General', icon: FileText },
-        { id: 2, name: 'Orden del Día', icon: Clock },
-        { id: 3, name: 'Requerimientos', icon: Layers },
-        { id: 4, name: 'Detalles Específicos', icon: Briefcase },
-    ];
-
+  const steps = [
+    { id: 1, name: 'General', icon: FileText },
+    { id: 2, name: 'Requerimientos', icon: Layers },
+ { id: 3, name: 'Detalles Específicos', icon: Briefcase },
+     { id: 4, name: 'Orden del Día', icon: Clock },
+];
     const filteredVenues = useMemo(() => {
         const personas = parseInt(formData.cantidadPersonas, 10);
         if (!personas || isNaN(personas)) {
@@ -612,28 +597,15 @@ microfonos,
                         />
                     )}
 
-                    {step === 2 && (
-                        <EventFormOrdenDia
-                            formData={formData}
-                            handleChange={handleChange}
-                            setFormData={setFormData}
-                            currentActivity={currentActivity}
-                            setCurrentActivity={setCurrentActivity}
-                            setStep={setStep}
-                        />
-                    )}
-
-                    {step === 3 && (
+ {step === 2 && (
                        
     <EventFormRequerimientos
     formData={formData}
     handleChange={handleChange}
 
-    sonido={sonido}
-    setSonido={setSonido}
+  audiovisual={audiovisual}
+setAudiovisual={setAudiovisual}
 
-    proyeccion={proyeccion}
-    setProyeccion={setProyeccion}
 
     microfonos={microfonos}
     setMicrofonos={setMicrofonos}
@@ -653,8 +625,8 @@ microfonos,
     setShowProtocoloModal={setShowProtocoloModal}
     setShowLogisticaModal={setShowLogisticaModal}
 
-    sonidoCount={sonidoCount}
-    proyeccionCount={proyeccionCount}
+    audiovisualCount={audiovisualCount}
+
     microfonosCount={microfonosCount}
 
     protocoloCount={protocoloCount}
@@ -667,8 +639,8 @@ microfonos,
     setStep={setStep}
 />
                     )}
-
-                    {step === 4 && (
+                    
+                    {step === 3 && (
                         <EventFormDetalles
                             formData={formData}
                             handleChange={handleChange}
@@ -676,6 +648,24 @@ microfonos,
                             setStep={setStep}
                         />
                     )}
+                    {step === 4 && (
+                     <EventFormOrdenDia
+    formData={formData}
+    setFormData={setFormData}
+    currentActivity={currentActivity}
+    setCurrentActivity={setCurrentActivity}
+    setStep={setStep}
+    loading={loading}
+/>
+                    )}
+
+                   {step === 5 && (
+    <EventFormOpciones
+        setStep={setStep}
+        handleSubmit={handleSubmit}
+    />
+)}
+
                 </form>
 
                 {/* Sección de Feedbacks para Modo Edición */}
@@ -720,7 +710,6 @@ microfonos,
                 horaFotografia={horaFotografia}
                 setHoraFotografia={setHoraFotografia}
             />
-
             <PresidiumModal
                 showPresidiumModal={showPresidiumModal}
                 setShowPresidiumModal={setShowPresidiumModal}
@@ -734,11 +723,8 @@ microfonos,
      showAudioModal={showAudioModal}
     setShowAudioModal={setShowAudioModal}
 
-    sonido={sonido}
-    setSonido={setSonido}
-
-    proyeccion={proyeccion}
-    setProyeccion={setProyeccion}
+    audiovisual={audiovisual}
+    setAudiovisual={setAudiovisual}
 />
             <MicrophonesModal
     showMicrophonesModal={showMicrophonesModal}

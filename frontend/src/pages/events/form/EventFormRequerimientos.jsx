@@ -1,14 +1,11 @@
-import { ChevronRight, Layers } from 'lucide-react';
+import { Layers } from 'lucide-react';
 
 const EventFormRequerimientos = ({
-    formData,
+     formData,
     handleChange,
 
-    sonido,
-    setSonido,
-
-    proyeccion,
-    setProyeccion,
+    audiovisual,
+    setAudiovisual,
 
     microfonos,
     setMicrofonos,
@@ -28,10 +25,9 @@ const EventFormRequerimientos = ({
     setShowPodiumModal,
     setShowProtocoloModal,
     setShowLogisticaModal,
-    setShowVideoModal,
 
-    sonidoCount,
-proyeccionCount,
+
+  audiovisualCount,
 microfonosCount,
 protocoloCount,
 logisticaCount,
@@ -60,7 +56,7 @@ logisticaCount,
  
 
 
-   {/* Sonido */}
+  {/* Sonido */}
 <div
     onClick={() => setShowAudioModal(true)}
     className="cursor-pointer rounded-[1.75rem] bg-emerald-700 p-6 shadow-md hover:bg-emerald-800 hover:shadow-lg transition-all duration-200 hover:scale-105 flex items-center justify-center"
@@ -68,11 +64,11 @@ logisticaCount,
     <h3 className="text-xl font-bold text-white">
         Sonido
 
-        {sonidoCount > 0 && (
-            <span className="ml-2 text-sm bg-white/20 px-2 py-1 rounded-full">
-                {sonidoCount}
-            </span>
-        )}
+        {audiovisualCount > 0 && (
+    <span className="ml-2 text-sm bg-white/20 px-2 py-1 rounded-full">
+        {audiovisualCount}
+    </span>
+)}
     </h3>
 </div>
    {/* Micrófonos */}
@@ -179,23 +175,25 @@ Logística y Mobiliario
     </h3>
 </div>
 
-    {/* Presídium */}
-    <div
-        onClick={() => setShowPresidiumModal(true)}
-        className="cursor-pointer rounded-[1.75rem] bg-emerald-700  p-6 shadow-md hover:bg-emerald-800 hover:shadow-lg transition-all duration-200 hover:scale-105 flex items-center justify-center"
-    >
-       <h3 className="text-xl font-bold text-white">
+  {/* Pódium */}
+<div
+    onClick={() => setShowPodiumModal(true)}
+    className="cursor-pointer rounded-[1.75rem] bg-emerald-700 p-6 shadow-md hover:bg-emerald-800 hover:shadow-lg transition-all duration-200 hover:scale-105"
+>
+    <div className="flex items-center justify-between">
+        <h3 className="text-xl font-bold text-white">
+            Pódium
+        </h3>
 
-Pódium
-
-{podiumSelected && (
-    <span className="ml-2">
-        ✔
-    </span>
-)}
-
-</h3>
+        {podiumSelected && (
+            <span className="text-sm bg-white/20 text-white px-3 py-1 rounded-full font-bold">
+                1
+            </span>
+        )}
     </div>
+
+   
+</div>
 
 </div>
             <div className="mt-8 rounded-[1.75rem] border border-slate-100 bg-white p-6 shadow-[0_12px_35px_-15px_rgba(15,23,42,0.12)]">
@@ -210,10 +208,29 @@ Pódium
                 />
             </div>
 
-            <div className="mt-12 pt-8 border-t border-gray-50 flex justify-between">
-                <button type="button" onClick={() => setStep(2)} className="px-8 py-3.5 rounded-2xl font-bold text-slate-500 hover:text-slate-700 transition-all">Atrás</button>
-                <button type="button" onClick={() => setStep(4)} className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-8 py-3.5 rounded-2xl font-bold shadow-lg shadow-emerald-200/70 hover:shadow-xl hover:shadow-emerald-200/80 transition-all">Continuar <ChevronRight size={18} /></button>
-            </div>
+           <div className="mt-12 pt-8 border-t border-gray-50 flex justify-between">
+    <button
+        type="button"
+        onClick={() => setStep(1)}
+        className="px-8 py-3.5 rounded-2xl font-bold text-slate-500 hover:text-slate-700 transition-all"
+    >
+        Atrás
+    </button>
+
+    <button
+        type="button"
+        onClick={() => {
+            if (podiumSelected || presidiumCount > 0) {
+                setStep(3);
+            } else {
+                setStep(5);
+            }
+        }}
+        className="flex items-center gap-2 bg-emerald-600 text-white px-8 py-3.5 rounded-2xl font-bold hover:bg-emerald-700 transition-all"
+    >
+        Continuar
+    </button>
+</div>
         </div>
     );
 };

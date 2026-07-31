@@ -1,4 +1,4 @@
-import { Briefcase, Save } from 'lucide-react';
+import { Briefcase, ChevronRight } from 'lucide-react';
 
 const EventFormDetalles = ({
     formData,
@@ -6,6 +6,9 @@ const EventFormDetalles = ({
     loading,
     setStep
 }) => {
+
+    console.log("Estoy en detalles");
+
     return (
         <div className="bg-white p-8 rounded-[2rem] shadow border border-gray-100 animate-slide-up">
             <div className="flex items-center gap-3 mb-8">
@@ -195,26 +198,26 @@ const EventFormDetalles = ({
                 </div>
             </div>
 
-            <div className="mt-12 pt-8 border-t border-gray-50 flex justify-between">
-                <button type="button" onClick={() => setStep(3)} className="px-8 py-3.5 rounded-2xl font-bold text-slate-500 hover:text-slate-700 transition-all">Atrás</button>
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-10 py-3.5 rounded-2xl font-bold shadow-xl shadow-emerald-200/70 hover:shadow-2xl hover:shadow-emerald-200/80 transition-all transform hover:-translate-y-1 active:translate-y-0"
-                >
-                    {loading ? (
-                        <div className="flex items-center gap-2">
-                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> Guardando...
-                        </div>
-                    ) : (
-                        <>
-                            <Save size={20} /> Guardar Ficha Técnica
-                        </>
-                    )}
-                </button>
-            </div>
-        </div>
-    );
+        <div className="mt-12 pt-8 border-t border-gray-50 flex justify-between">
+    <button 
+        type="button" 
+        onClick={() => setStep(2)} 
+        className="px-8 py-3.5 rounded-2xl font-bold text-slate-500 hover:text-slate-700 transition-all"
+    >
+        Atrás
+    </button>
+
+    <button 
+        type="button" 
+        onClick={() => setStep(4)} 
+        className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-8 py-3.5 rounded-2xl font-bold shadow-lg shadow-emerald-200/70 hover:shadow-xl hover:shadow-emerald-200/80 transition-all"
+    >
+        Continuar
+        <ChevronRight size={18} />
+    </button>
+</div>
+</div>  // div principal bg-white
+);
 };
 
 export default EventFormDetalles;
