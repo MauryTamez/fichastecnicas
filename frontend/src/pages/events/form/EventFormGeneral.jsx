@@ -1,4 +1,3 @@
-import React from 'react';
 import { ArrowRight, Calendar, FileText, MapPin, Sparkles, Users } from 'lucide-react';
 
 const EventFormGeneral = ({

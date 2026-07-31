@@ -1,4 +1,3 @@
-import React from 'react';
 import { Plus, X } from 'lucide-react';
 
 const PresidiumModal = ({
@@ -25,22 +24,59 @@ const PresidiumModal = ({
                     </button>
                 </div>
                 <div className="p-6 space-y-4 bg-slate-50">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <input
-                            type="text"
-                            placeholder="Nombre Completo"
-                            value={currentMember.nombre}
-                            onChange={(e) => setCurrentMember(prev => ({ ...prev, nombre: e.target.value }))}
-                            className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none shadow-sm"
-                        />
-                        <input
-                            type="text"
-                            placeholder="Puesto / Cargo"
-                            value={currentMember.puesto}
-                            onChange={(e) => setCurrentMember(prev => ({ ...prev, puesto: e.target.value }))}
-                            className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none shadow-sm"
-                        />
-                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+
+  <input
+    type="number"
+    min="1"
+    step="1"
+    placeholder="Lugar asignado"
+    value={currentMember.lugarAsignado}
+    onChange={(e) =>
+        setCurrentMember(prev => ({
+            ...prev,
+            lugarAsignado: e.target.value
+        }))
+    }
+    className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none shadow-sm"
+/>
+    <input
+        type="text"
+        placeholder="Nombre Completo"
+        value={currentMember.nombre}
+        onChange={(e) => {
+    const formattedName = e.target.value.replace(
+        /(^\w|\s\w)/g,
+        (match) => match.toUpperCase()
+    );
+
+    setCurrentMember(prev => ({
+        ...prev,
+        nombre: formattedName
+    }));
+}}
+        className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none shadow-sm"
+    />
+
+    <input
+        type="text"
+        placeholder="Puesto / Cargo"
+        value={currentMember.puesto}
+        onChange={(e) => {
+    const formattedPosition = e.target.value.replace(
+        /(^\w|\s\w)/g,
+        (match) => match.toUpperCase()
+    );
+
+    setCurrentMember(prev => ({
+        ...prev,
+        puesto: formattedPosition
+    }));
+}}
+        className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none shadow-sm"
+    />
+
+</div>
                     <button
                         type="button"
                         onClick={handleAddMember}
@@ -54,8 +90,13 @@ const PresidiumModal = ({
                             {presidiumList.map((member, idx) => (
                                 <div key={idx} className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-xl text-sm shadow-sm animate-fade-in">
                                     <div className="truncate flex-1 pr-2">
-                                        <p className="font-bold text-slate-800 truncate">{member.nombre}</p>
-                                        <p className="text-xs text-slate-400 font-medium truncate">{member.puesto}</p>
+                                       <p className="font-bold text-slate-800 truncate">
+    Lugar {member.lugarAsignado} - {member.nombre}
+</p>
+
+<p className="text-xs text-slate-400 font-medium truncate">
+    {member.puesto}
+</p>
                                     </div>
                                     <button
                                         type="button"

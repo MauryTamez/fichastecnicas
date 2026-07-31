@@ -1,19 +1,43 @@
-import React from 'react';
-import { Briefcase, ChevronRight, Layers, Sparkles } from 'lucide-react';
+import { Layers } from 'lucide-react';
 
 const EventFormRequerimientos = ({
-    formData,
+     formData,
     handleChange,
+
     audiovisual,
-    audiovisualItems,
-    toggleAudiovisual,
+    setAudiovisual,
+
+    microfonos,
+    setMicrofonos,
+
     otros,
     otrosItems,
     toggleOtro,
+
     setShowParkingModal,
     setShowPhotoModal,
     setShowPresidiumModal,
-    setStep
+
+    setShowAudioModal,
+    setShowMicrophonesModal,
+    setShowOtrosModal,
+
+    setShowPodiumModal,
+    setShowProtocoloModal,
+    setShowLogisticaModal,
+
+
+  audiovisualCount,
+microfonosCount,
+protocoloCount,
+logisticaCount,
+    podiumSelected,
+    presidiumCount,
+    estacionamientoCount,
+    fotografiaSelected,
+
+    setStep,
+
 }) => {
     return (
         <div className="bg-white p-8 rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(15,23,42,0.08)] border border-slate-100 animate-slide-up">
@@ -27,69 +51,151 @@ const EventFormRequerimientos = ({
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                <div className="rounded-[1.75rem] border border-slate-100 bg-white p-6 shadow-[0_12px_35px_-15px_rgba(15,23,42,0.12)]">
-                    <div className="mb-4 flex items-center gap-2">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
-                            <Sparkles size={18} />
-                        </div>
-                        <h3 className="text-lg font-bold text-slate-800">Audiovisual</h3>
-                    </div>
-                    <div className="space-y-3">
-                        {audiovisualItems.map(({ key, label }) => (
-                            <label key={key} className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3 transition-all duration-200 hover:scale-[1.01] hover:bg-slate-50 hover:border-emerald-200 shadow-sm cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={!!audiovisual[key]}
-                                    onChange={() => toggleAudiovisual(key)}
-                                    className="mt-0.5 h-4 w-4 rounded-full border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
-                                />
-                                <span className="text-sm font-medium text-gray-700">{label}</span>
-                            </label>
-                        ))}
-                    </div>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                <div className="rounded-[1.75rem] border border-slate-100 bg-white p-6 shadow-[0_12px_35px_-15px_rgba(15,23,42,0.12)]">
-                    <div className="mb-4 flex items-center gap-2">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
-                            <Briefcase size={18} />
-                        </div>
-                        <h3 className="text-lg font-bold text-slate-800">Otros Requerimientos</h3>
-                    </div>
-                    <div className="space-y-3">
-                        {otrosItems.map(({ key, label }) => (
-                            <div key={key} className="space-y-3">
-                                <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3 transition-all duration-200 hover:scale-[1.01] hover:bg-slate-50 hover:border-emerald-200 shadow-sm">
-                                    <label className="flex items-start gap-3 cursor-pointer flex-1">
-                                        <input
-                                            type="checkbox"
-                                            checked={otros[key]}
-                                            onChange={() => toggleOtro(key)}
-                                            className="mt-0.5 h-4 w-4 rounded-full border-gray-300 text-emerald-600 focus:ring-emerald-500"
-                                        />
-                                        <span className="text-sm font-medium text-gray-700">{label}</span>
-                                    </label>
-                                    {otros[key] && (key === 'estacionamiento' || key === 'fotografia' || key === 'presidium') && (
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                if (key === 'estacionamiento') setShowParkingModal(true);
-                                                if (key === 'fotografia') setShowPhotoModal(true);
-                                                if (key === 'presidium') setShowPresidiumModal(true);
-                                            }}
-                                            className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-lg font-bold hover:bg-emerald-100 transition-all"
-                                        >
-                                            Configurar
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
+ 
 
+
+  {/* Sonido */}
+<div
+    onClick={() => setShowAudioModal(true)}
+    className="cursor-pointer rounded-[1.75rem] bg-emerald-700 p-6 shadow-md hover:bg-emerald-800 hover:shadow-lg transition-all duration-200 hover:scale-105 flex items-center justify-center"
+>
+    <h3 className="text-xl font-bold text-white">
+        Sonido
+
+        {audiovisualCount > 0 && (
+    <span className="ml-2 text-sm bg-white/20 px-2 py-1 rounded-full">
+        {audiovisualCount}
+    </span>
+)}
+    </h3>
+</div>
+   {/* Micrófonos */}
+<div
+    onClick={() => setShowMicrophonesModal(true)}
+    className="cursor-pointer rounded-[1.75rem] bg-emerald-700 p-6 shadow-md hover:bg-emerald-800 hover:shadow-lg transition-all duration-200 hover:scale-105 flex items-center justify-center"
+>
+    <h3 className="text-xl font-bold text-white">
+        Micrófonos
+
+        {microfonosCount > 0 && (
+            <span className="ml-2 text-sm bg-white/20 px-2 py-1 rounded-full">
+                {microfonosCount}
+            </span>
+        )}
+    </h3>
+</div>
+    {/* Estacionamiento */}
+    <div
+        onClick={() => setShowParkingModal(true)}
+        className="cursor-pointer rounded-[1.75rem] bg-emerald-700  p-6 shadow-md hover:bg-emerald-800 hover:shadow-lg transition-all duration-200 hover:scale-105 flex items-center justify-center"
+    >
+       <h3 className="text-xl font-bold text-white">
+
+    Estacionamiento
+
+    {estacionamientoCount > 0 && (
+        <span className="ml-2 text-sm bg-white/20 px-2 py-1 rounded-full">
+            {estacionamientoCount}
+        </span>
+    )}
+
+</h3>
+    </div>
+
+    {/* Fotografía */}
+    <div
+        onClick={() => setShowPhotoModal(true)}
+        className="cursor-pointer rounded-[1.75rem] bg-emerald-700  p-6 shadow-md hover:bg-emerald-800 hover:shadow-lg transition-all duration-200 hover:scale-105 flex items-center justify-center"
+    >
+       <h3 className="text-xl font-bold text-white">
+
+Fotografía
+
+{fotografiaSelected && (
+    <span className="ml-2 text-sm">
+        ✔
+    </span>
+)}
+
+</h3>
+    </div>
+
+    {/* Protocolo y Banderas */}
+    <div
+         onClick={() => setShowProtocoloModal(true)}
+        className="cursor-pointer rounded-[1.75rem] bg-emerald-700  p-6 shadow-md hover:bg-emerald-800 hover:shadow-lg transition-all duration-200 hover:scale-105 flex items-center justify-center"
+    >
+       <h3 className="text-xl font-bold text-white">
+
+Protocolo y Banderas
+
+{protocoloCount > 0 && (
+    <span className="ml-2 text-sm bg-white/20 px-2 py-1 rounded-full">
+        {protocoloCount}
+    </span>
+)}
+
+</h3>
+    </div>
+
+    {/* Logística y Mobiliario */}
+    <div
+         onClick={() => setShowLogisticaModal(true)}
+        className="cursor-pointer rounded-[1.75rem] bg-emerald-700  p-6 shadow-md hover:bg-emerald-800 hover:shadow-lg transition-all duration-200 hover:scale-105 flex items-center justify-center"
+    >
+       <h3 className="text-xl font-bold text-white">
+
+Logística y Mobiliario
+
+{logisticaCount > 0 && (
+    <span className="ml-2 text-sm bg-white/20 px-2 py-1 rounded-full">
+        {logisticaCount}
+    </span>
+)}
+
+</h3>
+    </div>
+
+   {/* Presídium */}
+<div
+    onClick={() => setShowPresidiumModal(true)}
+    className="cursor-pointer rounded-[1.75rem] bg-emerald-700 p-6 shadow-md hover:bg-emerald-800 hover:shadow-lg transition-all duration-200 hover:scale-105 flex items-center justify-center"
+>
+    <h3 className="text-xl font-bold text-white">
+        Presídium
+
+        {presidiumCount > 0 && (
+            <span className="ml-2 text-sm bg-white/20 px-2 py-1 rounded-full">
+                {presidiumCount}
+            </span>
+        )}
+
+    </h3>
+</div>
+
+  {/* Pódium */}
+<div
+    onClick={() => setShowPodiumModal(true)}
+    className="cursor-pointer rounded-[1.75rem] bg-emerald-700 p-6 shadow-md hover:bg-emerald-800 hover:shadow-lg transition-all duration-200 hover:scale-105"
+>
+    <div className="flex items-center justify-between">
+        <h3 className="text-xl font-bold text-white">
+            Pódium
+        </h3>
+
+        {podiumSelected && (
+            <span className="text-sm bg-white/20 text-white px-3 py-1 rounded-full font-bold">
+                1
+            </span>
+        )}
+    </div>
+
+   
+</div>
+
+</div>
             <div className="mt-8 rounded-[1.75rem] border border-slate-100 bg-white p-6 shadow-[0_12px_35px_-15px_rgba(15,23,42,0.12)]">
                 <label className="block text-sm font-bold text-slate-700 mb-2 ml-1 uppercase tracking-tight">Observaciones</label>
                 <textarea
@@ -102,10 +208,29 @@ const EventFormRequerimientos = ({
                 />
             </div>
 
-            <div className="mt-12 pt-8 border-t border-gray-50 flex justify-between">
-                <button type="button" onClick={() => setStep(2)} className="px-8 py-3.5 rounded-2xl font-bold text-slate-500 hover:text-slate-700 transition-all">Atrás</button>
-                <button type="button" onClick={() => setStep(4)} className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-8 py-3.5 rounded-2xl font-bold shadow-lg shadow-emerald-200/70 hover:shadow-xl hover:shadow-emerald-200/80 transition-all">Continuar <ChevronRight size={18} /></button>
-            </div>
+           <div className="mt-12 pt-8 border-t border-gray-50 flex justify-between">
+    <button
+        type="button"
+        onClick={() => setStep(1)}
+        className="px-8 py-3.5 rounded-2xl font-bold text-slate-500 hover:text-slate-700 transition-all"
+    >
+        Atrás
+    </button>
+
+    <button
+        type="button"
+        onClick={() => {
+            if (podiumSelected || presidiumCount > 0) {
+                setStep(3);
+            } else {
+                setStep(5);
+            }
+        }}
+        className="flex items-center gap-2 bg-emerald-600 text-white px-8 py-3.5 rounded-2xl font-bold hover:bg-emerald-700 transition-all"
+    >
+        Continuar
+    </button>
+</div>
         </div>
     );
 };
