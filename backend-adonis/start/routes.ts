@@ -75,6 +75,8 @@ router.group(() => {
         router.get('/venues', [VenuesController, 'index'])
         const DepartmentsController = () => import('#controllers/departments_controller')
         router.get('/departments', [DepartmentsController, 'index'])
+        router.get('/departments/organigram-all', [DepartmentsController, 'organigramAll'])
+        router.get('/users/:id/events-summary', [UsersController, 'userEventsSummary'])
 
         const CatalogsController = () => import('#controllers/catalogs_controller')
         router.get('/organizations', [CatalogsController, 'getOrganizations'])

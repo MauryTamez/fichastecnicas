@@ -104,5 +104,27 @@ export default class UsersController {
     await user.delete()
     return response.json({ message: 'User deleted successfully' })
   }
+
+  async userEventsSummary({ params, response }: HttpContext) {
+    const user = await User.findOrFail(params.id)
+    const Event = (await import('#models/event')).default
+
+    const createdEvents = await Event.query()
+      .where('userId', user.id)
+      .preload('eventType')
+      .preload('location')
+      .orderBy('createdAt', 'desc')
+
+    const responsibleEvents = await Event.query()
+      .where('mainResponsibleId', user.id)
+      .preload('eventType')
+      .preload('location')
+      .orderBy('createdAt', 'desc')
+
+    return response.json({
+      createdEvents,
+      responsibleEvents
+    })
+  }
 }
 

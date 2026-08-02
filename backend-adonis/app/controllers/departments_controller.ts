@@ -59,4 +59,14 @@ export default class DepartmentsController {
 
     return response.json(department)
   }
+
+  async organigramAll({ response }: HttpContext) {
+    const departments = await Department.query()
+      .preload('users', (usersQuery) => {
+        usersQuery.preload('role')
+      })
+      .orderBy('priority', 'asc')
+      
+    return response.json(departments)
+  }
 }
