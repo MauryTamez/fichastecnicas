@@ -75,7 +75,6 @@ router.group(() => {
         router.get('/venues', [VenuesController, 'index'])
         const DepartmentsController = () => import('#controllers/departments_controller')
         router.get('/departments', [DepartmentsController, 'index'])
-        router.get('/departments/organigram-all', [DepartmentsController, 'organigramAll'])
         router.get('/users/:id/events-summary', [UsersController, 'userEventsSummary'])
 
         const CatalogsController = () => import('#controllers/catalogs_controller')
@@ -120,7 +119,10 @@ router.group(() => {
         router.group(() => {
             // Endpoints para moderador
             router.get('/solicitudes', [EventsController, 'pendingApprovals'])
-        }).prefix('/moderador').use(middleware.role(['admin', 'moderador']))
+            
+            const DepartmentsController = () => import('#controllers/departments_controller')
+            router.get('/organigram-all', [DepartmentsController, 'organigramAll'])
+        }).prefix('/moderador').use(middleware.role(['moderador']))
 
         // 3. Encargado de Departamento Group (Subdirector)
         router.group(() => {
@@ -129,19 +131,19 @@ router.group(() => {
             router.get('/organigram', [DepartmentsController, 'organigram'])
             router.get('/solicitudes', [EventsController, 'pendingApprovals'])
             router.put('/events/:id', [EventsController, 'update'])
-        }).prefix('/encargado').use(middleware.role(['admin', 'encargado_departamento']))
+        }).prefix('/encargado').use(middleware.role(['encargado_departamento']))
 
         // 4. Creador Group
         router.group(() => {
             router.post('/events', [EventsController, 'store'])
             router.put('/events/:id', [EventsController, 'update'])
             router.delete('/events/:id', [EventsController, 'destroy'])
-        }).prefix('/creador').use(middleware.role(['admin', 'creador']))
+        }).prefix('/creador').use(middleware.role(['creador']))
 
         // 5. Auxiliares Group
         router.group(() => {
             // Endpoints exclusivos auxiliares
-        }).prefix('/auxiliar').use(middleware.role(['admin', 'auxiliares', 'auxiliar']))
+        }).prefix('/auxiliar').use(middleware.role(['auxiliares', 'auxiliar']))
 
     }).use([middleware.jwtAuth()])
 }).prefix('/api')

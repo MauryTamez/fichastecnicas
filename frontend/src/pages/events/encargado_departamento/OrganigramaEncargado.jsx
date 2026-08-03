@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import api from '../../api/axios';
+import api from '../../../api/axios';
 import { Building2, Users, Mail, Phone, ShieldCheck, X, Calendar, User as UserIcon, CheckCircle2, Search } from 'lucide-react';
 import Swal from 'sweetalert2';
 
@@ -154,8 +154,8 @@ const UserDetailsPanel = ({ user, onClose }) => {
     );
 };
 
-const Organigrama = () => {
-    const [departments, setDepartments] = useState([]);
+const OrganigramaEncargado = () => {
+    const [department, setDepartment] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [selectedUser, setSelectedUser] = useState(null);
@@ -163,10 +163,10 @@ const Organigrama = () => {
 
     const fetchOrganigrama = async () => {
         try {
-            const res = await api.get('/moderador/organigram-all');
-            setDepartments(res.data);
+            const res = await api.get('/encargado/organigram');
+            setDepartment(res.data);
         } catch (err) {
-            setError(err.response?.data?.message || 'Error al cargar el organigrama.');
+            setError(err.response?.data?.message || 'Error al cargar el organigrama del departamento.');
             Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo cargar la información.' });
         } finally {
             setLoading(false);
@@ -190,16 +190,22 @@ const Organigrama = () => {
         </div>
     );
 
+    if (!department) return null;
+
+    const filteredUsers = (department.users || []).filter(u => 
+        !searchTerm || u.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     return (
         <div className="max-w-7xl mx-auto pb-20 animate-fade-in font-sans">
             {/* Header */}
             <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                     <div className="flex items-center gap-3 text-emerald-600 font-bold text-sm uppercase tracking-wider mb-3">
-                        <Building2 size={16} /> Organigrama General
+                        <Building2 size={16} /> Organigrama Departamental
                     </div>
-                    <h1 className="text-4xl font-display font-bold text-gray-900 mb-2">Subdirecciones</h1>
-                    <p className="text-gray-500">Usuarios distribuidos por cada departamento.</p>
+                    <h1 className="text-4xl font-display font-bold text-gray-900 mb-2">{department.name}</h1>
+                    <p className="text-gray-500">Usuarios asignados a tu subdirección.</p>
                 </div>
 
                 <div className="w-full md:w-96 relative">
@@ -216,78 +222,64 @@ const Organigrama = () => {
                 </div>
             </div>
 
-            {/* Listado de Departamentos */}
-            <div className="space-y-12">
-                {departments
-                    .map(dept => {
-                        if (!searchTerm) return dept;
-                        const filteredUsers = (dept.users || []).filter(u => 
-                            u.name?.toLowerCase().includes(searchTerm.toLowerCase())
-                        );
-                        return { ...dept, users: filteredUsers };
-                    })
-                    .filter(dept => !searchTerm || dept.users.length > 0)
-                    .map((dept) => (
-                    <div key={dept.id} className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-2 h-full bg-emerald-500 rounded-l-[2rem]"></div>
-                        
-                        <div className="flex items-center justify-between mb-8 pl-4">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center shadow-inner">
-                                    <Building2 size={24} />
-                                </div>
-                                <div>
-                                    <h3 className="text-2xl font-display font-bold text-gray-900">{dept.name}</h3>
-                                    <p className="text-sm text-gray-400 flex items-center gap-2 mt-1">
-                                        <Users size={14} />
-                                        {dept.users?.length || 0} integrantes
-                                    </p>
-                                </div>
-                            </div>
+            {/* Listado de Usuarios */}
+            <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-2 h-full bg-emerald-500 rounded-l-[2rem]"></div>
+                
+                <div className="flex items-center justify-between mb-8 pl-4">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center shadow-inner">
+                            <Users size={24} />
                         </div>
-
-                        {!dept.users || dept.users.length === 0 ? (
-                            <div className="text-center py-8 bg-gray-50 rounded-2xl border border-dashed border-gray-200 ml-4">
-                                <p className="text-gray-400 font-medium text-sm">No hay usuarios asignados a esta subdirección.</p>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 ml-4">
-                                {dept.users.map(u => (
-                                    <div 
-                                        key={u.id} 
-                                        onClick={() => setSelectedUser(u)}
-                                        className="bg-white border border-gray-100 p-5 rounded-3xl shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-emerald-200 transition-all cursor-pointer group flex flex-col"
-                                    >
-                                        <div className="flex items-center gap-4 mb-4 pb-4 border-b border-gray-100">
-                                            <div className="w-12 h-12 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-center text-gray-600 font-display font-bold text-lg group-hover:bg-emerald-50 group-hover:text-emerald-600 group-hover:border-emerald-100 transition-colors shrink-0">
-                                                {u.name?.charAt(0) || 'U'}
-                                            </div>
-                                            <div className="overflow-hidden">
-                                                <h4 className="font-bold text-gray-900 text-sm truncate group-hover:text-emerald-700 transition-colors" title={u.name}>{u.name}</h4>
-                                                <span className="inline-flex mt-1 items-center gap-1 px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 text-[9px] font-black uppercase tracking-wider group-hover:bg-emerald-100 group-hover:text-emerald-700 transition-colors">
-                                                    <ShieldCheck size={10} />
-                                                    {u.role?.name || 'Sin Rol'}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div className="space-y-2 mt-auto">
-                                            <div className="flex items-center gap-2 text-xs text-gray-500">
-                                                <Mail size={14} className="text-gray-400 shrink-0" />
-                                                <span className="truncate">{u.email}</span>
-                                            </div>
-                                            {u.phone && (
-                                                <div className="flex items-center gap-2 text-xs text-gray-500">
-                                                    <Phone size={14} className="text-gray-400 shrink-0" />
-                                                    <span className="truncate">{u.phone}</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                        <div>
+                            <h3 className="text-2xl font-display font-bold text-gray-900">Personal del Departamento</h3>
+                            <p className="text-sm text-gray-400 flex items-center gap-2 mt-1">
+                                {filteredUsers.length} integrantes encontrados
+                            </p>
+                        </div>
                     </div>
-                ))}
+                </div>
+
+                {filteredUsers.length === 0 ? (
+                    <div className="text-center py-8 bg-gray-50 rounded-2xl border border-dashed border-gray-200 ml-4">
+                        <p className="text-gray-400 font-medium text-sm">No hay usuarios asignados que coincidan con la búsqueda.</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 ml-4">
+                        {filteredUsers.map(u => (
+                            <div 
+                                key={u.id} 
+                                onClick={() => setSelectedUser(u)}
+                                className="bg-white border border-gray-100 p-5 rounded-3xl shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-emerald-200 transition-all cursor-pointer group flex flex-col"
+                            >
+                                <div className="flex items-center gap-4 mb-4 pb-4 border-b border-gray-100">
+                                    <div className="w-12 h-12 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-center text-gray-600 font-display font-bold text-lg group-hover:bg-emerald-50 group-hover:text-emerald-600 group-hover:border-emerald-100 transition-colors shrink-0">
+                                        {u.name?.charAt(0) || 'U'}
+                                    </div>
+                                    <div className="overflow-hidden">
+                                        <h4 className="font-bold text-gray-900 text-sm truncate group-hover:text-emerald-700 transition-colors" title={u.name}>{u.name}</h4>
+                                        <span className="inline-flex mt-1 items-center gap-1 px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 text-[9px] font-black uppercase tracking-wider group-hover:bg-emerald-100 group-hover:text-emerald-700 transition-colors">
+                                            <ShieldCheck size={10} />
+                                            {u.role?.name || 'Sin Rol'}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="space-y-2 mt-auto">
+                                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                                        <Mail size={14} className="text-gray-400 shrink-0" />
+                                        <span className="truncate">{u.email}</span>
+                                    </div>
+                                    {u.phone && (
+                                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                                            <Phone size={14} className="text-gray-400 shrink-0" />
+                                            <span className="truncate">{u.phone}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* User Details Modal (Slide Over) */}
@@ -301,4 +293,4 @@ const Organigrama = () => {
     );
 };
 
-export default Organigrama;
+export default OrganigramaEncargado;

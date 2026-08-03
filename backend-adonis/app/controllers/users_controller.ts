@@ -109,21 +109,37 @@ export default class UsersController {
     const user = await User.findOrFail(params.id)
     const Event = (await import('#models/event')).default
 
-    const createdEvents = await Event.query()
+    const createdEventsQuery = await Event.query()
       .where('userId', user.id)
       .preload('eventType')
       .preload('location')
+      .preload('eventVersions', (v) => v.where('isCurrentVersion', true).preload('versionContent'))
       .orderBy('createdAt', 'desc')
 
-    const responsibleEvents = await Event.query()
+    const responsibleEventsQuery = await Event.query()
       .where('mainResponsibleId', user.id)
       .preload('eventType')
       .preload('location')
+      .preload('eventVersions', (v) => v.where('isCurrentVersion', true).preload('versionContent'))
       .orderBy('createdAt', 'desc')
 
+    const mapEvent = (e: any) => {
+      const json = e.serialize()
+      const content = e.eventVersions?.[0]?.versionContent
+      return {
+        ...json,
+        titulo: content?.name || 'Sin Título',
+        name: content?.name || 'Sin Título',
+        descripcion: content?.description || '',
+        description: content?.description || '',
+        fecha_inicio: content?.startsAt || json.createdAt,
+        startsAt: content?.startsAt || json.createdAt
+      }
+    }
+
     return response.json({
-      createdEvents,
-      responsibleEvents
+      createdEvents: createdEventsQuery.map(mapEvent),
+      responsibleEvents: responsibleEventsQuery.map(mapEvent)
     })
   }
 }

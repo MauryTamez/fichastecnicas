@@ -39,18 +39,19 @@ const Layout = ({ children }) => {
     // Items principales de navegación
     const menuItems = [
         { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-        { name: 'Nueva Ficha', path: '/nuevo-evento', icon: PlusCircle, roles: ['admin', 'encargado_departamento', 'creador'] },
-        { name: 'Solicitudes', path: '/encargado/solicitudes', icon: CheckCircle, roles: ['admin', 'encargado_departamento'] },
-        { name: 'Fichas Pendientes', path: '/moderador/fichas-pendientes', icon: CheckCircle, roles: ['admin', 'moderador'] },
-        { name: 'Mis Eventos', path: '/creador/eventos', icon: Calendar, roles: ['admin', 'creador'] },
-        { name: 'Feedback', path: '/creador/feedback', icon: Mail, roles: ['admin', 'creador'] },
+        { name: 'Nueva Ficha', path: '/nuevo-evento', icon: PlusCircle, roles: ['encargado_departamento', 'creador'] },
+        { name: 'Solicitudes', path: '/encargado/solicitudes', icon: CheckCircle, roles: ['encargado_departamento'] },
+        { name: 'Fichas Pendientes', path: '/moderador/fichas-pendientes', icon: CheckCircle, roles: ['moderador'] },
+        { name: 'Mis Eventos', path: '/creador/eventos', icon: Calendar, roles: ['creador'] },
+        { name: 'Feedback', path: '/creador/feedback', icon: Mail, roles: ['creador'] },
     ];
 
     // Items de configuración del admin (agrupados)
     const configItems = [
         { name: 'Usuarios', path: '/admin/usuarios', icon: UserIcon, roles: ['admin'] },
         { name: 'Eventos Dpto', path: '/encargado/eventos', icon: Calendar, roles: ['encargado_departamento'] },
-        { name: 'Organigrama Dpto', path: '/encargado/organigrama', icon: Building2, roles: ['admin', 'encargado_departamento'] },
+        { name: 'Organigrama', path: '/moderador/organigrama', icon: Building2, roles: ['moderador'] },
+        { name: 'Organigrama Dpto', path: '/encargado/organigrama', icon: Building2, roles: ['encargado_departamento'] },
         { name: 'Departamentos', path: '/admin/departamentos', icon: Building2, roles: ['admin'] },
         { name: 'Locaciones', path: '/admin/recintos', icon: MapPin, roles: ['admin'] },
         { name: 'Eventos y Catálogo', path: '/admin/tipos-evento', icon: Tag, roles: ['admin'] },

@@ -7,6 +7,7 @@ import EventDetail from './pages/events/general/EventDetail';
 import EventVersionsList from './pages/events/general/EventVersionsList';
 import Layout from './components/Layout';
 import UserAdmin from './pages/admin/UserAdmin';
+import UserEvents from './pages/admin/UserEvents';
 import VenueAdmin from './pages/admin/VenueAdmin';
 import EventTypeAndCatalogAdmin from './pages/admin/EventTypeAndCatalogAdmin';
 import DepartmentAdmin from './pages/admin/DepartmentAdmin';
@@ -17,6 +18,7 @@ import AuxiliarInbox from './pages/events/auxiliar/AuxiliarInbox';
 import MyEvents from './pages/events/creador/MyEvents';
 import DepartmentEvents from './pages/events/encargado_departamento/DepartmentEvents';
 import Requests from './pages/events/encargado_departamento/Requests';
+import OrganigramaEncargado from './pages/events/encargado_departamento/OrganigramaEncargado';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user } = useAuth();
@@ -39,7 +41,7 @@ function App() {
             </ProtectedRoute>
           } />
           <Route path="/nuevo-evento" element={
-            <ProtectedRoute allowedRoles={['admin', 'encargado_departamento', 'creador']}>
+            <ProtectedRoute allowedRoles={['encargado_departamento', 'creador']}>
               <Layout>
                 <EventForm />
               </Layout>
@@ -80,6 +82,13 @@ function App() {
               </Layout>
             </ProtectedRoute>
           } />
+          <Route path="/admin/usuarios/:id/eventos" element={
+            <ProtectedRoute allowedRoles={['admin', 'encargado_departamento']}>
+              <Layout>
+                <UserEvents />
+              </Layout>
+            </ProtectedRoute>
+          } />
           <Route path="/admin/tipos-evento" element={
             <ProtectedRoute allowedRoles={['admin']}>
               <Layout>
@@ -97,14 +106,14 @@ function App() {
 
           {/* Nuevas Rutas FASE 3 / FASE 4 */}
           <Route path="/moderador/organigrama" element={
-            <ProtectedRoute allowedRoles={['admin', 'moderador']}>
+            <ProtectedRoute allowedRoles={['moderador']}>
               <Layout>
                 <Organigrama />
               </Layout>
             </ProtectedRoute>
           } />
           <Route path="/moderador/fichas-pendientes" element={
-            <ProtectedRoute allowedRoles={['admin', 'moderador']}>
+            <ProtectedRoute allowedRoles={['moderador']}>
               <Layout>
                 <PendingApprovals />
               </Layout>
@@ -112,28 +121,28 @@ function App() {
           } />
 
           <Route path="/encargado/solicitudes" element={
-            <ProtectedRoute allowedRoles={['admin', 'encargado_departamento']}>
+            <ProtectedRoute allowedRoles={['encargado_departamento']}>
               <Layout>
                 <Requests />
               </Layout>
             </ProtectedRoute>
           } />
           <Route path="/encargado/organigrama" element={
-            <ProtectedRoute allowedRoles={['admin', 'encargado_departamento']}>
+            <ProtectedRoute allowedRoles={['encargado_departamento']}>
               <Layout>
-                <Organigrama />
+                <OrganigramaEncargado />
               </Layout>
             </ProtectedRoute>
           } />
           <Route path="/encargado/eventos" element={
-            <ProtectedRoute allowedRoles={['admin', 'encargado_departamento']}>
+            <ProtectedRoute allowedRoles={['encargado_departamento']}>
               <Layout>
                 <DepartmentEvents />
               </Layout>
             </ProtectedRoute>
           } />
           <Route path="/encargado/usuarios" element={
-            <ProtectedRoute allowedRoles={['admin', 'encargado_departamento']}>
+            <ProtectedRoute allowedRoles={['encargado_departamento']}>
               <Layout>
                 <UserAdmin />
               </Layout>
@@ -141,14 +150,14 @@ function App() {
           } />
 
           <Route path="/creador/feedback" element={
-            <ProtectedRoute allowedRoles={['admin', 'creador']}>
+            <ProtectedRoute allowedRoles={['creador']}>
               <Layout>
                 <FeedbackReview />
               </Layout>
             </ProtectedRoute>
           } />
           <Route path="/creador/eventos" element={
-            <ProtectedRoute allowedRoles={['admin', 'creador']}>
+            <ProtectedRoute allowedRoles={['creador']}>
               <Layout>
                 <MyEvents />
               </Layout>
@@ -156,14 +165,14 @@ function App() {
           } />
 
           <Route path="/auxiliar/notificaciones" element={
-            <ProtectedRoute allowedRoles={['admin', 'auxiliares', 'auxiliar']}>
+            <ProtectedRoute allowedRoles={['auxiliares', 'auxiliar']}>
               <Layout>
                 <AuxiliarInbox />
               </Layout>
             </ProtectedRoute>
           } />
           <Route path="/auxiliar/eventos" element={
-            <ProtectedRoute allowedRoles={['admin', 'auxiliares', 'auxiliar']}>
+            <ProtectedRoute allowedRoles={['auxiliares', 'auxiliar']}>
               <Layout>
                 <Dashboard />
               </Layout>

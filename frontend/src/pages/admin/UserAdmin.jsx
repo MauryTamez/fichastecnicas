@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { getUsers, createUser, updateUser, deleteUser, getRoles } from '../../api/users';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
@@ -191,9 +192,11 @@ export default function UserAdmin() {
                                             {u.nombre?.charAt(0)?.toUpperCase()}
                                         </div>
                                         <div className="min-w-0">
-                                            <p className="text-sm font-bold text-gray-900 truncate">{u.nombre}</p>
+                                            <Link to={`/admin/usuarios/${u.id}/eventos`} className="text-sm font-bold text-gray-900 truncate hover:text-emerald-600 transition-colors">
+                                                {u.nombre}
+                                            </Link>
                                             {isSelf && (
-                                                <span className="text-[10px] font-black text-emerald-500 uppercase tracking-wider">Tú</span>
+                                                <span className="text-[10px] font-black text-emerald-500 uppercase tracking-wider block">Tú</span>
                                             )}
                                         </div>
                                     </div>
