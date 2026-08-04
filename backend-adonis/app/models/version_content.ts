@@ -3,7 +3,6 @@ import type { HasMany } from '@adonisjs/lucid/types/relations'
 import { DateTime } from 'luxon'
 import EventVersion from './event_version.js'
 import EventVersionEmbedding from './event_version_embedding.js'
-import VersionItem from './version_item.js'
 
 export default class VersionContent extends BaseModel {
   @column({ isPrimary: true })
@@ -117,6 +116,4 @@ declare otrosObservaciones: string | null
   @hasMany(() => EventVersionEmbedding)
   declare eventVersionEmbeddings: HasMany<typeof EventVersionEmbedding>
 
-  @hasMany(() => VersionItem, { foreignKey: 'eventVersionId' })
-  declare versionItems: HasMany<typeof VersionItem>
 }

@@ -6,6 +6,7 @@ import VersionContent from './version_content.js'
 import VersionActivity from './version_activity.js'
 import VersionStaffing from './version_staffing.js'
 import VersionFeedback from './version_feedback.js'
+import VersionItem from './version_item.js'
 
 export default class EventVersion extends BaseModel {
   @column({ isPrimary: true })
@@ -42,4 +43,7 @@ export default class EventVersion extends BaseModel {
 
   @hasMany(() => VersionFeedback)
   declare versionFeedbacks: HasMany<typeof VersionFeedback>
+
+  @hasMany(() => VersionItem, { foreignKey: 'eventVersionId' })
+  declare versionItems: HasMany<typeof VersionItem>
 }

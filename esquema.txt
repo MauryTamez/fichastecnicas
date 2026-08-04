@@ -227,32 +227,7 @@ Table version_contents {
   cantidad_personas int [null]
   acomodo_tipo varchar [null]
 
-  // --- Checkboxes / Plomitas (Parte 2 - Migración base) ---
-  sonido boolean [default: false]
-  microfono_inalambrico_mano boolean [default: false]
-  proyeccion_presentacion boolean [default: false]
-  personal_apoyo boolean [default: false]
-  musica_fondo boolean [default: false]
-  manteles boolean [default: false]
-  banderas boolean [default: false]
-  toma_fotografia boolean [default: false]
-
-  // --- Checkboxes adicionales (Migración: add_missing_requirements) ---
-  microfono_inalambrico_mesa boolean [default: false]
-  microfono_presidencial boolean [default: false]
-  microfono_diadema boolean [default: false]
-  microfono_alambrico boolean [default: false]
-  proyeccion_video boolean [default: false]
-  videograbacion boolean [default: false]
-  apuntador boolean [default: false]
-  mesa_coffee_break boolean [default: false]
-  estacionamiento boolean [default: false]
-  podium boolean [default: false]
-  presidium boolean [default: false]
-  edecanes boolean [default: false]
-  himno_uanl boolean [default: false]
-  separador_himno boolean [default: false]
-
+  // --- Checkboxes (Migrados a version_items y catalog_items) ---
   // --- Campos de texto/JSON adicionales (Migración: add_missing_requirements) ---
   otros_observaciones text [null]
   lista_estacionamiento json [null, note: 'Lista JSON de placas/personas para estacionamiento']
@@ -328,12 +303,12 @@ Table event_version_embeddings {
 }
 Table version_items {
   id int [pk, increment]
-  event_version_id int [ref: > version_contents.id]
+  event_version_id int [ref: > event_versions.id]
   item_id int [ref: > catalog_items.id]
   quantity int [default: 1]
   indexes {
     (event_version_id,item_id) [unique]
-  }-
+  }
 }
 // ---------------------------------------------------------
 // ENUMS

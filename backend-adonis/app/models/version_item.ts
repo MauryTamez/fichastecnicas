@@ -1,6 +1,6 @@
 import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
-import VersionContent from './version_content.js'
+import EventVersion from './event_version.js'
 import CatalogItem from './catalog_item.js'
 
 export default class VersionItem extends BaseModel {
@@ -16,8 +16,8 @@ export default class VersionItem extends BaseModel {
   @column()
   declare quantity: number
 
-  @belongsTo(() => VersionContent, { foreignKey: 'eventVersionId' })
-  declare versionContent: BelongsTo<typeof VersionContent>
+  @belongsTo(() => EventVersion, { foreignKey: 'eventVersionId' })
+  declare eventVersion: BelongsTo<typeof EventVersion>
 
   @belongsTo(() => CatalogItem, { foreignKey: 'itemId' })
   declare catalogItem: BelongsTo<typeof CatalogItem>
