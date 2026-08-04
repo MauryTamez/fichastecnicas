@@ -326,7 +326,15 @@ Table event_version_embeddings {
   created_at timestamp
   updated_at timestamp
 }
-
+Table version_items {
+  id int [pk, increment]
+  event_version_id int [ref: > version_contents.id]
+  item_id int [ref: > catalog_items.id]
+  quantity int [default: 1]
+  indexes {
+    (event_version_id,item_id) [unique]
+  }-
+}
 // ---------------------------------------------------------
 // ENUMS
 // ---------------------------------------------------------

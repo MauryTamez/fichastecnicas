@@ -1,5 +1,7 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm'
+import type { HasMany } from '@adonisjs/lucid/types/relations'
+import VersionItem from './version_item.js'
 
 export default class CatalogItem extends BaseModel {
   @column({ isPrimary: true })
@@ -19,4 +21,7 @@ export default class CatalogItem extends BaseModel {
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
+
+  @hasMany(() => VersionItem, { foreignKey: 'itemId' })
+  declare versionItems: HasMany<typeof VersionItem>
 }
