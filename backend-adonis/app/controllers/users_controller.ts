@@ -114,6 +114,18 @@ export default class UsersController {
       .preload('eventType')
       .preload('location')
       .preload('eventVersions', (v) => v.where('isCurrentVersion', true).preload('versionContent'))
+      .orderByRaw(`
+        CASE current_state
+          WHEN 'requested' THEN 1
+          WHEN 'in_review' THEN 2
+          WHEN 'scheduled' THEN 3
+          WHEN 'draft' THEN 4
+          WHEN 'cancelled' THEN 5
+          WHEN 'rejected' THEN 6
+          WHEN 'historical' THEN 7
+          ELSE 8
+        END ASC
+      `)
       .orderBy('createdAt', 'desc')
 
     const responsibleEventsQuery = await Event.query()
@@ -121,6 +133,18 @@ export default class UsersController {
       .preload('eventType')
       .preload('location')
       .preload('eventVersions', (v) => v.where('isCurrentVersion', true).preload('versionContent'))
+      .orderByRaw(`
+        CASE current_state
+          WHEN 'requested' THEN 1
+          WHEN 'in_review' THEN 2
+          WHEN 'scheduled' THEN 3
+          WHEN 'draft' THEN 4
+          WHEN 'cancelled' THEN 5
+          WHEN 'rejected' THEN 6
+          WHEN 'historical' THEN 7
+          ELSE 8
+        END ASC
+      `)
       .orderBy('createdAt', 'desc')
 
     const mapEvent = (e: any) => {

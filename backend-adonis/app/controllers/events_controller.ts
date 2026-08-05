@@ -53,6 +53,18 @@ export default class EventsController {
       })
       .preload('organization')
       .preload('user')
+      .orderByRaw(`
+        CASE current_state
+          WHEN 'requested' THEN 1
+          WHEN 'in_review' THEN 2
+          WHEN 'scheduled' THEN 3
+          WHEN 'draft' THEN 4
+          WHEN 'cancelled' THEN 5
+          WHEN 'rejected' THEN 6
+          WHEN 'historical' THEN 7
+          ELSE 8
+        END ASC
+      `)
       .orderBy('createdAt', 'desc')
 
     if (departmentId) {
@@ -157,6 +169,19 @@ export default class EventsController {
     }
 
     const events = await eventsQuery
+      .orderByRaw(`
+        CASE current_state
+          WHEN 'requested' THEN 1
+          WHEN 'in_review' THEN 2
+          WHEN 'scheduled' THEN 3
+          WHEN 'draft' THEN 4
+          WHEN 'cancelled' THEN 5
+          WHEN 'rejected' THEN 6
+          WHEN 'historical' THEN 7
+          ELSE 8
+        END ASC
+      `)
+      .orderBy('createdAt', 'desc')
 
     const mapped = events.map(e => {
       const content = e.eventVersions[0]?.versionContent;
@@ -536,6 +561,7 @@ export default class EventsController {
     return response.ok({ message: 'Estado actualizado', event })
   }
 
+  // cambia de draft a requested
   async requestReview({ params, response, auth }: HttpContext) {
     const user = auth.use('web').user
     if (!user) {
@@ -558,7 +584,7 @@ export default class EventsController {
     })
   }
   }
-
+  // cambia de requested a in_review
   async passToReview({ params, response, auth }: HttpContext) {
     const user = auth.use('web').user!
     await user.load('role')

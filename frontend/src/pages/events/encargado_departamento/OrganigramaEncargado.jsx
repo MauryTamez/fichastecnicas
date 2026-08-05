@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import api from '../../../api/axios';
 import { Building2, Users, Mail, Phone, ShieldCheck, X, Calendar, User as UserIcon, CheckCircle2, Search } from 'lucide-react';
 import Swal from 'sweetalert2';
@@ -23,7 +24,7 @@ const UserDetailsPanel = ({ user, onClose }) => {
         fetchEvents();
     }, [user.id]);
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 z-50 flex justify-end bg-gray-900/40 backdrop-blur-sm transition-opacity duration-300">
             <div className="w-full max-w-md h-full bg-white shadow-2xl flex flex-col animate-slide-in-right relative overflow-hidden">
                 {/* Header */}
@@ -150,7 +151,8 @@ const UserDetailsPanel = ({ user, onClose }) => {
                     </div>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 
