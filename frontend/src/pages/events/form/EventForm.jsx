@@ -490,7 +490,10 @@ microfonos,
                     : `/creador/events/${id}`;
                 await api.put(endpoint, payload);
             } else {
-                await api.post('/creador/events', payload);
+                const endpoint = (user?.role === 'encargado_departamento' || user?.role === 'subdirector')
+                    ? `/encargado/events`
+                    : `/creador/events`;
+                await api.post(endpoint, payload);
             }
             navigate('/');
         } catch (err) {

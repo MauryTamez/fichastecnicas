@@ -131,6 +131,7 @@ router.group(() => {
             router.get('/organigram', [DepartmentsController, 'organigram'])
             router.get('/solicitudes', [EventsController, 'pendingApprovals'])
             router.put('/events/:id', [EventsController, 'update'])
+            router.post('/events', [EventsController, 'store'])
         }).prefix('/encargado').use(middleware.role(['encargado_departamento']))
 
         // 4. Creador Group
