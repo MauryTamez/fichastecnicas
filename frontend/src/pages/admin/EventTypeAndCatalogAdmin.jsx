@@ -12,7 +12,7 @@ const CATEGORIAS = [
     { key: 'mobiliario', label: 'Mobiliario', icon: Tag, color: 'purple' },
     { key: 'documentacion', label: 'Documentación', icon: FileText, color: 'emerald' },
 ];
-
+// Colors
 const COLOR_STYLES = {
     blue: { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-100', dot: 'bg-blue-500' },
     amber: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-100', dot: 'bg-amber-500' },
