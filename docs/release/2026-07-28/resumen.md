@@ -14,3 +14,6 @@ Historial de cambios automatizado.
 - **Autor:** Enrique-OSM
 - **Nota:** OPENROUTER_API_KEY no configurada.
 
+### 📦 Actualización: 2026-08-10 13:48:13 (Fallback por Error)
+- **Error API:** This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-r1
+

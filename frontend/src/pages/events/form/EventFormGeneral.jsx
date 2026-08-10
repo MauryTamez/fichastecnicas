@@ -10,6 +10,11 @@ const EventFormGeneral = ({
     setShowAIModal,
     setStep
 }) => {
+    // Calcular la fecha y hora actual local para establecer el mínimo permitido
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    const minDateTime = now.toISOString().slice(0, 16);
+
     return (
         <div className="bg-white p-8 rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(15,23,42,0.08)] border border-slate-100 animate-slide-up">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
@@ -63,6 +68,7 @@ const EventFormGeneral = ({
                                     type="datetime-local"
                                     required
                                     name="startsAt"
+                                    min={minDateTime}
                                     className="block w-full py-2 bg-transparent outline-none text-emerald-900 font-bold uppercase text-xs cursor-pointer"
                                     value={formData.startsAt}
                                     onChange={handleChange}
@@ -78,6 +84,7 @@ const EventFormGeneral = ({
                                     type="datetime-local"
                                     required
                                     name="endsAt"
+                                    min={formData.startsAt || minDateTime}
                                     className="block w-full py-2 bg-transparent outline-none text-red-900 font-bold uppercase text-xs cursor-pointer"
                                     value={formData.endsAt}
                                     onChange={handleChange}
