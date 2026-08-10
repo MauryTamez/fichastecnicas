@@ -450,9 +450,15 @@ const fotografiaSelected = horaFotografia !== '';
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!formData.name.trim() || !formData.locationId || !formData.organizationId || !formData.eventTypeId) {
+        if (!formData.name.trim() || !formData.locationId || !formData.eventTypeId) {
             setStep(1);
-            setError('Por favor complete todos los campos obligatorios (Nombre, Organización, Tipo y Recinto).');
+            setError('Por favor complete todos los campos obligatorios (Nombre, Tipo y Recinto).');
+            return;
+        }
+
+        if (!user?.organizationId) {
+            setStep(1);
+            setError('Error: Su cuenta de usuario no tiene una organización asignada.');
             return;
         }
 
@@ -472,7 +478,7 @@ const fotografiaSelected = horaFotografia !== '';
             const payload = {
                 ...formData,
                 locationId: Number(formData.locationId),
-                organizationId: Number(formData.organizationId),
+                organizationId: Number(user.organizationId),
                 eventTypeId: Number(formData.eventTypeId),
 
              audiovisual,

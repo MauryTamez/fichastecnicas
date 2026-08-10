@@ -127,24 +127,8 @@ const EventFormGeneral = ({
                     </div>
                 </div>
 
-                {/* Organización y Tipo */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-2 ml-1 uppercase tracking-wider">Organización</label>
-                        <select
-                            required
-                            name="organizationId"
-                            className="block w-full px-4 py-3.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none font-medium text-slate-700 appearance-none shadow-sm cursor-pointer"
-                            value={formData.organizationId}
-                            onChange={handleChange}
-                        >
-                            <option value="" disabled>Seleccione organización...</option>
-                            {organizations.map(o => (
-                                <option key={o.id} value={o.id}>{o.name}</option>
-                            ))}
-                        </select>
-                    </div>
-
+                {/* Tipo de Evento */}
+                <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
                     <div>
                         <label className="block text-xs font-bold text-slate-700 mb-2 ml-1 uppercase tracking-wider">Tipo de Evento</label>
                         <select
