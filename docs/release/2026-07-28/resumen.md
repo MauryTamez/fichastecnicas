@@ -6,3 +6,7 @@ Historial de cambios automatizado.
 - **Archivos afectados:**
   - `[M]` frontend/src/pages/admin/EventTypeAndCatalogAdmin.jsx
 
+### 📦 Actualización: 2026-08-10 12:33:57
+- **Autor:** Enrique-OSM
+- **Nota:** OPENROUTER_API_KEY no configurada.
+
