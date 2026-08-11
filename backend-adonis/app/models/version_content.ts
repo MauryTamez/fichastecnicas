@@ -50,68 +50,7 @@ export default class VersionContent extends BaseModel {
   @column({ columnName: 'acomodo_tipo' })
   declare acomodoTipo: string | null
 
-  @column()
-  declare sonido: boolean
-
-  @column({ columnName: 'microfono_inalambrico_mano' })
-  declare microfonoInalambricoMano: boolean
-
-  @column({ columnName: 'proyeccion_presentacion' })
-  declare proyeccionPresentacion: boolean
-
-  @column({ columnName: 'personal_apoyo' })
-  declare personalApoyo: boolean
-
-  @column({ columnName: 'musica_fondo' })
-  declare musicaFondo: boolean
-
-  @column()
-  declare manteles: boolean
-
-  @column()
-  declare banderas: boolean
-
-  @column({ columnName: 'microfono_inalambrico_mesa' })
-declare microfonoInalambricoMesa: boolean
-
-@column({ columnName: 'microfono_presidencial' })
-declare microfonoPresidencial: boolean
-
-@column({ columnName: 'microfono_diadema' })
-declare microfonoDiadema: boolean
-
-@column({ columnName: 'microfono_alambrico' })
-declare microfonoAlambrico: boolean
-
-@column({ columnName: 'proyeccion_video' })
-declare proyeccionVideo: boolean
-
-@column()
-declare videograbacion: boolean
-
-@column()
-declare apuntador: boolean
-
-@column({ columnName: 'mesa_coffee_break' })
-declare mesaCoffeeBreak: boolean
-
-@column()
-declare estacionamiento: boolean
-
-@column()
-declare podium: boolean
-
-@column()
-declare presidium: boolean
-
-@column()
-declare edecanes: boolean
-
-@column({ columnName: 'himno_uanl' })
-declare himnoUanl: boolean
-
-@column({ columnName: 'separador_himno' })
-declare separadorHimno: boolean
+  // Checkboxes have been migrated to version_items and catalog_items
 
 @column({ columnName: 'otros_observaciones' })
 declare otrosObservaciones: string | null
@@ -142,8 +81,7 @@ declare otrosObservaciones: string | null
     },
   })
   declare listaPresidium: any
-  @column({ columnName: 'toma_fotografia' })
-  declare tomaFotografia: boolean
+
 
   @column.dateTime()
   declare startsAt: DateTime
@@ -177,4 +115,5 @@ declare otrosObservaciones: string | null
 
   @hasMany(() => EventVersionEmbedding)
   declare eventVersionEmbeddings: HasMany<typeof EventVersionEmbedding>
+
 }

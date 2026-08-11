@@ -13,7 +13,7 @@ export default class extends BaseSeeder {
     await User.updateOrCreateMany('email', [
       {
         name: 'Admin User',
-        email: 'amdmin@mail.com',
+        email: 'admin@mail.com',
         phone: '1234567890',
         password: 'password',
         isInternal: true,

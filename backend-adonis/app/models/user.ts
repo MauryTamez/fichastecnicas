@@ -11,6 +11,7 @@ import LocationAccountRule from './location_account_rule.js'
 import VersionActivity from './version_activity.js'
 import VersionFeedback from './version_feedback.js'
 import VersionStaffing from './version_staffing.js'
+import Department from './department.js'
 
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   uids: ['email'],
@@ -63,6 +64,9 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   @belongsTo(() => Organization)
   declare organization: BelongsTo<typeof Organization>
+
+  @belongsTo(() => Department)
+  declare department: BelongsTo<typeof Department>
 
   @hasMany(() => LocationAccountRule)
   declare locationAccountRules: HasMany<typeof LocationAccountRule>

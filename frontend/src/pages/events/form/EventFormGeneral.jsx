@@ -1,4 +1,3 @@
-import React from 'react';
 import { ArrowRight, Calendar, FileText, MapPin, Sparkles, Users } from 'lucide-react';
 
 const EventFormGeneral = ({
@@ -11,6 +10,11 @@ const EventFormGeneral = ({
     setShowAIModal,
     setStep
 }) => {
+    // Calcular la fecha y hora actual local para establecer el mínimo permitido
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    const minDateTime = now.toISOString().slice(0, 16);
+
     return (
         <div className="bg-white p-8 rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(15,23,42,0.08)] border border-slate-100 animate-slide-up">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
@@ -64,6 +68,7 @@ const EventFormGeneral = ({
                                     type="datetime-local"
                                     required
                                     name="startsAt"
+                                    min={minDateTime}
                                     className="block w-full py-2 bg-transparent outline-none text-emerald-900 font-bold uppercase text-xs cursor-pointer"
                                     value={formData.startsAt}
                                     onChange={handleChange}
@@ -79,6 +84,7 @@ const EventFormGeneral = ({
                                     type="datetime-local"
                                     required
                                     name="endsAt"
+                                    min={formData.startsAt || minDateTime}
                                     className="block w-full py-2 bg-transparent outline-none text-red-900 font-bold uppercase text-xs cursor-pointer"
                                     value={formData.endsAt}
                                     onChange={handleChange}
@@ -128,24 +134,8 @@ const EventFormGeneral = ({
                     </div>
                 </div>
 
-                {/* Organización y Tipo */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-2 ml-1 uppercase tracking-wider">Organización</label>
-                        <select
-                            required
-                            name="organizationId"
-                            className="block w-full px-4 py-3.5 bg-slate-50/70 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none font-medium text-slate-700 appearance-none shadow-sm cursor-pointer"
-                            value={formData.organizationId}
-                            onChange={handleChange}
-                        >
-                            <option value="" disabled>Seleccione organización...</option>
-                            {organizations.map(o => (
-                                <option key={o.id} value={o.id}>{o.name}</option>
-                            ))}
-                        </select>
-                    </div>
-
+                {/* Tipo de Evento */}
+                <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
                     <div>
                         <label className="block text-xs font-bold text-slate-700 mb-2 ml-1 uppercase tracking-wider">Tipo de Evento</label>
                         <select

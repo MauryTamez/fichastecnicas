@@ -1,0 +1,330 @@
+// =============================================================
+// ESQUEMA DE BASE DE DATOS - CAM Fichas Técnicas
+// Fuente de verdad basada en las migraciones de AdonisJS 6
+// Última actualización: Julio 2026
+// =============================================================
+
+// ---------------------------------------------------------
+// NIVEL SAAS (TENANCY)
+// ---------------------------------------------------------
+
+Table organizations {
+  id int [pk, increment]
+  name varchar [not null]
+  color varchar
+  slug varchar [not null, note: 'Para subdominios: empresa.miapp.com']
+  logo varchar
+  created_at timestamp
+  updated_at timestamp
+}
+
+// Cada empresa define sus propios tipos de eventos
+// Ej: UANL -> "Congreso", "Clase";  EmpresaX -> "Kickoff", "Scrum"
+Table event_types {
+  id int [pk, increment]
+  name varchar [not null]
+  description varchar [not null]
+  organization_id int [ref: > organizations.id, not null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+// Cada empresa define sus tipos de espacios
+// Ej: UANL -> "Aula", "Laboratorio"; Hotel -> "Salón de baile", "Jardín"
+Table location_types {
+  id int [pk, increment]
+  name varchar [not null]
+  allows_external_staff boolean [not null]
+  organization_id int [ref: > organizations.id, not null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+// ---------------------------------------------------------
+// MOTOR DE REGLAS
+// ---------------------------------------------------------
+
+// Define qué tipo de evento puede ocurrir en qué tipo de ubicación
+Table location_assignment_rules {
+  id int [pk, increment]
+  is_allowed boolean [not null]
+  requires_approval boolean [not null]
+  max_capacity_override int [null]
+  organization_id int [ref: > organizations.id, not null]
+  event_type_id int [ref: > event_types.id, not null]
+  location_type_id int [ref: > location_types.id, not null]
+  created_at timestamp
+  updated_at timestamp
+
+  note: 'Define la matriz de compatibilidad. Ej: Un "Concierto" (EventType) NO se permite en una "Biblioteca" (LocationType)'
+}
+
+// Define qué usuarios pueden usar qué tipos de ubicación
+Table location_account_rules {
+  id int [pk, increment]
+  is_allowed boolean [not null]
+  requires_approval boolean [not null]
+  max_capacity_override boolean [null]
+  organization_id int [ref: > organizations.id, not null]
+  user_id int [ref: > users.id, not null]
+  location_type_id int [ref: > location_types.id, not null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+// ---------------------------------------------------------
+// AUTENTICACIÓN Y USUARIOS
+// ---------------------------------------------------------
+
+Table roles {
+  id int [pk, increment]
+  name varchar [not null, note: 'Valores: admin, auxiliar, staff_interno, direccion']
+  description text
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table departments {
+  id int [pk, increment]
+  name varchar [not null]
+  priority int [not null]
+  organization_id int [ref: > organizations.id, not null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table users {
+  id int [pk, increment]
+  email varchar(254) [unique, not null]
+  phone varchar(20) [unique]
+  name varchar [not null]
+  password varchar [not null, note: 'Argon2/Bcrypt hash']
+  is_internal boolean [not null]
+  role_id int [ref: > roles.id, not null]
+  organization_id int [ref: > organizations.id, not null]
+  department_id int [ref: > departments.id, null]
+  created_at timestamp [not null]
+  updated_at timestamp
+}
+
+// ---------------------------------------------------------
+// RECURSOS HUMANOS (Scoped per Organization)
+// ---------------------------------------------------------
+
+// Catálogo de Roles de Staff (Cada empresa crea sus propios roles)
+Table staff_roles {
+  id int [pk, increment]
+  name varchar [not null, note: 'Ej: Mesero, Seguridad, Valet']
+  organization_id int [ref: > organizations.id, not null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+// ---------------------------------------------------------
+// UBICACIONES / RECINTOS (Scoped per Organization)
+// ---------------------------------------------------------
+
+Table locations {
+  id int [pk, increment]
+  name varchar [not null]
+  address varchar
+  capacity int [not null]
+  organization_id int [ref: > organizations.id, not null]
+  location_type_id int [ref: > location_types.id, not null, note: 'Apunta al catálogo dinámico']
+  created_at timestamp
+  updated_at timestamp
+}
+
+// ---------------------------------------------------------
+// CATÁLOGO GENÉRICO DE ITEMS
+// ---------------------------------------------------------
+
+// Tabla nueva para items de catálogo con categorías flexibles
+// Ej: category='acomodo_tipo', name='Tipo U'
+Table catalog_items {
+  id int [pk, increment]
+  category varchar [not null, note: 'Categoría del item: acomodo_tipo, dress_code, etc.']
+  name varchar [not null]
+  is_active boolean [default: true]
+  created_at timestamp
+  updated_at timestamp
+}
+
+// ---------------------------------------------------------
+// EL NÚCLEO DEL EVENTO (Scoped per Organization)
+// ---------------------------------------------------------
+
+Table events {
+  id int [pk, increment]
+  current_state event_state [not null]
+  organization_id int [ref: > organizations.id, not null]
+  user_id int [ref: > users.id, not null, note: 'Creador del evento']
+  main_responsible int [ref: > users.id, not null]
+  event_type_id int [ref: > event_types.id, not null]
+  location_id int [ref: > locations.id, null, note: 'Añadido via migración posterior']
+
+  // --- Datos de la Ficha Técnica (Parte 1 - Desnormalizados) ---
+  lugar varchar [null]
+  departamento_solicitante varchar [null]
+  nombre_evento varchar [null]
+  fecha varchar [null]
+  horario_inicio_fin varchar [null]
+  responsable varchar [null]
+  extension varchar [null]
+  correo_electronico varchar [null]
+  cantidad_personas int [null]
+  acomodo_tipo varchar [null]
+
+  created_at timestamp
+  updated_at timestamp
+}
+
+// ---------------------------------------------------------
+// VERSIONES DEL EVENTO
+// ---------------------------------------------------------
+// Estas tablas heredan la propiedad de organización a través de event_id.
+
+Table event_versions {
+  id int [pk, increment]
+  is_current_version boolean [not null]
+  event_id int [ref: > events.id, not null]
+  version_content_id int [ref: > version_contents.id, not null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+// ---------------------------------------------------------
+// CONTENIDO DE LA VERSIÓN (Datos Técnicos Completos)
+// ---------------------------------------------------------
+
+Table version_contents {
+  id int [pk, increment]
+  version_number int [not null]
+
+  // Datos Generales
+  name varchar [not null]
+  objective text
+  description text
+
+  // Logística
+  starts_at datetime [not null]
+  ends_at datetime [not null]
+  dress_code varchar
+  program_impacted varchar
+  guest_specifications text
+  presidium_details text
+  director_action text
+
+  // --- Datos de la Ficha Técnica (Parte 1 - Desnormalizados) ---
+  lugar varchar [null]
+  departamento_solicitante varchar [null]
+  nombre_evento varchar [null]
+  fecha varchar [null]
+  horario_inicio_fin varchar [null]
+  responsable varchar [null]
+  extension varchar [null]
+  correo_electronico varchar [null]
+  cantidad_personas int [null]
+  acomodo_tipo varchar [null]
+
+  // --- Checkboxes (Migrados a version_items y catalog_items) ---
+  // --- Campos de texto/JSON adicionales (Migración: add_missing_requirements) ---
+  otros_observaciones text [null]
+  lista_estacionamiento json [null, note: 'Lista JSON de placas/personas para estacionamiento']
+  hora_fotografia varchar [null]
+  lista_presidium json [null, note: 'Lista JSON de integrantes del presídium']
+
+  // Metadatos
+  created_at timestamp
+  updated_at timestamp
+}
+
+// ---------------------------------------------------------
+// ENTIDADES HIJAS DE LA VERSIÓN
+// ---------------------------------------------------------
+
+// Tabla pivote: Versión <-> Actividades (Many-to-Many)
+Table event_versions_to_version_activities {
+  id int [pk, increment]
+  event_version_id int [ref: > event_versions.id, not null]
+  version_activity_id int [ref: > version_activities.id, not null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+// Actividades individuales del "Minuto a Minuto"
+Table version_activities {
+  id int [pk, increment]
+  name varchar [not null]
+  description text
+  starts_at datetime [not null]
+  ends_at datetime [not null]
+  responsible_id int [ref: > users.id, not null]
+  location_id int [ref: > locations.id, not null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+// Asignación individual de staff a una versión
+Table version_staffings {
+  id int [pk, increment, note: 'Cada registro = un individuo asignado a un rol en una versión']
+  member int [ref: > users.id, not null]
+  event_version_id int [ref: > event_versions.id, not null]
+  staff_role_id int [ref: > staff_roles.id, not null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+// Retroalimentación por campo sobre una versión
+Table version_feedbacks {
+  id int [pk, increment]
+  field_name varchar
+  comment text [not null]
+  status feedback_status [not null]
+  event_version_id int [ref: > event_versions.id, not null]
+  reviewer_id int [ref: > users.id, not null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+// ---------------------------------------------------------
+// IA / RAG - EMBEDDINGS
+// ---------------------------------------------------------
+
+// Requiere la extensión pgvector en PostgreSQL
+Table event_version_embeddings {
+  id int [pk, increment]
+  embedding vector(1536) [not null, note: 'Vector generado por OpenAI text-embedding-3-small']
+  content_chunk text [not null]
+  event_id int [ref: > events.id, not null]
+  version_content_id int [ref: > version_contents.id, not null]
+  created_at timestamp
+  updated_at timestamp
+}
+Table version_items {
+  id int [pk, increment]
+  event_version_id int [ref: > event_versions.id]
+  item_id int [ref: > catalog_items.id]
+  quantity int [default: 1]
+  indexes {
+    (event_version_id,item_id) [unique]
+  }
+}
+// ---------------------------------------------------------
+// ENUMS
+// ---------------------------------------------------------
+
+enum event_state {
+  draft
+  requested       [note: 'Añadido via migración posterior']
+  in_review
+  scheduled       [note: 'Aprobado y calendarizado']
+  rejected
+  cancelled
+  historical
+}
+
+enum feedback_status {
+  pending
+  resolved
+}

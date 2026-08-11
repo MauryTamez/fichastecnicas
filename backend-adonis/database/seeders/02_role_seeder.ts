@@ -21,7 +21,7 @@ export default class extends BaseSeeder {
         description: 'Creadores de eventos - fichas tecnicas',
       },
       {
-        name: 'auxiliares',
+        name: 'auxiliar',
         description: 'Auxiliares y personal de apoyo',
       },
     ])

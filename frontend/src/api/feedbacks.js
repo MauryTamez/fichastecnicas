@@ -14,3 +14,8 @@ export const resolveFeedback = async (feedbackId) => {
     const response = await api.patch(`/feedbacks/${feedbackId}/resolve`);
     return response.data;
 };
+
+export const getPendingFeedbacks = async () => {
+    const response = await api.get('/feedbacks/pending');
+    return response.data;
+};

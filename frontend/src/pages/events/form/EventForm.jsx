@@ -1,23 +1,32 @@
-import { AlertTriangle, ArrowLeft, Briefcase, Clock, ChevronRight, FileText, Layers, X } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Briefcase, ChevronRight, Clock, FileText, Layers, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import api from '../../../api/axios';
-import { useAuth } from '../../../context/AuthContext';
-import { getVenues } from '../../../api/venues';
 import { resolveFeedback } from '../../../api/feedbacks';
+import { getVenues } from '../../../api/venues';
+import { useAuth } from '../../../context/AuthContext';
+import EventFormOpciones from './EventFormOpciones';
 
 // Componentes del formulario
+import AIAutofillModal from './AIAutofillModal';
+import AudioModal from './AudioModal';
+import EventFormDetalles from './EventFormDetalles';
+import EventFormFeedbacks from './EventFormFeedbacks';
 import EventFormGeneral from './EventFormGeneral';
 import EventFormOrdenDia from './EventFormOrdenDia';
 import EventFormRequerimientos from './EventFormRequerimientos';
-import EventFormDetalles from './EventFormDetalles';
 import EventFormSidebar from './EventFormSidebar';
-import EventFormFeedbacks from './EventFormFeedbacks';
-import AIAutofillModal from './AIAutofillModal';
+import LogisticaModal from './LogisticaModal';
+import MicrophonesModal from './MicrophonesModal';
+
 import ParkingModal from './ParkingModal';
 import PhotoModal from './PhotoModal';
 import PresidiumModal from './PresidiumModal';
+
+import PodiumModal from './PodiumModal';
+import ProtocoloModal from './ProtocoloModal';
+
 
 const EventForm = () => {
     const { user } = useAuth();
@@ -31,7 +40,21 @@ const EventForm = () => {
     const [step, setStep] = useState(1);
     const [detailedEvent, setDetailedEvent] = useState(null);
     const [actionLoading, setActionLoading] = useState(false);
-    
+const [showMicrophonesModal, setShowMicrophonesModal] = useState(false);
+
+const [showAudioModal, setShowAudioModal] = useState(false);
+
+
+    const requerimientosGrupos = [
+    { key: 'audiovisual', label: 'Audiovisual' },
+    { key: 'microfonos', label: 'Micrófonos' },
+    { key: 'estacionamiento', label: 'Estacionamiento' },
+    { key: 'fotografia', label: 'Fotografía' },
+    { key: 'protocolo', label: 'Protocolo y Banderas' },
+    { key: 'logistica', label: 'Logística y Mobiliario' },
+    { key: 'podium', label: 'Pódium' },
+    { key: 'presidium', label: 'Presídium' },
+];
     const [formData, setFormData] = useState({
         name: '',
         objective: '',
@@ -52,20 +75,28 @@ const EventForm = () => {
         otrosObservaciones: ''
     });
 
-    const [audiovisual, setAudiovisual] = useState({
-        sonido: false,
-        microfonoInalambrico: false,
-        microfonoMesa: false,
-        microfonoPresidencial: false,
-        microfonoDiadema: false,
-        microfonoAlambrico: false,
-        proyeccionPresentacion: false,
-        proyeccionVideo: false,
-        videograbacion: false,
-        personalApoyo: false,
-        apuntador: false,
-        musicaFondo: false,
-    });
+const [audiovisual, setAudiovisual] = useState({
+    sonido:false,
+    microfonoInalambrico:false,
+    microfonoMesa:false,
+    microfonoPresidencial:false,
+    microfonoDiadema:false,
+    microfonoAlambrico:false,
+    proyeccionPresentacion:false,
+    proyeccionVideo:false,
+    videograbacion:false,
+    personalApoyo:false,
+    apuntador:false,
+    musicaFondo:false
+});
+
+const [microfonos, setMicrofonos] = useState({
+    microfonoInalambrico: false,
+    microfonoMesa: false,
+    microfonoPresidencial: false,
+    microfonoDiadema: false,
+    microfonoAlambrico: false
+});
 
     const [currentActivity, setCurrentActivity] = useState({
         name: '',
@@ -94,6 +125,11 @@ const EventForm = () => {
     const [showParkingModal, setShowParkingModal] = useState(false);
     const [showPhotoModal, setShowPhotoModal] = useState(false);
     const [showPresidiumModal, setShowPresidiumModal] = useState(false);
+    const [showPodiumModal, setShowPodiumModal] = useState(false);
+const [showProtocoloModal, setShowProtocoloModal] = useState(false);
+const [showLogisticaModal, setShowLogisticaModal] = useState(false);
+  
+    
 
     // ESTADOS PARA MÚLTIPLES CARROS
     const [parkingList, setParkingList] = useState([]);
@@ -124,20 +160,7 @@ const EventForm = () => {
         { key: 'separadorHimno', label: 'Separador con himno' },
     ];
 
-    const audiovisualItems = [
-        { key: 'sonido', label: 'Sonido' },
-        { key: 'microfonoInalambrico', label: 'Micrófono Inalámbrico de mano' },
-        { key: 'microfonoMesa', label: 'Micrófono Inalámbrico de mano con base de mesa' },
-        { key: 'microfonoPresidencial', label: 'Micrófono Presidencial' },
-        { key: 'microfonoDiadema', label: 'Micrófono de Diadema' },
-        { key: 'microfonoAlambrico', label: 'Micrófono Alámbrico' },
-        { key: 'proyeccionPresentacion', label: 'Proyección de Presentación' },
-        { key: 'proyeccionVideo', label: 'Proyección de Video Institucional' },
-        { key: 'videograbacion', label: 'Videograbación' },
-        { key: 'personalApoyo', label: 'Personal de Apoyo' },
-        { key: 'apuntador', label: 'Apuntador para pase de diapositivas' },
-        { key: 'musicaFondo', label: 'Música de fondo' },
-    ];
+   
 
     const handleVehicleChange = (e) => {
         const { name, value } = e.target;
@@ -227,9 +250,17 @@ const EventForm = () => {
                 otrosObservaciones: data.otrosObservaciones ?? prev.otrosObservaciones
             }));
 
-            if (data.audiovisual && typeof data.audiovisual === 'object') {
-                setAudiovisual(prev => ({ ...prev, ...data.audiovisual }));
-            }
+           if (data.sonido && typeof data.sonido === 'object') {
+    setSonido(prev => ({ ...prev, ...data.sonido }));
+}
+
+if (data.proyeccion && typeof data.proyeccion === 'object') {
+    setProyeccion(prev => ({ ...prev, ...data.proyeccion }));
+}
+
+if (data.microfonos && typeof data.microfonos === 'object') {
+    setMicrofonos(prev => ({ ...prev, ...data.microfonos }));
+}
 
             if (data.otros && typeof data.otros === 'object') {
                 setOtros(prev => ({ ...prev, ...data.otros }));
@@ -298,8 +329,19 @@ const EventForm = () => {
                                 otrosObservaciones: currentVersion.otrosObservaciones || currentEvent.otrosObservaciones || ''
                             });
 
-                            const targetAv = currentVersion.audiovisual || currentEvent.audiovisual;
-                            if (targetAv) setAudiovisual(prev => ({ ...prev, ...targetAv }));
+const targetAudiovisual =
+    currentVersion.audiovisual ||
+    currentEvent.audiovisual;
+
+if (targetAudiovisual) {
+    setAudiovisual(prev => ({
+        ...prev,
+        ...targetAudiovisual
+    }));
+}
+
+const targetMicrofonos = currentVersion.microfonos || currentEvent.microfonos;
+if (targetMicrofonos) setMicrofonos(prev => ({ ...prev, ...targetMicrofonos }));
 
                             const targetOtros = currentVersion.requerimientosOtros || currentEvent.requerimientosOtros;
                             if (targetOtros) setOtros(prev => ({ ...prev, ...targetOtros }));
@@ -336,8 +378,14 @@ const EventForm = () => {
                                 activities: currentEvent.activities || [],
                                 otrosObservaciones: currentEvent.otrosObservaciones || ''
                             });
+if (currentEvent.sonido)
+    setSonido(prev => ({ ...prev, ...currentEvent.sonido }));
 
-                            if (currentEvent.audiovisual) setAudiovisual(prev => ({ ...prev, ...currentEvent.audiovisual }));
+if (currentEvent.proyeccion)
+    setProyeccion(prev => ({ ...prev, ...currentEvent.proyeccion }));
+
+if (currentEvent.microfonos)
+    setMicrofonos(prev => ({ ...prev, ...currentEvent.microfonos }));
                             if (currentEvent.requerimientosOtros) setOtros(prev => ({ ...prev, ...currentEvent.requerimientosOtros }));
                             if (currentEvent.listaEstacionamiento) setParkingList(currentEvent.listaEstacionamiento);
                             if (currentEvent.horaFotografia) setHoraFotografia(currentEvent.horaFotografia);
@@ -358,20 +406,59 @@ const EventForm = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const toggleAudiovisual = (key) => {
-        setAudiovisual((prev) => ({
-            ...prev,
-            [key]: !prev[key],
-        }));
-    };
-
+   
     const [error, setError] = useState('');
+    // CONTADORES DE REQUERIMIENTOS
+
+const audiovisualCount =
+    Object.values(audiovisual).filter(Boolean).length;
+
+const microfonosCount = Object.values(microfonos).filter(Boolean).length;
+
+
+
+const protocoloCount =
+    [
+        otros.banderas,
+        otros.himno,
+        otros.separadorHimno
+    ]
+    .filter(Boolean)
+    .length;
+
+
+const logisticaCount =
+    [
+        otros.manteles,
+        otros.coffeeBreak,
+        otros.edecanes
+    ]
+    .filter(Boolean)
+    .length;
+
+
+const podiumSelected = otros.podium;
+
+
+const presidiumCount = presidiumList.length;
+
+
+const estacionamientoCount = parkingList.length;
+
+
+const fotografiaSelected = horaFotografia !== '';
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!formData.name.trim() || !formData.locationId || !formData.organizationId || !formData.eventTypeId) {
+        if (!formData.name.trim() || !formData.locationId || !formData.eventTypeId) {
             setStep(1);
-            setError('Por favor complete todos los campos obligatorios (Nombre, Organización, Tipo y Recinto).');
+            setError('Por favor complete todos los campos obligatorios (Nombre, Tipo y Recinto).');
+            return;
+        }
+
+        if (!user?.organizationId) {
+            setStep(1);
+            setError('Error: Su cuenta de usuario no tiene una organización asignada.');
             return;
         }
 
@@ -391,10 +478,11 @@ const EventForm = () => {
             const payload = {
                 ...formData,
                 locationId: Number(formData.locationId),
-                organizationId: Number(formData.organizationId),
+                organizationId: Number(user.organizationId),
                 eventTypeId: Number(formData.eventTypeId),
 
-                audiovisual,
+             audiovisual,
+microfonos,
 
                 requerimientosOtros: otros,
                 listaEstacionamiento: otros.estacionamiento ? parkingList : null,
@@ -408,7 +496,10 @@ const EventForm = () => {
                     : `/creador/events/${id}`;
                 await api.put(endpoint, payload);
             } else {
-                await api.post('/creador/events', payload);
+                const endpoint = (user?.role === 'encargado_departamento' || user?.role === 'subdirector')
+                    ? `/encargado/events`
+                    : `/creador/events`;
+                await api.post(endpoint, payload);
             }
             navigate('/');
         } catch (err) {
@@ -432,13 +523,12 @@ const EventForm = () => {
         }
     };
 
-    const steps = [
-        { id: 1, name: 'General', icon: FileText },
-        { id: 2, name: 'Orden del Día', icon: Clock },
-        { id: 3, name: 'Requerimientos', icon: Layers },
-        { id: 4, name: 'Detalles Específicos', icon: Briefcase },
-    ];
-
+  const steps = [
+    { id: 1, name: 'General', icon: FileText },
+    { id: 2, name: 'Requerimientos', icon: Layers },
+ { id: 3, name: 'Detalles Específicos', icon: Briefcase },
+     { id: 4, name: 'Orden del Día', icon: Clock },
+];
     const filteredVenues = useMemo(() => {
         const personas = parseInt(formData.cantidadPersonas, 10);
         if (!personas || isNaN(personas)) {
@@ -516,35 +606,50 @@ const EventForm = () => {
                         />
                     )}
 
-                    {step === 2 && (
-                        <EventFormOrdenDia
-                            formData={formData}
-                            handleChange={handleChange}
-                            setFormData={setFormData}
-                            currentActivity={currentActivity}
-                            setCurrentActivity={setCurrentActivity}
-                            setStep={setStep}
-                        />
-                    )}
+ {step === 2 && (
+                       
+    <EventFormRequerimientos
+    formData={formData}
+    handleChange={handleChange}
 
+  audiovisual={audiovisual}
+setAudiovisual={setAudiovisual}
+
+
+    microfonos={microfonos}
+    setMicrofonos={setMicrofonos}
+
+    otros={otros}
+    otrosItems={otrosItems}
+    toggleOtro={toggleOtro}
+
+    setShowParkingModal={setShowParkingModal}
+    setShowPhotoModal={setShowPhotoModal}
+    setShowPresidiumModal={setShowPresidiumModal}
+
+    setShowAudioModal={setShowAudioModal}
+    setShowMicrophonesModal={setShowMicrophonesModal}
+
+    setShowPodiumModal={setShowPodiumModal}
+    setShowProtocoloModal={setShowProtocoloModal}
+    setShowLogisticaModal={setShowLogisticaModal}
+
+    audiovisualCount={audiovisualCount}
+
+    microfonosCount={microfonosCount}
+
+    protocoloCount={protocoloCount}
+    logisticaCount={logisticaCount}
+    podiumSelected={podiumSelected}
+    presidiumCount={presidiumCount}
+    estacionamientoCount={estacionamientoCount}
+    fotografiaSelected={fotografiaSelected}
+
+    setStep={setStep}
+/>
+                    )}
+                    
                     {step === 3 && (
-                        <EventFormRequerimientos
-                            formData={formData}
-                            handleChange={handleChange}
-                            audiovisual={audiovisual}
-                            audiovisualItems={audiovisualItems}
-                            toggleAudiovisual={toggleAudiovisual}
-                            otros={otros}
-                            otrosItems={otrosItems}
-                            toggleOtro={toggleOtro}
-                            setShowParkingModal={setShowParkingModal}
-                            setShowPhotoModal={setShowPhotoModal}
-                            setShowPresidiumModal={setShowPresidiumModal}
-                            setStep={setStep}
-                        />
-                    )}
-
-                    {step === 4 && (
                         <EventFormDetalles
                             formData={formData}
                             handleChange={handleChange}
@@ -552,6 +657,24 @@ const EventForm = () => {
                             setStep={setStep}
                         />
                     )}
+                    {step === 4 && (
+                     <EventFormOrdenDia
+    formData={formData}
+    setFormData={setFormData}
+    currentActivity={currentActivity}
+    setCurrentActivity={setCurrentActivity}
+    setStep={setStep}
+    loading={loading}
+/>
+                    )}
+
+                   {step === 5 && (
+    <EventFormOpciones
+        setStep={setStep}
+        handleSubmit={handleSubmit}
+    />
+)}
+
                 </form>
 
                 {/* Sección de Feedbacks para Modo Edición */}
@@ -578,6 +701,7 @@ const EventForm = () => {
                 handleAutoFill={handleAutoFill}
                 isAILoading={isAILoading}
             />
+            
 
             <ParkingModal
                 showParkingModal={showParkingModal}
@@ -595,7 +719,6 @@ const EventForm = () => {
                 horaFotografia={horaFotografia}
                 setHoraFotografia={setHoraFotografia}
             />
-
             <PresidiumModal
                 showPresidiumModal={showPresidiumModal}
                 setShowPresidiumModal={setShowPresidiumModal}
@@ -605,6 +728,42 @@ const EventForm = () => {
                 presidiumList={presidiumList}
                 setPresidiumList={setPresidiumList}
             />
+            <AudioModal
+     showAudioModal={showAudioModal}
+    setShowAudioModal={setShowAudioModal}
+
+    audiovisual={audiovisual}
+    setAudiovisual={setAudiovisual}
+/>
+            <MicrophonesModal
+    showMicrophonesModal={showMicrophonesModal}
+    setShowMicrophonesModal={setShowMicrophonesModal}
+    microfonos={microfonos}
+    setMicrofonos={setMicrofonos}
+/>
+
+<PodiumModal
+    showPodiumModal={showPodiumModal}
+    setShowPodiumModal={setShowPodiumModal}
+    otros={otros}
+    setOtros={setOtros}
+/>
+
+
+<ProtocoloModal
+    showProtocoloModal={showProtocoloModal}
+    setShowProtocoloModal={setShowProtocoloModal}
+    otros={otros}
+    setOtros={setOtros}
+/>
+
+
+<LogisticaModal
+    showLogisticaModal={showLogisticaModal}
+    setShowLogisticaModal={setShowLogisticaModal}
+    otros={otros}
+    setOtros={setOtros}
+/>
         </div>
     );
 };

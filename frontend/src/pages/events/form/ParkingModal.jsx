@@ -1,4 +1,3 @@
-import React from 'react';
 import { Plus, X } from 'lucide-react';
 
 const MARCAS_POPULARES = [
@@ -45,6 +44,27 @@ const ParkingModal = ({
                             onChange={handleVehicleChange}
                             className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none shadow-sm"
                         />
+                        <label className="flex items-center gap-2 px-4 py-2.5 bg-white rounded-xl border border-slate-200 text-sm font-medium text-slate-700">
+    <input
+        type="checkbox"
+        name="reservarCajon"
+        checked={currentVehicle.reservarCajon}
+        onChange={handleVehicleChange}
+    />
+
+    Reservar cajón
+</label>
+{currentVehicle.reservarCajon && (
+    <input
+        type="number"
+        min="1"
+        name="numeroCajon"
+        placeholder="Número de cajón"
+        value={currentVehicle.numeroCajon}
+        onChange={handleVehicleChange}
+        className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none shadow-sm"
+    />
+)}
                         <input
                             type="text"
                             name="placaVehiculo"
@@ -89,7 +109,15 @@ const ParkingModal = ({
                             {parkingList.map((vehicle, idx) => (
                                 <div key={idx} className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-xl text-sm shadow-sm animate-fade-in">
                                     <div className="truncate flex-1 pr-2">
-                                        <p className="font-bold text-slate-800 truncate">{vehicle.marcaVehiculo} • <span className="text-emerald-600">{vehicle.placaVehiculo}</span></p>
+                                       <p className="font-bold text-slate-800 truncate">
+    {vehicle.marcaVehiculo} • <span className="text-emerald-600">{vehicle.placaVehiculo}</span>
+</p>
+
+{vehicle.reservarCajon && (
+    <p className="text-xs text-emerald-600 font-bold">
+        🚗 Cajón reservado: {vehicle.numeroCajon}
+    </p>
+)}
                                         <p className="text-xs text-slate-400 font-medium truncate">Resp: {vehicle.nombreResponsable} {vehicle.colorVehiculo ? `(${vehicle.colorVehiculo})` : ''}</p>
                                     </div>
                                     <button
