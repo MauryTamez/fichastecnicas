@@ -17,3 +17,9 @@ Historial de cambios automatizado.
 ### 📦 Actualización: 2026-08-10 13:48:13 (Fallback por Error)
 - **Error API:** This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-r1
 
+### 📦 Actualización: 2026-08-12 13:18:44 (Fallback por Error)
+- **Error API:** This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-r1
+
+### 📦 Actualización: 2026-08-12 14:31:21 (Fallback por Error)
+- **Error API:** This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-r1
+
