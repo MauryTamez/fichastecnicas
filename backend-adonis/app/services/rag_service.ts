@@ -258,7 +258,7 @@ Estructura JSON requerida:
       headers: {
         'Authorization': `Bearer ${this.openRouterKey}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'http://localhost:3333',
+        'HTTP-Referer': `http://${env.get('HOST')}:${env.get('PORT')}`,
         'X-Title': 'Fichas Tecnicas CAM',
       },
       body: JSON.stringify({
