@@ -15,7 +15,7 @@ export default class Department extends BaseModel {
   declare priority: number
 
   @column()
-  declare organization_id: number
+  declare organizationId: number
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

@@ -1,5 +1,4 @@
-import React from 'react';
-import { Briefcase, Save } from 'lucide-react';
+import { Briefcase, ChevronRight } from 'lucide-react';
 
 const EventFormDetalles = ({
     formData,
@@ -7,6 +6,9 @@ const EventFormDetalles = ({
     loading,
     setStep
 }) => {
+
+    console.log("Estoy en detalles");
+
     return (
         <div className="bg-white p-8 rounded-[2rem] shadow border border-gray-100 animate-slide-up">
             <div className="flex items-center gap-3 mb-8">
@@ -36,43 +38,72 @@ const EventFormDetalles = ({
                     </select>
                 </div>
 
-                <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight">
-                        Programa Impactado
-                    </label>
-                    <select
-                        name="programImpacted"
-                        className="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium"
-                        value={formData.programImpacted}
-                        onChange={handleChange}
-                    >
-                        <option value="">
-                            Selecciona un programa académico
-                        </option>
-                        <option value="Ingeniería en Sistemas">
-                            Ingeniería en Sistemas
-                        </option>
-                        <option value="Ingeniería Mecatrónica">
-                            Ingeniería Mecatrónica
-                        </option>
-                        <option value="Ingeniería Mecánica">
-                            Ingeniería Mecánica
-                        </option>
-                        <option value="Ingeniería Industrial">
-                            Ingeniería Industrial
-                        </option>
-                        <option value="Ingeniería Electrónica">
-                            Ingeniería Electrónica
-                        </option>
-                        <option value="Ingeniería Administrativa">
-                            Ingeniería Administrativa
-                        </option>
-                        <option value="Ingeniería Aeronáutica">
-                            Ingeniería Aeronáutica
-                        </option>
-                    </select>
-                </div>
+                <select
+    name="programImpacted"
+    className="block w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium"
+    value={formData.programImpacted}
+    onChange={handleChange}
+>
+    <option value="">
+        Selecciona un programa académico
+    </option>
 
+    <option value="Ingeniería Aeronáutica">
+        Ingeniería Aeronáutica
+    </option>
+
+    <option value="Ingeniería Administrativa">
+        Ingeniería Administrativa
+    </option>
+
+    <option value="Ingeniería Electrónica y Comunicaciones">
+        Ingeniería Electrónica y Comunicaciones
+    </option>
+
+    <option value="Ingeniería en Manufactura">
+        Ingeniería en Manufactura
+    </option>
+
+    <option value="Ingeniería en Materiales">
+        Ingeniería en Materiales
+    </option>
+
+    <option value="Ingeniería en Mecatrónica">
+        Ingeniería en Mecatrónica
+    </option>
+
+    <option value="Ingeniería en Sistemas">
+        Ingeniería en Sistemas
+    </option>
+
+    <option value="Ingeniería Industrial">
+        Ingeniería Industrial
+    </option>
+
+    <option value="Ingeniería Mecánica">
+        Ingeniería Mecánica
+    </option>
+
+    <option value="Ingeniería Química">
+        Ingeniería Química
+    </option>
+
+    <option value="Ingeniería en Tecnología de Software">
+        Ingeniería en Tecnología de Software
+    </option>
+
+    <option value="Ingeniería Petrolera">
+        Ingeniería Petrolera
+    </option>
+
+    <option value="Ingeniería Eléctrica">
+        Ingeniería Eléctrica
+    </option>
+
+    <option value="Posgrado">
+        Posgrado
+    </option>
+</select>
                 <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2 ml-1 uppercase tracking-tight">Especificaciones de Invitados</label>
                     <textarea
@@ -167,26 +198,26 @@ const EventFormDetalles = ({
                 </div>
             </div>
 
-            <div className="mt-12 pt-8 border-t border-gray-50 flex justify-between">
-                <button type="button" onClick={() => setStep(3)} className="px-8 py-3.5 rounded-2xl font-bold text-slate-500 hover:text-slate-700 transition-all">Atrás</button>
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-10 py-3.5 rounded-2xl font-bold shadow-xl shadow-emerald-200/70 hover:shadow-2xl hover:shadow-emerald-200/80 transition-all transform hover:-translate-y-1 active:translate-y-0"
-                >
-                    {loading ? (
-                        <div className="flex items-center gap-2">
-                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> Guardando...
-                        </div>
-                    ) : (
-                        <>
-                            <Save size={20} /> Guardar Ficha Técnica
-                        </>
-                    )}
-                </button>
-            </div>
-        </div>
-    );
+        <div className="mt-12 pt-8 border-t border-gray-50 flex justify-between">
+    <button 
+        type="button" 
+        onClick={() => setStep(2)} 
+        className="px-8 py-3.5 rounded-2xl font-bold text-slate-500 hover:text-slate-700 transition-all"
+    >
+        Atrás
+    </button>
+
+    <button 
+        type="button" 
+        onClick={() => setStep(4)} 
+        className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-8 py-3.5 rounded-2xl font-bold shadow-lg shadow-emerald-200/70 hover:shadow-xl hover:shadow-emerald-200/80 transition-all"
+    >
+        Continuar
+        <ChevronRight size={18} />
+    </button>
+</div>
+</div>  // div principal bg-white
+);
 };
 
 export default EventFormDetalles;

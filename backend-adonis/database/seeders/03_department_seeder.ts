@@ -26,13 +26,13 @@ export default class extends BaseSeeder {
         {
           name: 'SAFIME',
           priority: 4,
-          organization_id: fime.id,
+          organizationId: fime.id,
         },
       ]
 
       for (const dept of departments) {
         await Department.updateOrCreate(
-          { name: dept.name, organization_id: dept.organization_id },
+          { name: dept.name, organizationId: dept.organizationId },
           dept
         )
       }

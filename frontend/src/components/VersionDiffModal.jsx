@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { X, ArrowRight, CheckCircle2, GitCompare, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -105,7 +106,7 @@ const VersionDiffModal = ({ isOpen, onClose, versions = [], defaultV1Id = null, 
     const displayedFields = onlyDifferences ? fieldComparisons.filter(f => f.isDifferent) : fieldComparisons;
     const diffCount = fieldComparisons.filter(f => f.isDifferent).length;
 
-    return (
+    const modalContent = (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-fade-in font-sans">
             <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-gray-100">
                 
@@ -258,6 +259,8 @@ const VersionDiffModal = ({ isOpen, onClose, versions = [], defaultV1Id = null, 
             </div>
         </div>
     );
+
+    return createPortal(modalContent, document.body);
 };
 
 export default VersionDiffModal;

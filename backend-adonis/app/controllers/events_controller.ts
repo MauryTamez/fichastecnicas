@@ -2,43 +2,17 @@ import Event from '#models/event'
 import EventVersion from '#models/event_version'
 import VersionActivity from '#models/version_activity'
 import VersionContent from '#models/version_content'
+import { EventStateService } from '#services/event_state_service'
+import { NotificationService } from '#services/notification_service'
+import { RagService } from '#services/rag_service'
 import { createEventValidator, updateEventValidator } from '#validators/event'
 import type { HttpContext } from '@adonisjs/core/http'
 import db from '@adonisjs/lucid/services/db'
-import { EventState } from '../enums/event_state.js'
-import { RagService } from '#services/rag_service'
-import { EventStateService } from '#services/event_state_service'
-import { NotificationService } from '#services/notification_service'
 import { DateTime } from 'luxon'
+import { EventState } from '../enums/event_state.js'
 
 export default class EventsController {
   private ragService = new RagService()
-
-  private sanitizeJsonList(list: any): any[] | null {
-    if (!list) return null
-    let arr = list
-    if (typeof arr === 'string') {
-      try {
-        arr = JSON.parse(arr)
-      } catch {
-        return null
-      }
-    }
-    if (!Array.isArray(arr)) return null
-    const cleaned = arr
-      .map((item) => {
-        if (typeof item === 'string') {
-          try {
-            return JSON.parse(item)
-          } catch {
-            return { nombre: item }
-          }
-        }
-        return item
-      })
-      .filter((item) => item && typeof item === 'object')
-    return cleaned.length > 0 ? cleaned : null
-  }
 
   private async checkOverlaps(startsAt: DateTime, endsAt: DateTime, locationId: number, currentEventId: number | null = null) {
     if (!startsAt.isValid || !endsAt.isValid) return []
@@ -62,7 +36,10 @@ export default class EventsController {
 
   async index({ request, response, auth }: HttpContext) {
     const page = request.input('page', 1)
-    const limit = 20
+    const limit = request.input('limit', 20)
+    const departmentId = request.input('departmentId')
+    const eventTypeId = request.input('eventTypeId')
+    const currentState = request.input('currentState')
 
     const user = auth.use('web').user
     await user?.load('role')
@@ -76,7 +53,31 @@ export default class EventsController {
       })
       .preload('organization')
       .preload('user')
+      .orderByRaw(`
+        CASE current_state
+          WHEN 'requested' THEN 1
+          WHEN 'in_review' THEN 2
+          WHEN 'scheduled' THEN 3
+          WHEN 'draft' THEN 4
+          WHEN 'cancelled' THEN 5
+          WHEN 'rejected' THEN 6
+          WHEN 'historical' THEN 7
+          ELSE 8
+        END ASC
+      `)
       .orderBy('createdAt', 'desc')
+
+    if (departmentId) {
+      eventsQuery.whereHas('user', (q) => q.where('departmentId', departmentId))
+    }
+    
+    if (eventTypeId) {
+      eventsQuery.where('eventTypeId', eventTypeId)
+    }
+    
+    if (currentState) {
+      eventsQuery.where('currentState', currentState)
+    }
 
     if (user && roleName !== 'admin' && roleName !== 'moderador') {
       if (roleName === 'encargado_departamento') {
@@ -168,6 +169,19 @@ export default class EventsController {
     }
 
     const events = await eventsQuery
+      .orderByRaw(`
+        CASE current_state
+          WHEN 'requested' THEN 1
+          WHEN 'in_review' THEN 2
+          WHEN 'scheduled' THEN 3
+          WHEN 'draft' THEN 4
+          WHEN 'cancelled' THEN 5
+          WHEN 'rejected' THEN 6
+          WHEN 'historical' THEN 7
+          ELSE 8
+        END ASC
+      `)
+      .orderBy('createdAt', 'desc')
 
     const mapped = events.map(e => {
       const content = e.eventVersions[0]?.versionContent;
@@ -218,32 +232,8 @@ export default class EventsController {
           directorAction: content?.directorAction,
           cantidadPersonas: content?.cantidadPersonas,
           acomodo_tipo: content?.acomodoTipo,
-          audiovisual: {
-            sonido: Boolean(content?.sonido),
-            microfonoInalambrico: Boolean(content?.microfonoInalambricoMano),
-            microfonoMesa: Boolean(content?.microfonoInalambricoMesa),
-            microfonoPresidencial: Boolean(content?.microfonoPresidencial),
-            microfonoDiadema: Boolean(content?.microfonoDiadema),
-            microfonoAlambrico: Boolean(content?.microfonoAlambrico),
-            proyeccionPresentacion: Boolean(content?.proyeccionPresentacion),
-            proyeccionVideo: Boolean(content?.proyeccionVideo),
-            videograbacion: Boolean(content?.videograbacion),
-            personalApoyo: Boolean(content?.personalApoyo),
-            apuntador: Boolean(content?.apuntador),
-            musicaFondo: Boolean(content?.musicaFondo),
-          },
-          requerimientosOtros: {
-            manteles: Boolean(content?.manteles),
-            banderas: Boolean(content?.banderas),
-            coffeeBreak: Boolean(content?.mesaCoffeeBreak),
-            estacionamiento: Boolean(content?.estacionamiento),
-            fotografia: Boolean(content?.tomaFotografia),
-            podium: Boolean(content?.podium),
-            presidium: Boolean(content?.presidium),
-            edecanes: Boolean(content?.edecanes),
-            himno: Boolean(content?.himnoUanl),
-            separadorHimno: Boolean(content?.separadorHimno),
-          },
+          audiovisual: {},
+          requerimientosOtros: {},
           otrosObservaciones: content?.otrosObservaciones || '',
           listaEstacionamiento: content?.listaEstacionamiento || [],
           horaFotografia: content?.horaFotografia || '',
@@ -287,7 +277,14 @@ export default class EventsController {
 
   async store({ request, response, auth }: HttpContext) {
     const data = await request.validateUsing(createEventValidator)
-    const userEmail = auth.use('web').user?.email || ''
+    
+    const user = auth.use('web').user!
+    await user.load('role')
+    if (user.role?.name === 'moderador') {
+      return response.forbidden({ message: 'Los moderadores no tienen permiso para crear fichas técnicas' })
+    }
+    
+    const userEmail = user.email || ''
 
     const locationId = data.locationId
     const startsAt = DateTime.fromISO(data.startsAt)
@@ -337,34 +334,11 @@ export default class EventsController {
         content.cantidadPersonas = data.cantidadPersonas || null
         content.acomodoTipo = data.acomodoTipo || data.acomodo_tipo || null
 
-        content.sonido = Boolean(data.audiovisual?.sonido)
-        content.microfonoInalambricoMano = Boolean(data.audiovisual?.microfonoInalambrico)
-        content.microfonoInalambricoMesa = Boolean(data.audiovisual?.microfonoMesa)
-        content.microfonoPresidencial = Boolean(data.audiovisual?.microfonoPresidencial)
-        content.microfonoDiadema = Boolean(data.audiovisual?.microfonoDiadema)
-        content.microfonoAlambrico = Boolean(data.audiovisual?.microfonoAlambrico)
-        content.proyeccionPresentacion = Boolean(data.audiovisual?.proyeccionPresentacion)
-        content.proyeccionVideo = Boolean(data.audiovisual?.proyeccionVideo)
-        content.videograbacion = Boolean(data.audiovisual?.videograbacion)
-        content.personalApoyo = Boolean(data.audiovisual?.personalApoyo)
-        content.apuntador = Boolean(data.audiovisual?.apuntador)
-        content.musicaFondo = Boolean(data.audiovisual?.musicaFondo)
-
-        content.manteles = Boolean(data.requerimientosOtros?.manteles)
-        content.banderas = Boolean(data.requerimientosOtros?.banderas)
-        content.mesaCoffeeBreak = Boolean(data.requerimientosOtros?.coffeeBreak)
-        content.estacionamiento = Boolean(data.requerimientosOtros?.estacionamiento)
-        content.tomaFotografia = Boolean(data.requerimientosOtros?.fotografia)
-        content.podium = Boolean(data.requerimientosOtros?.podium)
-        content.presidium = Boolean(data.requerimientosOtros?.presidium)
-        content.edecanes = Boolean(data.requerimientosOtros?.edecanes)
-        content.himnoUanl = Boolean(data.requerimientosOtros?.himno)
-        content.separadorHimno = Boolean(data.requerimientosOtros?.separadorHimno)
-
+        // Checkboxes logic has been moved to version_items
         content.otrosObservaciones = data.otrosObservaciones || null
-        content.listaEstacionamiento = this.sanitizeJsonList(data.listaEstacionamiento)
+        content.listaEstacionamiento = data.listaEstacionamiento || null
         content.horaFotografia = data.horaFotografia || null
-        content.listaPresidium = this.sanitizeJsonList(data.listaPresidium)
+        content.listaPresidium = data.listaPresidium || null
 
         content.useTransaction(transaction)
         await content.save()
@@ -497,36 +471,11 @@ export default class EventsController {
       content.cantidadPersonas = data.cantidadPersonas !== undefined ? data.cantidadPersonas : (oldContent?.cantidadPersonas || null)
       content.acomodoTipo = data.acomodoTipo !== undefined ? data.acomodoTipo : (data.acomodo_tipo !== undefined ? data.acomodo_tipo : (oldContent?.acomodoTipo || null))
 
-      const av = data.audiovisual
-      content.sonido = av?.sonido !== undefined ? Boolean(av.sonido) : (oldContent?.sonido || false)
-      content.microfonoInalambricoMano = av?.microfonoInalambrico !== undefined ? Boolean(av.microfonoInalambrico) : (oldContent?.microfonoInalambricoMano || false)
-      content.microfonoInalambricoMesa = av?.microfonoMesa !== undefined ? Boolean(av.microfonoMesa) : (oldContent?.microfonoInalambricoMesa || false)
-      content.microfonoPresidencial = av?.microfonoPresidencial !== undefined ? Boolean(av.microfonoPresidencial) : (oldContent?.microfonoPresidencial || false)
-      content.microfonoDiadema = av?.microfonoDiadema !== undefined ? Boolean(av.microfonoDiadema) : (oldContent?.microfonoDiadema || false)
-      content.microfonoAlambrico = av?.microfonoAlambrico !== undefined ? Boolean(av.microfonoAlambrico) : (oldContent?.microfonoAlambrico || false)
-      content.proyeccionPresentacion = av?.proyeccionPresentacion !== undefined ? Boolean(av.proyeccionPresentacion) : (oldContent?.proyeccionPresentacion || false)
-      content.proyeccionVideo = av?.proyeccionVideo !== undefined ? Boolean(av.proyeccionVideo) : (oldContent?.proyeccionVideo || false)
-      content.videograbacion = av?.videograbacion !== undefined ? Boolean(av.videograbacion) : (oldContent?.videograbacion || false)
-      content.personalApoyo = av?.personalApoyo !== undefined ? Boolean(av.personalApoyo) : (oldContent?.personalApoyo || false)
-      content.apuntador = av?.apuntador !== undefined ? Boolean(av.apuntador) : (oldContent?.apuntador || false)
-      content.musicaFondo = av?.musicaFondo !== undefined ? Boolean(av.musicaFondo) : (oldContent?.musicaFondo || false)
-
-      const ro = data.requerimientosOtros
-      content.manteles = ro?.manteles !== undefined ? Boolean(ro.manteles) : (oldContent?.manteles || false)
-      content.banderas = ro?.banderas !== undefined ? Boolean(ro.banderas) : (oldContent?.banderas || false)
-      content.mesaCoffeeBreak = ro?.coffeeBreak !== undefined ? Boolean(ro.coffeeBreak) : (oldContent?.mesaCoffeeBreak || false)
-      content.estacionamiento = ro?.estacionamiento !== undefined ? Boolean(ro.estacionamiento) : (oldContent?.estacionamiento || false)
-      content.tomaFotografia = ro?.fotografia !== undefined ? Boolean(ro.fotografia) : (oldContent?.tomaFotografia || false)
-      content.podium = ro?.podium !== undefined ? Boolean(ro.podium) : (oldContent?.podium || false)
-      content.presidium = ro?.presidium !== undefined ? Boolean(ro.presidium) : (oldContent?.presidium || false)
-      content.edecanes = ro?.edecanes !== undefined ? Boolean(ro.edecanes) : (oldContent?.edecanes || false)
-      content.himnoUanl = ro?.himno !== undefined ? Boolean(ro.himno) : (oldContent?.himnoUanl || false)
-      content.separadorHimno = ro?.separadorHimno !== undefined ? Boolean(ro.separadorHimno) : (oldContent?.separadorHimno || false)
-
+      // Checkboxes logic has been moved to version_items
       content.otrosObservaciones = data.otrosObservaciones !== undefined ? data.otrosObservaciones : (oldContent?.otrosObservaciones || null)
-      content.listaEstacionamiento = data.listaEstacionamiento !== undefined ? this.sanitizeJsonList(data.listaEstacionamiento) : (oldContent?.listaEstacionamiento || null)
+      content.listaEstacionamiento = data.listaEstacionamiento !== undefined ? data.listaEstacionamiento : (oldContent?.listaEstacionamiento || null)
       content.horaFotografia = data.horaFotografia !== undefined ? data.horaFotografia : (oldContent?.horaFotografia || null)
-      content.listaPresidium = data.listaPresidium !== undefined ? this.sanitizeJsonList(data.listaPresidium) : (oldContent?.listaPresidium || null)
+      content.listaPresidium = data.listaPresidium !== undefined ? data.listaPresidium : (oldContent?.listaPresidium || null)
 
       content.useTransaction(transaction)
       await content.save()
@@ -612,6 +561,7 @@ export default class EventsController {
     return response.ok({ message: 'Estado actualizado', event })
   }
 
+  // cambia de draft a requested
   async requestReview({ params, response, auth }: HttpContext) {
     const user = auth.use('web').user
     if (!user) {
@@ -623,14 +573,18 @@ export default class EventsController {
       const eventStateService = new EventStateService()
       await eventStateService.requestReview(event, user)
       return response.ok({ message: 'Revisión solicitada exitosamente', event })
-    } catch (error) {
-      if (error.status) {
-        return response.status(error.status).json({ message: error.message })
-      }
-      return response.internalServerError({ message: 'Error interno del servidor', error: error.message })
+    } catch (error: any) {
+    if (error.status) {
+      return response.status(error.status).json({ message: error.message })
     }
-  }
 
+    return response.internalServerError({
+      message: 'Error interno del servidor',
+      error: error.message
+    })
+  }
+  }
+  // cambia de requested a in_review
   async passToReview({ params, response, auth }: HttpContext) {
     const user = auth.use('web').user!
     await user.load('role')

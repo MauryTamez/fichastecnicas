@@ -13,6 +13,7 @@ import LoginController from '#controllers/auth/login_controller'
 import DashboardController from '#controllers/dashboard_controller'
 const EventsController = () => import('#controllers/events_controller')
 const VenuesController = () => import('#controllers/venues_controller')
+const LocationTypesController = () => import('#controllers/location_types_controller')
 const UsersController = () => import('#controllers/users_controller')
 const LoginControllerIntegration = () => import('#controllers/auth/login_controller')
 const EventTypesController = () => import('#controllers/event_types_controller')
@@ -61,6 +62,7 @@ router.group(() => {
         router.post('/events/:id/pass-to-review', [EventsController, 'passToReview'])
 
         // Feedbacks
+        router.get('/feedbacks/pending', [FeedbacksController, 'pendingUserFeedbacks'])
         router.get('/events/:eventId/versions/:versionId/feedbacks', [FeedbacksController, 'index'])
         router.post('/events/:eventId/versions/:versionId/feedbacks', [FeedbacksController, 'store'])
         router.patch('/feedbacks/:id/resolve', [FeedbacksController, 'resolve'])
@@ -71,16 +73,25 @@ router.group(() => {
         // Data for dropdowns (accessible to all authenticated roles)
         router.get('/event-types', [EventTypesController, 'index'])
         router.get('/venues', [VenuesController, 'index'])
+        const DepartmentsController = () => import('#controllers/departments_controller')
+        router.get('/departments', [DepartmentsController, 'index'])
+        router.get('/users/:id/events-summary', [UsersController, 'userEventsSummary'])
 
         const CatalogsController = () => import('#controllers/catalogs_controller')
         router.get('/organizations', [CatalogsController, 'getOrganizations'])
         router.get('/catalog', [CatalogsController, 'index'])
+        router.get('/roles', [UsersController, 'roles'])
 
         // 1. Admin Group
         router.group(() => {
             router.post('/venues', [VenuesController, 'store'])
             router.put('/venues/:id', [VenuesController, 'update'])
             router.delete('/venues/:id', [VenuesController, 'destroy'])
+
+            router.get('/location-types', [LocationTypesController, 'index'])
+            router.post('/location-types', [LocationTypesController, 'store'])
+            router.put('/location-types/:id', [LocationTypesController, 'update'])
+            router.delete('/location-types/:id', [LocationTypesController, 'destroy'])
 
             router.get('/users', [UsersController, 'index'])
             router.post('/users', [UsersController, 'store'])
@@ -94,13 +105,24 @@ router.group(() => {
             router.get('/event-types/:id', [EventTypesController, 'show'])
             router.put('/event-types/:id', [EventTypesController, 'update'])
             router.delete('/event-types/:id', [EventTypesController, 'destroy'])
+
+            // Departments
+            const DepartmentsController = () => import('#controllers/departments_controller')
+            router.get('/departments', [DepartmentsController, 'index'])
+            router.post('/departments', [DepartmentsController, 'store'])
+            router.get('/departments/:id', [DepartmentsController, 'show'])
+            router.put('/departments/:id', [DepartmentsController, 'update'])
+            router.delete('/departments/:id', [DepartmentsController, 'destroy'])
         }).prefix('/admin').use(middleware.role(['admin']))
 
         // 2. Moderador Group
         router.group(() => {
             // Endpoints para moderador
             router.get('/solicitudes', [EventsController, 'pendingApprovals'])
-        }).prefix('/moderador').use(middleware.role(['admin', 'moderador']))
+            
+            const DepartmentsController = () => import('#controllers/departments_controller')
+            router.get('/organigram-all', [DepartmentsController, 'organigramAll'])
+        }).prefix('/moderador').use(middleware.role(['moderador']))
 
         // 3. Encargado de Departamento Group (Subdirector)
         router.group(() => {
@@ -109,19 +131,20 @@ router.group(() => {
             router.get('/organigram', [DepartmentsController, 'organigram'])
             router.get('/solicitudes', [EventsController, 'pendingApprovals'])
             router.put('/events/:id', [EventsController, 'update'])
-        }).prefix('/encargado').use(middleware.role(['admin', 'encargado_departamento']))
+            router.post('/events', [EventsController, 'store'])
+        }).prefix('/encargado').use(middleware.role(['encargado_departamento']))
 
         // 4. Creador Group
         router.group(() => {
             router.post('/events', [EventsController, 'store'])
             router.put('/events/:id', [EventsController, 'update'])
             router.delete('/events/:id', [EventsController, 'destroy'])
-        }).prefix('/creador').use(middleware.role(['admin', 'creador']))
+        }).prefix('/creador').use(middleware.role(['creador']))
 
         // 5. Auxiliares Group
         router.group(() => {
             // Endpoints exclusivos auxiliares
-        }).prefix('/auxiliar').use(middleware.role(['admin', 'auxiliares', 'auxiliar']))
+        }).prefix('/auxiliar').use(middleware.role(['auxiliares', 'auxiliar']))
 
     }).use([middleware.jwtAuth()])
 }).prefix('/api')

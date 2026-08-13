@@ -1,6 +1,7 @@
 import { DateTime } from 'luxon'
 import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
 import User from './user.js'
+import EventVersion from './event_version.js'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 
 export default class VersionFeedback extends BaseModel {
@@ -32,4 +33,7 @@ export default class VersionFeedback extends BaseModel {
     foreignKey: 'reviewerId',
   })
   declare reviewer: BelongsTo<typeof User>
+
+  @belongsTo(() => EventVersion)
+  declare eventVersion: BelongsTo<typeof EventVersion>
 }
