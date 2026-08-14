@@ -257,8 +257,8 @@ export default function UserAdmin() {
 
             {/* ═══ Modal de Formulario ═══ */}
             {isFormOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" onClick={handleCloseForm}>
-                    <div className="w-full max-w-md bg-white rounded-[2rem] shadow-2xl border border-gray-100 overflow-hidden animate-fade-in" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm" onClick={handleCloseForm}>
+                    <div className="w-full max-w-md max-h-[95vh] overflow-y-auto bg-white rounded-[2rem] shadow-2xl border border-gray-100 animate-fade-in flex flex-col" onClick={e => e.stopPropagation()}>
                         {/* Modal Header */}
                         <div className="flex items-center justify-between px-8 py-6 border-b border-gray-100 bg-gradient-to-br from-emerald-50 to-white">
                             <div>
