@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, Calendar, User as UserIcon, Search, LayoutDashboard, Tag, MapPin, ChevronDown, Shield, ShieldCheck, ShieldAlert, Menu, X, Settings, Mail, Building2, PlusCircle, CheckCircle } from 'lucide-react';
+import { LogOut, Calendar, User as UserIcon, Search, LayoutDashboard, Tag, MapPin, ChevronDown, Shield, ShieldCheck, ShieldAlert, Menu, X, Settings, Mail, Building2, PlusCircle, CheckCircle, key } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import ChatBot from './ChatBot';
 
@@ -11,6 +11,8 @@ const Layout = ({ children }) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const dropdownRef = useRef(null);
+    const [isPassworfModalOpen, setIsPasswordModalOpen]= useState(false);
+
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -191,6 +193,15 @@ const Layout = ({ children }) => {
                                 </div>
                                 <div className="p-2">
                                     <button
+                                        onClick={() => setIsPasswordModalOpen(true)}
+                                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-emerald-700 hover:bg-emerald-50 rounded-2xl transition-all group mb-1"
+                                    >
+                                        <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
+                                            <Key size={16} />
+                                        </div>
+                                        Cambiar Contraseña
+                                    </button>
+                                    <button
                                         onClick={handleLogout}
                                         className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-600 hover:bg-red-50 rounded-2xl transition-all group"
                                     >
@@ -215,6 +226,51 @@ const Layout = ({ children }) => {
                 </footer>
             </div>
             <ChatBot />
+            {isPasswordModalOpen && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center animate-fade-in p-4">
+                    <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-premium border border-gray-100 relative">
+                        <button 
+                            onClick={() => setIsPasswordModalOpen(false)}
+                            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 bg-gray-50 hover:bg-gray-100 p-2 rounded-xl transition-colors"
+                        >
+                            <X size={20} />
+                        </button>
+                        
+                        <div className="flex items-center gap-4 mb-6">
+                            <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center">
+                                <Key size={24} />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-display font-bold text-gray-900">Cambiar Contraseña</h3>
+                                <p className="text-sm text-gray-500 font-medium">Actualiza tu clave de acceso</p>
+                            </div>
+                        </div>
+
+                        <form className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-1">Contraseña Actual</label>
+                                <input type="password" placeholder="Ingresa tu contraseña actual" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm font-medium" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-1">Nueva Contraseña</label>
+                                <input type="password" placeholder="Ingresa tu nueva contraseña" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm font-medium" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-1">Confirmar Contraseña</label>
+                                <input type="password" placeholder="Repite tu nueva contraseña" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm font-medium" />
+                            </div>
+                            <div className="pt-4 flex gap-3">
+                                <button type="button" onClick={() => setIsPasswordModalOpen(false)} className="flex-1 py-3 px-4 rounded-xl font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 transition-colors">
+                                    Cancelar
+                                </button>
+                                <button type="button" className="flex-1 py-3 px-4 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all">
+                                    Guardar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

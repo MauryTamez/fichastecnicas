@@ -1,6 +1,8 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import User from '#models/user'
 import Role from '#models/role'
+import hash from '@adonisjs/core/services/hash'
+import updatePasswordValidator from '#validators/update_password'
 
 export default class UsersController {
   /**
@@ -54,6 +56,23 @@ export default class UsersController {
     await user.save()
 
     return response.created({ message: 'User created successfully', userId: user.id })
+  }
+
+  async updatePassword({auth,request,response}:HttpContext){
+    const user = auth.user!
+    const payload = await request.validateUsing(updatePasswordValidator)
+
+    // Verificar que la contraseña actual es correcta
+    const isPasswordValid = await hash.verify(user.password, payload.currentPassword)
+    if (!isPasswordValid) {
+      return response.badRequest({ message: 'La contraseña actual es incorrecta' })
+    }
+
+    // Actualizar con la nueva contraseña (el hook beforeSave se encargará del hash)
+    user.password = payload.newPassword
+    await user.save()
+
+    return response.ok({ message: 'Contraseña actualizada correctamente' })
   }
 
   async update({ params, request, response }: HttpContext) {

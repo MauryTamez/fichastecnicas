@@ -146,6 +146,9 @@ router.group(() => {
             // Endpoints exclusivos auxiliares
         }).prefix('/auxiliar').use(middleware.role(['auxiliares', 'auxiliar']))
 
+        // 6. Update password for self user
+        router.put('/users/passwordChange', [UsersController, 'updatePassword'])
+
     }).use([middleware.jwtAuth()])
 }).prefix('/api')
 
