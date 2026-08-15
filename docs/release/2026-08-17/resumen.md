@@ -25,3 +25,18 @@
   - Se añadió manejo de errores y mensajes de éxito para la operación de cambio de contraseña.
   - Se ajustaron estilos y animaciones del modal y elementos relacionados.
   - Se corrigió un error tipográfico en el estado `isPassworfModalOpen` a `isPasswordModalOpen`.
+
+### 📦 Actualización: 2026-08-14 21:59:21 (refactor: Migración de datos de eventos y corrección de seeder de departamentos)
+
+- **Backend:**
+  - **Seeder de Departamentos (`03_department_seeder.ts`):**
+    - Se corrigió el uso de `organization_id` a `organizationId` para adherirse a las convenciones de nombres de propiedades en el modelo `Department`.
+  - **Migración de Datos de Eventos (`08_event_seeder.ts`):**
+    - Se introdujo un nuevo seeder (`08_event_seeder.ts`) para poblar la base de datos con datos históricos de eventos desde un archivo `eventosAnteriores.json`.
+    - Se eliminó el seeder obsoleto `08_evento_seeder.ts`.
+    - Se implementó un usuario "histórico" (`historico@sistema.local`) para asignar la responsabilidad de los eventos migrados, asegurando la integridad referencial sin depender de usuarios existentes en el sistema actual.
+    - Se crearon helpers (`ensureOrganization`, `ensureEventType`, `ensureLocation`) para garantizar la existencia de registros en tablas relacionadas antes de insertar los datos de eventos.
+    - Se mapearon los campos del JSON a los modelos correspondientes (`Event`, `VersionActivity`), asignando el `userId` y `mainResponsibleId` al usuario histórico.
+    - Se añadió el manejo de la ruta del archivo JSON y una advertencia si no se encuentra.
+  - **Archivo de Datos (`eventosAnteriores.json`):**
+    - Se añadió un nuevo archivo JSON que contiene los datos de eventos históricos a ser migrados. Este archivo incluye información sobre eventos, sus tipos, organizaciones, creadores y responsables principales.
