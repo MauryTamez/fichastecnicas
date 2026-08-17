@@ -11,17 +11,17 @@ export default class extends BaseSeeder {
         {
           name: 'Direccion',
           priority: 1,
-          organization_id: fime.id,
+          organizationId: fime.id,
         },
         {
           name: 'Subdireccion',
           priority: 2,
-          organization_id: fime.id,
+          organizationId: fime.id,
         },
         {
           name: 'Academia',
           priority: 3,
-          organization_id: fime.id,
+          organizationId: fime.id,
         },
         {
           name: 'SAFIME',

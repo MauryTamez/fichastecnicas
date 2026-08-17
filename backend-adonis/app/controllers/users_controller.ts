@@ -1,6 +1,8 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import User from '#models/user'
 import Role from '#models/role'
+import hash from '@adonisjs/core/services/hash'
+import updatePasswordValidator from '#validators/update_password'
 
 export default class UsersController {
   /**
@@ -54,6 +56,37 @@ export default class UsersController {
     await user.save()
 
     return response.created({ message: 'User created successfully', userId: user.id })
+  }
+
+  async updatePassword({ auth, request, response }: HttpContext) {
+    try {
+      // Usar auth.use('web').user ya que el jwtAuth middleware usa ese guard
+      const user = auth.use('web').user
+      if (!user) {
+        return response.unauthorized({ message: 'Usuario no autenticado' })
+      }
+
+      // 1. Validar request
+      const payload = await request.validateUsing(updatePasswordValidator)
+
+      // 2. Verificar contraseña actual
+      const isPasswordValid = await hash.verify(user.password, payload.currentPassword)
+      if (!isPasswordValid) {
+        return response.badRequest({ message: 'La contraseña actual es incorrecta' })
+      }
+
+      // 3. Asignar y guardar. Traemos al usuario de la BD para asegurar que Lucid trackee el cambio
+      const dbUser = await User.findOrFail(user.id)
+      dbUser.password = payload.newPassword
+      await dbUser.save()
+
+      return response.ok({ message: 'Contraseña actualizada correctamente' })
+    } catch (error) {
+      if (error.messages) {
+        return response.badRequest({ message: 'Error de validación', errors: error.messages })
+      }
+      return response.internalServerError({ message: 'Ocurrió un error al cambiar la contraseña' })
+    }
   }
 
   async update({ params, request, response }: HttpContext) {

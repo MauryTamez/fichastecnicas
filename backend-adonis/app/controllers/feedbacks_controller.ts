@@ -71,8 +71,20 @@ export default class FeedbacksController {
 
     await user.load('role')
 
-    if (event.userId !== user.id && user.role?.name?.toLowerCase() !== 'admin') {
-      return response.forbidden({ message: 'Solo el creador puede marcar el feedback como resuelto.' })
+    const roleName = user.role?.name?.toLowerCase()
+
+    let canResolve = false
+    if (event.userId === user.id || roleName === 'admin') {
+      canResolve = true
+    } else if (roleName === 'encargado_departamento') {
+      await event.load('user')
+      if (event.user.departmentId === user.departmentId) {
+        canResolve = true
+      }
+    }
+
+    if (!canResolve) {
+      return response.forbidden({ message: 'No tienes permisos para marcar este feedback como resuelto.' })
     }
 
     feedback.status = 'resolved'

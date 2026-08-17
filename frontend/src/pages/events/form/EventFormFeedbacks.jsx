@@ -23,27 +23,27 @@ const EventFormFeedbacks = ({
             <div className="space-y-4">
                 {feedbacks.map(f => (
                     <div key={f.id} className={`p-5 rounded-2xl border ${f.status === 'resolved' ? 'bg-green-50/50 border-green-100' : 'bg-red-50/50 border-red-100'}`}>
-                        <div className="flex justify-between items-start mb-2">
-                            <div>
-                                <span className={`text-xs font-bold px-2.5 py-1 rounded-lg uppercase tracking-wide ${f.status === 'resolved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                    {f.status === 'resolved' ? 'Resuelto' : 'Pendiente'}
-                                </span>
-                                <span className="text-xs text-gray-500 ml-3">
-                                    {format(new Date(f.createdAt), "d 'de' MMMM, yyyy - HH:mm", { locale: es })}
-                                </span>
-                            </div>
-                            {f.status === 'pending' && (
+                        <div className="flex items-center mb-2">
+                            <span className={`text-xs font-bold px-2.5 py-1 rounded-lg uppercase tracking-wide ${f.status === 'resolved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                {f.status === 'resolved' ? 'Resuelto' : 'Pendiente'}
+                            </span>
+                            <span className="text-xs text-gray-500 ml-3">
+                                {format(new Date(f.createdAt), "d 'de' MMMM, yyyy - HH:mm", { locale: es })}
+                            </span>
+                        </div>
+                        <p className="text-sm text-gray-800 font-medium whitespace-pre-line mt-3">{f.comment}</p>
+                        {f.status === 'pending' && (
+                            <div className="mt-4 pt-4 border-t border-red-100 flex justify-end">
                                 <button
                                     type="button"
                                     onClick={() => handleResolveFeedback(f.id)}
                                     disabled={actionLoading}
-                                    className="text-sm bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-xl font-bold hover:bg-gray-50 transition-colors shadow-sm disabled:opacity-50"
+                                    className="text-sm bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-xl font-bold hover:bg-gray-50 transition-colors shadow-sm disabled:opacity-50"
                                 >
                                     Marcar como Resuelto
                                 </button>
-                            )}
-                        </div>
-                        <p className="text-sm text-gray-800 font-medium whitespace-pre-line mt-3">{f.comment}</p>
+                            </div>
+                        )}
                     </div>
                 ))}
             </div>
