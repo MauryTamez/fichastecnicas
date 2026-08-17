@@ -52,3 +52,19 @@
     - Se incluyó manejo de errores específico para la operación de vectorización.
     - Se implementó la sincronización de secuencias de bases de datos para las tablas relevantes (`organizations`, `departments`, `users`, `event_types`, `location_types`, `locations`, `events`, `version_contents`, `event_versions`, `version_activities`) para asegurar la correcta generación de IDs autoincrementales después de la inserción de datos.
   - **Dependencias:** Se importaron `VersionContent` y `EventVersion` para su uso en el seeder. Se añadió `db` para la sincronización de secuencias.
+
+### 📦 Actualización: 2026-08-17 13:28:39 (feat: Ampliación de permisos para resolver feedbacks y mejora en el modal de usuario)
+
+- **Backend:**
+  - **Controlador de Feedbacks (`FeedbacksController.ts`):**
+    - Se ha ampliado la lógica de permisos para la acción de marcar un feedback como resuelto. Ahora, además del creador del evento y los administradores, los usuarios con el rol de 'encargado_departamento' también pueden resolver feedbacks si pertenecen al mismo departamento que el creador del evento asociado.
+    - Se ha mejorado el mensaje de error devuelto cuando un usuario no tiene permisos para resolver un feedback, haciéndolo más genérico y preciso.
+- **Frontend:**
+  - **Componente `UserAdmin.jsx`:**
+    - Se ha implementado el uso de `createPortal` para renderizar el modal de formulario de usuario. Esto asegura que el modal se ancle directamente al `document.body`, resolviendo posibles problemas de apilamiento y clipping con elementos padres que tengan `overflow: hidden` o `z-index` restrictivos.
+    - Se ajustó el `z-index` del modal a `z-[100]` para garantizar su visibilidad sobre otros elementos de la interfaz.
+  - **Componente `EventFormFeedbacks.jsx`:**
+    - Se ha reestructurado la presentación de la información de cada feedback para mejorar la legibilidad.
+    - El estado del feedback (Resuelto/Pendiente) y la fecha de creación ahora se muestran en una línea separada y más compacta.
+    - El botón "Marcar como Resuelto" ahora se muestra dentro de un contenedor con un borde superior y alineado a la derecha, mejorando la separación visual y la jerarquía de la acción.
+    - Se ajustaron los estilos del botón "Marcar como Resuelto" para un aspecto más consistente con el resto de la interfaz.

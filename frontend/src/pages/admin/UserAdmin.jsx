@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { getUsers, createUser, updateUser, deleteUser, getRoles } from '../../api/users';
 import api from '../../api/axios';
@@ -256,8 +257,8 @@ export default function UserAdmin() {
             </div>
 
             {/* ═══ Modal de Formulario ═══ */}
-            {isFormOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm" onClick={handleCloseForm}>
+            {isFormOpen && createPortal(
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm" onClick={handleCloseForm}>
                     <div className="w-full max-w-md max-h-[95vh] overflow-y-auto bg-white rounded-[2rem] shadow-2xl border border-gray-100 animate-fade-in flex flex-col" onClick={e => e.stopPropagation()}>
                         {/* Modal Header */}
                         <div className="flex items-center justify-between px-8 py-6 border-b border-gray-100 bg-gradient-to-br from-emerald-50 to-white">
@@ -370,7 +371,8 @@ export default function UserAdmin() {
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );
