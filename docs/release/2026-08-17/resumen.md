@@ -40,3 +40,15 @@
     - Se añadió el manejo de la ruta del archivo JSON y una advertencia si no se encuentra.
   - **Archivo de Datos (`eventosAnteriores.json`):**
     - Se añadió un nuevo archivo JSON que contiene los datos de eventos históricos a ser migrados. Este archivo incluye información sobre eventos, sus tipos, organizaciones, creadores y responsables principales.
+
+### 📦 Actualización: 2026-08-17 11:57:39 (refactor: Mejoras en el seeder de eventos y vectorización)
+
+- **Backend:**
+  - **Seeder de Eventos (`08_event_seeder.ts`):**
+    - Se completó la lógica para el procesamiento de `VersionContent` y `EventVersion`, asegurando la correcta persistencia de los datos históricos de eventos.
+    - Se implementó el manejo de los pivotes `event_version_to_version_activity` para establecer las relaciones entre versiones de eventos y actividades asociadas.
+    - Se integró la funcionalidad de vectorización de eventos utilizando `RagService`. Tras la inserción de datos, se generan embeddings para las fichas técnicas de los eventos actuales (`isCurrentVersion: true`) para su posterior uso en búsquedas semánticas.
+    - Se añadió la generación de contenido completo para la vectorización, incluyendo nombre, objetivo, descripción, dress code y agenda de actividades.
+    - Se incluyó manejo de errores específico para la operación de vectorización.
+    - Se implementó la sincronización de secuencias de bases de datos para las tablas relevantes (`organizations`, `departments`, `users`, `event_types`, `location_types`, `locations`, `events`, `version_contents`, `event_versions`, `version_activities`) para asegurar la correcta generación de IDs autoincrementales después de la inserción de datos.
+  - **Dependencias:** Se importaron `VersionContent` y `EventVersion` para su uso en el seeder. Se añadió `db` para la sincronización de secuencias.
