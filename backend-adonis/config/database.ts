@@ -12,7 +12,7 @@ const dbConfig = defineConfig({
         user: env.get('DB_USER'),
         password: env.get('DB_PASSWORD') || '$Uncharted171103',
         database: env.get('DB_DATABASE'),
-        ...(env.get('NODE_ENV') === 'production' ? { ssl: { rejectUnauthorized: false } } : {}),
+        ...(env.get('DB_SSL') ? { ssl: { rejectUnauthorized: false } } : {}),
       },
       migrations: {
         naturalSort: true,
