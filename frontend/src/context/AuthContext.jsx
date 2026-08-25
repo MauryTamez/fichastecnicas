@@ -34,6 +34,12 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
     };
 
+    const markPasswordUpdated = () => {
+        const updatedUser = { ...user, needsPasswordReset: false };
+        setUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+    };
+
     return (
         <AuthContext.Provider value={{ user, loading, login, register, logout }}>
             {!loading && children}

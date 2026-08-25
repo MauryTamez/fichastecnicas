@@ -6,14 +6,17 @@ import ChatBot from './ChatBot';
 import api from '../api/axios';
 
 const Layout = ({ children }) => {
-    const { user, logout } = useAuth();
+    const { user, logout, markPasswordUpdated } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const dropdownRef = useRef(null);
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+    const [resetStep, setResetStep] = useState(1); // 1 = Aviso, 2 = Formulario
     
+    const isForcedReset = user?.needsPasswordReset === true;
+
     const [passwordForm, setPasswordForm] = useState({
         currentPassword: '',
         newPassword: '',
@@ -32,6 +35,13 @@ const Layout = ({ children }) => {
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    useEffect(() => {
+        if (isForcedReset) {
+            setIsPasswordModalOpen(true);
+            setIsSidebarOpen(false); // Cierra el menú móvil por si acaso
+        }
+    }, [isForcedReset]);
 
     const handleLogout = () => {
         logout();
@@ -64,6 +74,9 @@ const Layout = ({ children }) => {
             setTimeout(() => {
                 setIsPasswordModalOpen(false);
                 setPasswordSuccess('');
+                if (isForcedReset && markPasswordUpdated) {
+                    markPasswordUpdated(); // Marca que el usuario ya no necesita cambiar la contraseña
+                }
             }, 2000);
         } catch (error) {
             setPasswordError(error.response?.data?.message || 'Error al cambiar la contraseña. Verifica tu contraseña actual.');
@@ -108,7 +121,10 @@ const Layout = ({ children }) => {
             <Link
                 key={item.path}
                 to={item.path}
-                onClick={() => setIsSidebarOpen(false)}
+                onClick={(e) => {
+                    if (isForcedReset) e.preventDefault();
+                    () => setIsSidebarOpen(false)
+                }}
                 className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition-all group ${location.pathname === item.path
                     ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-100 translate-x-1'
                     : 'text-gray-500 hover:bg-emerald-50 hover:text-emerald-600'
@@ -126,6 +142,11 @@ const Layout = ({ children }) => {
     return (
         <div className="min-h-screen bg-[#fafdfc] font-sans selection:bg-emerald-100 selection:text-emerald-900">
             {/* Mobile Sidebar Overlay */}
+            <div style={{ 
+                filter: isForcedReset ? 'blur(5px)' : 'none',
+                pointerEvents: isForcedReset ? 'none' : 'auto',
+                transition: 'filter 0.3s ease'
+            }}></div>
             {isSidebarOpen && (
                 <div 
                     className="fixed inset-0 bg-black/20 backdrop-blur-sm z-30 lg:hidden"
@@ -276,94 +297,135 @@ const Layout = ({ children }) => {
                 </footer>
             </div>
             <ChatBot />
+{/* Modal de Contraseña (FUERA del div del blur) */}
             {isPasswordModalOpen && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center animate-fade-in p-4">
                     <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-premium border border-gray-100 relative">
-                        <button 
-                            onClick={() => setIsPasswordModalOpen(false)}
-                            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 bg-gray-50 hover:bg-gray-100 p-2 rounded-xl transition-colors"
-                            disabled={passwordLoading}
-                        >
-                            <X size={20} />
-                        </button>
                         
-                        <div className="flex items-center gap-4 mb-6">
-                            <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center">
-                                <KeyRound size={24} />
-                            </div>
-                            <div>
-                                <h3 className="text-xl font-display font-bold text-gray-900">Cambiar Contraseña</h3>
-                                <p className="text-sm text-gray-500 font-medium">Actualiza tu clave de acceso</p>
-                            </div>
-                        </div>
-
-                        {passwordError && (
-                            <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm font-bold rounded-xl border border-red-100">
-                                {passwordError}
-                            </div>
-                        )}
-                        {passwordSuccess && (
-                            <div className="mb-4 p-3 bg-emerald-50 text-emerald-600 text-sm font-bold rounded-xl border border-emerald-100">
-                                {passwordSuccess}
-                            </div>
-                        )}
-
-                        <form className="space-y-4" onSubmit={handlePasswordChange}>
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1">Contraseña Actual</label>
-                                <input 
-                                    type="password" 
-                                    placeholder="Ingresa tu contraseña actual" 
-                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm font-medium"
-                                    value={passwordForm.currentPassword}
-                                    onChange={(e) => setPasswordForm({...passwordForm, currentPassword: e.target.value})}
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1">Nueva Contraseña</label>
-                                <input 
-                                    type="password" 
-                                    placeholder="Ingresa tu nueva contraseña" 
-                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm font-medium"
-                                    value={passwordForm.newPassword}
-                                    onChange={(e) => setPasswordForm({...passwordForm, newPassword: e.target.value})}
-                                    required
-                                    minLength={8}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1">Confirmar Contraseña</label>
-                                <input 
-                                    type="password" 
-                                    placeholder="Repite tu nueva contraseña" 
-                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm font-medium"
-                                    value={passwordForm.confirmPassword}
-                                    onChange={(e) => setPasswordForm({...passwordForm, confirmPassword: e.target.value})}
-                                    required
-                                    minLength={8}
-                                />
-                            </div>
-                            <div className="pt-4 flex gap-3">
+                        {/* PASO 1: EL AVISO (Solo si es forzado y estamos en el paso 1) */}
+                        {isForcedReset && resetStep === 1 ? (
+                            <div className="text-center py-4">
+                                <div className="w-16 h-16 bg-orange-100 text-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <ShieldAlert size={32} />
+                                </div>
+                                <h3 className="text-xl font-display font-bold text-gray-900 mb-2">
+                                    Cambio de contraseña requerido
+                                </h3>
+                                <p className="text-sm text-gray-500 mb-6">
+                                    Por políticas de seguridad, es obligatorio actualizar tu contraseña para continuar navegando en la plataforma.
+                                </p>
                                 <button 
-                                    type="button" 
-                                    onClick={() => setIsPasswordModalOpen(false)} 
-                                    className="flex-1 py-3 px-4 rounded-xl font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 transition-colors"
-                                    disabled={passwordLoading}
+                                    onClick={() => setResetStep(2)}
+                                    className="w-full py-3 px-4 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all"
                                 >
-                                    Cancelar
-                                </button>
-                                <button 
-                                    type="submit" 
-                                    className="flex-1 py-3 px-4 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all disabled:opacity-50 flex justify-center items-center"
-                                    disabled={passwordLoading}
-                                >
-                                    {passwordLoading ? (
-                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                    ) : 'Guardar'}
+                                    Cambiar Contraseña
                                 </button>
                             </div>
-                        </form>
+                        ) : (
+                            /* PASO 2: EL FORMULARIO (Se muestra si no es forzado, o si ya pasamos al paso 2) */
+                            <>
+                                {/* Ocultamos el botón X si es un reset forzado */}
+                                {!isForcedReset && (
+                                    <button 
+                                        onClick={() => {
+                                            setIsPasswordModalOpen(false);
+                                            setResetStep(1); // Reseteamos por si acaso
+                                        }}
+                                        className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 bg-gray-50 hover:bg-gray-100 p-2 rounded-xl transition-colors"
+                                        disabled={passwordLoading}
+                                    >
+                                        <X size={20} />
+                                    </button>
+                                )}
+                                
+                                <div className="flex items-center gap-4 mb-6">
+                                    <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center">
+                                        <KeyRound size={24} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-display font-bold text-gray-900">
+                                            {isForcedReset ? 'Actualizar Clave' : 'Cambiar Contraseña'}
+                                        </h3>
+                                        <p className="text-sm text-gray-500 font-medium">
+                                            Ingresa los datos para continuar
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {passwordError && (
+                                    <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm font-bold rounded-xl border border-red-100">
+                                        {passwordError}
+                                    </div>
+                                )}
+                                {passwordSuccess && (
+                                    <div className="mb-4 p-3 bg-emerald-50 text-emerald-600 text-sm font-bold rounded-xl border border-emerald-100">
+                                        {passwordSuccess}
+                                    </div>
+                                )}
+
+                                <form className="space-y-4" onSubmit={handlePasswordChange}>
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-1">Contraseña Actual</label>
+                                        <input 
+                                            type="password" 
+                                            placeholder="Ingresa tu contraseña actual" 
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm font-medium"
+                                            value={passwordForm.currentPassword}
+                                            onChange={(e) => setPasswordForm({...passwordForm, currentPassword: e.target.value})}
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-1">Nueva Contraseña</label>
+                                        <input 
+                                            type="password" 
+                                            placeholder="Ingresa tu nueva contraseña" 
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm font-medium"
+                                            value={passwordForm.newPassword}
+                                            onChange={(e) => setPasswordForm({...passwordForm, newPassword: e.target.value})}
+                                            required
+                                            minLength={8}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-1">Confirmar Contraseña</label>
+                                        <input 
+                                            type="password" 
+                                            placeholder="Repite tu nueva contraseña" 
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm font-medium"
+                                            value={passwordForm.confirmPassword}
+                                            onChange={(e) => setPasswordForm({...passwordForm, confirmPassword: e.target.value})}
+                                            required
+                                            minLength={8}
+                                        />
+                                    </div>
+                                    <div className="pt-4 flex gap-3">
+                                        {!isForcedReset && (
+                                            <button 
+                                                type="button" 
+                                                onClick={() => {
+                                                    setIsPasswordModalOpen(false);
+                                                    setResetStep(1);
+                                                }} 
+                                                className="flex-1 py-3 px-4 rounded-xl font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 transition-colors"
+                                                disabled={passwordLoading}
+                                            >
+                                                Cancelar
+                                            </button>
+                                        )}
+                                        <button 
+                                            type="submit" 
+                                            className="flex-1 py-3 px-4 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all disabled:opacity-50 flex justify-center items-center"
+                                            disabled={passwordLoading}
+                                        >
+                                            {passwordLoading ? (
+                                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            ) : 'Guardar'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </>
+                        )}
                     </div>
                 </div>
             )}

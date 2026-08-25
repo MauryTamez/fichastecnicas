@@ -35,7 +35,8 @@ export default class LoginController {
           email: user.email,
           role: user.role?.name,
           nivel_permiso: user.roleId,
-          organizationId: user.organizationId
+          organizationId: user.organizationId,
+          needsPasswordReset: user.needsPasswordReset 
         }
       })
     } catch (error) {

@@ -34,6 +34,9 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @column({ serializeAs: null })
   declare password: string
 
+  @column({ columnName: 'needs_password_reset' })
+  declare needsPasswordReset: boolean 
+  
   @beforeSave()
   static async hashPassword(user: any) {
     if (user.$dirty.password && !user.password.startsWith('$')) {

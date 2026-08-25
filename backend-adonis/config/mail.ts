@@ -2,19 +2,26 @@ import env from '#start/env'
 import { defineConfig, transports } from '@adonisjs/mail'
 
 const mailConfig = defineConfig({
-  default: 'brevo',
+  // 1. Cambiamos el default a smtp
+  default: 'smtp',
 
-   /**
-    * The mailers object can be used to configure multiple mailers
-    * each using a different transport or same transport with different
-    * options.
-   */
-  mailers: {     
+  mailers: {
+    // 2. Agregamos el transportador SMTP
+    smtp: transports.smtp({
+      host: env.get('SMTP_HOST'),
+      port: env.get('SMTP_PORT'),
+      auth: {
+        type: 'login',
+        user: env.get('SMTP_USERNAME'),
+        pass: env.get('SMTP_PASSWORD'),
+      },
+    }),
+    
+    // (Puedes dejar el de brevo aquí abajo sin problema, como está apagado en el default, no hará nada)
     brevo: transports.brevo({
       key: env.get('BREVO_API_KEY') || '',
       baseUrl: 'https://api.brevo.com/v3',
     }),
-     
   },
 })
 

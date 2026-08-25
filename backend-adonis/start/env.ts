@@ -44,5 +44,16 @@ export default await Env.create(new URL('../', import.meta.url), {
   |----------------------------------------------------------
   */
   BREVO_API_KEY: Env.schema.string.optional(),
-  MAIL_FROM_ADDRESS: Env.schema.string.optional()
+  MAIL_FROM_ADDRESS: Env.schema.string.optional(),
+
+    /*
+    |-------------------------------------------------------
+    | Variables para el envío de correos (SMTP Gmail)
+    |-------------------------------------------------------
+    */
+    SMTP_HOST: Env.schema.string(),
+    SMTP_PORT: Env.schema.number(),
+    SMTP_USERNAME: Env.schema.string(),
+    SMTP_PASSWORD: Env.schema.string(),
 })
+

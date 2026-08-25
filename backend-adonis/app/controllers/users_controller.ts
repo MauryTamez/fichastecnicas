@@ -2,6 +2,8 @@ import type { HttpContext } from '@adonisjs/core/http'
 import User from '#models/user'
 import Role from '#models/role'
 import hash from '@adonisjs/core/services/hash'
+import mail from '@adonisjs/mail/services/main'
+import NewUserPasswordNotification from '#mails/new_user_password_notification' // O la ruta relativa si no tienes el alias #mails configurado
 import updatePasswordValidator from '#validators/update_password'
 
 export default class UsersController {
@@ -55,6 +57,8 @@ export default class UsersController {
     }
     await user.save()
 
+    await mail.send(new NewUserPasswordNotification(user.email, data.password))
+
     return response.created({ message: 'User created successfully', userId: user.id })
   }
 
@@ -78,6 +82,7 @@ export default class UsersController {
       // 3. Asignar y guardar. Traemos al usuario de la BD para asegurar que Lucid trackee el cambio
       const dbUser = await User.findOrFail(user.id)
       dbUser.password = payload.newPassword
+      dbUser.needsPasswordReset = false
       await dbUser.save()
 
       return response.ok({ message: 'Contraseña actualizada correctamente' })
